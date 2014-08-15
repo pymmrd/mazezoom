@@ -204,6 +204,13 @@ class Application(models.Model):
         verbose_name=u'App名字'
     )
 
+    company = models.ForeignKey(
+        Company,
+        blank=True,
+        null=True,
+        verbose_name=u'公司',
+    )
+
     category = models.ForeignKey(
         Category,
         blank=True,
@@ -213,7 +220,7 @@ class Application(models.Model):
 
     created_date = models.DateTimeField(
         auto_now_add=True,
-        verbose_name=u'创建日期'
+        verbose_name=u'创建日期',
     )
 
     is_active = models.BooleanField(
@@ -223,6 +230,9 @@ class Application(models.Model):
 
     class Meta:
         db_table = 'application'
+
+    def __unicode__(self):
+        return self.name
 
 
 class AppVersion(models.Model):
@@ -256,6 +266,10 @@ class AppVersion(models.Model):
 
     class Meta:
         db_table = 'appversion'
+
+
+    def __unicode__(self):
+        return '%s---%s' % (self.app, self.version)
 
 
 class Channel(models.Model):
@@ -308,3 +322,7 @@ class Channel(models.Model):
 
     class Meta:
         db_table = 'channel'
+
+
+    def __unicode__(self):
+        return '%s--->%s' % (self.app.name, self.url)
