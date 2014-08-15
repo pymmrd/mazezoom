@@ -5,15 +5,30 @@ from django.db import models
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=255, verbose_name=u'公司名字')
+    name = models.CharField(
+        max_length=255,
+        verbose_name=u'公司名字'
+    )
 
-    tel = models.CharField(max_length=20, verbose_name=u'座机')
+    tel = models.CharField(
+        max_length=20,
+        verbose_name=u'座机'
+    )
 
-    mobile = models.CharField(max_length=11, verbose_name=u'手机')
+    mobile = models.CharField(
+        max_length=11,
+        verbose_name=u'手机'
+    )
 
-    contact_user = models.CharField(max_length=100, verbose_name='联系人')
+    contact_user = models.CharField(
+        max_length=100,
+        verbose_name='联系人'
+    )
 
-    remark = models.TextField(blank=True, verbose_name=u'备注')
+    remark = models.TextField(
+        blank=True,
+        verbose_name=u'备注'
+    )
 
     is_active = models.BooleanField(default=True)
 
@@ -94,21 +109,31 @@ class Category(models.Model):
         children.append(node)
         for child in node.children.active():
             if child != self:
-                children_list = self._recurse_for_children(child, only_active=only_active)
+                children_list = self._recurse_for_children(
+                    child,
+                    only_active=only_active
+                )
                 children.append(children_list)
         return children
 
     def get_active_children(self, include_self=False):
         """
-        Gets a list of all of the children categories which have active products.
+        Gets a list of all of the children
+        categories which have active products.
         """
-        return self.get_all_children(only_active=True, include_self=include_self)
+        return self.get_all_children(
+            only_active=True,
+            include_self=include_self
+        )
 
     def get_all_children(self, only_active=False, include_self=False):
         """
         Gets a list of all of the children categories.
         """
-        children_list = self._recurse_for_children(self, only_active=only_active)
+        children_list = self._recurse_for_children(
+            self,
+            only_active=only_active
+        )
         if include_self:
             ix = 0
         else:
@@ -138,7 +163,12 @@ class Category(models.Model):
 
     @classmethod
     def top_level(self, *args, **kw):
-        return self.objects.filter(is_active=True, parent__isnull=True, *args, **kw)
+        return self.objects.filter(
+            is_active=True,
+            parent__isnull=True,
+            *args,
+            **kw
+        )
 
     def save(self, ancestors=None):
         if ancestors is None:
@@ -147,15 +177,15 @@ class Category(models.Model):
             assert self.parent not in self.descendants.all(), "prevent loop reference"
 
         if self.parent:
-            self.level = self.parent.level + 1 
+            self.level = self.parent.level + 1
         else:
-            self.level = 0 
+            self.level = 0
         super(self.__class__, self).save()
         self.ancestors.clear()
         if self.parent:
             if not ancestors:
                 ancestors = list(self.parent.ancestors.all())
-                ancestors.extend([self.parent,])
+                ancestors.extend([self.parent])
             self.ancestors.add(*ancestors)
         childs_ancestors = ancestors.extend([self, ])
         for child in self.children.all():
@@ -169,28 +199,60 @@ class Application(models.Model):
     """
     应用
     """
-    name = models.CharField(max_length=255, verbose_name=u'App名字')
+    name = models.CharField(
+        max_length=255,
+        verbose_name=u'App名字'
+    )
 
-    category = models.ForeignKey(Category, blank=True, null=True)
+    category = models.ForeignKey(
+        Category,
+        blank=True,
+        null=True,
+        verbose_name=u'类别',
+    )
 
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=u'创建日期'
+    )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=u'是否激活',
+    )
+
+    class Meta:
+        db_table = 'application'
 
 
 class AppVersion(models.Model):
     """
     App 版本
     """
-    app = models.ForeignKey(Application, verbose_name=u'App')
+    app = models.ForeignKey(
+        Application,
+        verbose_name=u'App'
+    )
 
-    version = models.CharField(max_length=50, verbose_name=u'版本')
+    version = models.CharField(
+        max_length=50,
+        verbose_name=u'版本'
+    )
 
-    md5sum = models.CharField(max_length=64, verbose_name=u'md5值')
+    md5sum = models.CharField(
+        max_length=64,
+        verbose_name=u'md5值'
+    )
 
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=u'创建日期'
+    )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=u'是否激活',
+    )
 
     class Meta:
         db_table = 'appversion'
@@ -203,20 +265,46 @@ class Channel(models.Model):
     VALID = 1
     INVALID = 2
     UNCERTAIN = 3
+
     AUDIT_CHOICES = (
         (VALID, u'有效的'),
         (INVALID, u'无效的'),
         (UNCERTAIN, u'不确定'),
     )
 
-    app = models.ForeignKey(Application, verbose_name=u'App')
+    app = models.ForeignKey(
+        Application,
+        verbose_name=u'App'
+    )
 
-    url = models.CharField(max_length=255, verbose_name=u'地址')
+    url = models.CharField(
+        max_length=255,
+        verbose_name=u'地址'
+    )
 
-    checksum = models.BigIntegerField(verbose_name=u'检验值',
-                                      help_text=u'通过binascii的b2a_hex生成的校验值'
-                                      )
+    checksum = models.BigIntegerField(
+        db_index=True,
+        verbose_name=u'检验值',
+        help_text=u'通过binascii的b2a_hex生成的校验值'
+    )
 
-    version = models.ForeignKey(AppVersion, verbose_name=u'版本')
+    version = models.ForeignKey(
+        AppVersion,
+        verbose_name=u'版本'
+    )
 
-    status = models.IntegerField(default=UNCERTAIN, choices=AUDIT_CHOICES)
+    created_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=u'创建日期',
+    )
+
+    status = models.IntegerField(
+        default=UNCERTAIN,
+        choices=AUDIT_CHOICES,
+        verbose_name=u'状态',
+    )
+
+    #TODO 是否需要在这里给每个抓取的url添加爬虫类型
+
+    class Meta:
+        db_table = 'channel'
