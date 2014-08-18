@@ -16,8 +16,6 @@ class OyksoftPosition(PositionSpider):
         url = self.search_url % quote_app
         etree = self.get_elemtree(url)
         items = etree.xpath(self.base_xpath)
-        for item in items:
-            print item.xpath(self.link_xpath)[0], item.xpath(self.title_xpath)[0].text_content()
         return [(item.xpath(self.link_xpath)[0], item.xpath(self.title_xpath)[0].text_content()) for item in items]
 
 

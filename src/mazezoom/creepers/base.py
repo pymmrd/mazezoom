@@ -27,7 +27,6 @@ class PositionSpider(object):
 
     def get_content(self, url):
         ua = random.choice(USER_AGENTS)
-        print ua
         headers = {'User-Agent': ua}
         req = urllib2.Request(url=url, headers=headers)
         try:
