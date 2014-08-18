@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -203,7 +204,11 @@ class Application(models.Model):
         max_length=255,
         verbose_name=u'App名字'
     )
-
+    
+    user = models.ForeignKey(
+        User,
+        verbose_name='用户'
+    )
     company = models.ForeignKey(
         Company,
         blank=True,
@@ -239,6 +244,16 @@ class AppVersion(models.Model):
     """
     App 版本
     """
+    VALID = 1
+    INVALID = 2
+    UNCERTAIN = 3
+
+    AUDIT_CHOICES = (
+        (VALID, u'有效的'),
+        (INVALID, u'无效的'),
+        (UNCERTAIN, u'不确定'),
+    )
+
     app = models.ForeignKey(
         Application,
         verbose_name=u'App'
@@ -259,9 +274,10 @@ class AppVersion(models.Model):
         verbose_name=u'创建日期'
     )
 
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name=u'是否激活',
+    status = models.IntegerField(
+        default=UNCERTAIN,
+        choices=AUDIT_CHOICES,
+        verbose_name=u'状态',
     )
 
     class Meta:
@@ -305,6 +321,8 @@ class Channel(models.Model):
     version = models.ForeignKey(
         AppVersion,
         verbose_name=u'版本'
+        blank=True,
+        null=True
     )
 
     created_date = models.DateTimeField(
@@ -318,7 +336,6 @@ class Channel(models.Model):
         verbose_name=u'状态',
     )
 
-    #TODO 是否需要在这里给每个抓取的url添加爬虫类型
 
     class Meta:
         db_table = 'channel'
