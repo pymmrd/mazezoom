@@ -182,7 +182,321 @@ class AnZhiPosition(PositionSpider):
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = self.normalize_url(self.search_url, item.attrib('href'))
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class AngeeksPosition(PositionSpider):
+    domain = "www.angeeks.com"
+    search_url = "http://apk.angeeks.com/search?keywords=%s&x=29&y=15"
+    xpath = "//dd/div[@class='info']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class JiQiMaoPosition(PositionSpider):
+    domain = "jiqimao.com"
+    search_url = "http://jiqimao.com/search/index?a=game&w=%s"
+    search_url2 = "http://jiqimao.com/search/index?a=soft&w=%s"
+    xpath = "//div[@class='applist']/li/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url2)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        for item in items.extend(items2):
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class ShouYouPosition(PositionSpider):
+    domain = "shouyou.178.com"
+    url = "http://shouyou.178.com/list/android.html"
+
+    def run(self, appname):
+        pass
+
+
+class Position07cn(PositionSpider):
+    domain = "www.07cn.com"
+
+    def run(self, appname):
+        pass
+
+
+class IappsPosition(PositionSpider):
+    domain = "www.iapps.com"
+    search_url = "http://www.iapps.im/search/%s"
+    xpath = "//h2[@class='entry-title']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class MaoRen8Position(PositionSpider):
+    charset = 'gb2312'
+    domain = "www.maoren8.com"
+    search_url = "http://www.maoren8.com/searcher/"
+    xpath = "//div[@id='card_box_list']/ul/li/div[@class='card_title']/a"
+
+    def run(self, appname):
+        results = []
+        data = {'search_subject': self.quote_args(appname)}
+        etree = self.send_request(data=data)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class SjapkPosition(PositionSpider):
+    charset = 'gb2312'
+    domain = "www.sjapk.com"
+    search_url = "http://www.sjapk.com/Search.asp"
+    xpath = "//li/span/h1/a"
+
+    def run(self, appname):
+        results = []
+        data = {'Key': self.quote_args(appname)}
+        etree = self.send_request(data=data)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class CoolApkPosition(PositionSpider):
+    domain = "www.cookapk.com"
+    search_url = "http://www.coolapk.com/search?q=%s"
+    xpath = "//li[@class='media']/div[@class='media-body']/h4/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Position365Nokia(PositionSpider):
+    """
+    >>>nokia365 = Position365Nokia()
+    >>>nokia365.run(u'HTC')
+    """
+    domain = "www.365nokia.cn"
+    search_url = "http://www.365nokia.cn/search.asp?q=%s"
+    xpath = "//div[@class='list-r']/ur/li/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class MyFilesPosition(PositionSpider):
+
+    """
+    >>>myfiles = MyFilesPosition()
+    >>>myfiles.run(u'驱动精灵')
+    """
+
+    domain = "www.myfiles.com.cn"
+    search_url = "http://so.myfiles.com.cn/soft.aspx?q=%s&Submit2="
+    xpath = ("//div[@class='rj-list']/div[@class='list1']"
+             "/ul/li[@class='rjbt']/a")
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class WapMyPosition(PositionSpider):
+
+    """
+    >>>wap = WapMyPosition()
+    >>>wap.run(u'360手机卫士')
+    """
+
+    domain = "www.wapmy.cn"
+    search_url = "http://www.wapmy.cn/wapmys/webmy/search.jsp"
+    xpath = "//p[@class='listname']/b/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.attrib['title']
+            results.append((link, title))
+        return results
+
+
+class Position52SamSung(PositionSpider):
+    domain = "bbs.52samsung.com"
+    search_url = ""
+
+    def run(self, appname):
+        pass
+
+
+class SjrjyPosition(PositionSpider):
+    domain = "www.sjrjy.com"
+    search_url = ""
+
+    def run(self, appname):
+        pass
+
+
+class DownBankPosition(PositionSpider):
+    """
+    >>>downbank = DownBankPosition()
+    >>>downbank.run(u'金山毒霸')
+    """
+    charset = 'gb2312'
+    domain = "www.downbank.cn"
+    search_url = "http://www.downbank.cn/search.asp?keyword=%s&x=38&y=10"
+    xpath = "//div[@class='searchTopic']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class AndroidZonePosition(PositionSpider):
+    """
+    >>>az = AndroidZonePosition()
+    >>>az.run(u'手机QQ')
+    """
+    charset = "gbk"
+    domain = "andorid.zone.it.sohu.com"
+    search_url = ("http://android.zone.it.sohu.com/search.php"
+                  "?mod=forum&searchid=204468&orderby=lastpost"
+                  "&ascdesc=desc&searchsubmit=yes&kw=%s")
+    search_url1 = ("http://android.zone.it.sohu.com/search.php"
+                   "?mod=forum&searchid=204469&orderby=lastpost"
+                   "&ascdesc=desc&searchsubmit=yes&kw=%s")
+    xpath = "//li[@class='pbw']/h3[@class='xs3']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpatH(self.xpath)
+        for item in items.extend(items2):
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class CrossmoPosition(PositionSpider):
+    """
+    >>>cs = CrossmoPosition()
+    >>>cs.run(u'疯狂的麦咭')
+    """
+    domain = "www.crossmo.com"
+    search_url = ("http://soft.crossmo.com/soft_default.php"
+                  "?act=search&searchkey=%s")
+    xpath = "//div[@class='infor_centerb1']/div/dl/dt/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class App111Position(PositionSpider):
+    """
+    ios
+    >>>app = App111Position()
+    >>>app.run(u'K歌达人')
+    """
+
+    domain = "www.app111.com"
+    search_url = "http://www.app111.com/search?k=%s"
+    xpath = "//div[@class='Apper_contain3_1']/ul/li/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.attrib['title']
+            results.append((link, title))
+        return results
+
+
+class ShoujiBaiduSpider(PositionSpider):
+    """
+    >>>shouji = ShoujiBaiduSpider()
+    >>>shouji.run(u'HOT市场')
+    """
+    domain = "shouji.baidu.com"
+    search_url = ("http://shouji.baidu.com/s"
+                  "?wd=%s&data_type=app&"
+                  "f=header_software%40input%40btn_search"
+                  "&from=web_alad_5")
+    xpath = "//div[@class='top']/a[@class='app-name']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
             title = item.text_content()
             results.append((link, title))
         return results

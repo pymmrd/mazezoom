@@ -29,13 +29,13 @@ class PositionSpider(object):
                 content = self.tryAgain(req, retries)
         return content
 
-    def get_content(self, url):
+    def get_content(self, url, data):
         """
         给请求加载USER-AGENT, 获取页面内容，
         """
         ua = random.choice(USER_AGENTS)
         headers = {'User-Agent': ua}
-        req = urllib2.Request(url=url, headers=headers)
+        req = urllib2.Request(url=url, data=data, headers=headers)
         try:
             content = urllib2.urlopen(req).read()
         except urllib2.HTTPError, e:
@@ -56,12 +56,12 @@ class PositionSpider(object):
         """
         return urlparse.urljoin(source, url)
 
-    def get_elemtree(self, url):
+    def get_elemtree(self, url, data=None):
         """
         生成dom树方便xpath分析
         """
         etree = None
-        content = self.get_content(url)
+        content = self.get_content(url, data)
         if content:
             try:
                 etree = fromstring(content)
@@ -75,13 +75,15 @@ class PositionSpider(object):
         """
         return urllib.quote(appname.encode(self.charset))
 
-    def send_request(self, appname):
+    def send_request(self, appname=None, url=None, data=None):
         #按照网站charset编码参数
-        quote_app = self.quote_args(appname)
-        url = self.search_url % quote_app
-
+        url = self.search_url if url is None else url
+        if data is None
+            #GET 请求
+            quote_app = self.quote_args(appname)
+            url = url % quote_app
         #获取页面dom树
-        etree = self.get_elemtree(url)
+        etree = self.get_elemtree(url, data)
         return etree
 
     def run(self):
