@@ -12,9 +12,14 @@ class OyksoftPosition(PositionSpider):
     link_xpath = "child::div[@class='gs-title gsc-table-cell-thumbnail gsc-thumbnail-left']/a[@class='gs-title']/@href"
 
     def run(self, appname):
+        #按照网站charset编码参数
         quote_app = self.quote_args(appname)
         url = self.search_url % quote_app
+        
+        #获取页面dom树
         etree = self.get_elemtree(url)
+
+        #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         return [(item.xpath(self.link_xpath)[0], item.xpath(self.title_xpath)[0].text_content()) for item in items]
 

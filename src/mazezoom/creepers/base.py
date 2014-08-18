@@ -15,6 +15,9 @@ from constants import USER_AGENTS, MAX_RETRY_TIMES
 class PositionSpider(object):
 
     def tryAgain(self, req, retries=0):
+        """
+         尝试最大次数(MAX_RETRY_TIMES)后请求退出
+        """
         content = ''
         if retries < MAX_RETRY_TIMES:
             try:
@@ -26,6 +29,9 @@ class PositionSpider(object):
         return content
 
     def get_content(self, url):
+        """
+        给请求加载USER-AGENT, 获取页面内容，
+        """
         ua = random.choice(USER_AGENTS)
         headers = {'User-Agent': ua}
         req = urllib2.Request(url=url, headers=headers)
@@ -41,9 +47,18 @@ class PositionSpider(object):
         return content
 
     def normalize_url(source, url):
+        """
+        >>> urlparse.urljoin('http://www.baidu.com/?a=1', '/page/1?query=a')
+            http://www.baidu.com/page/1?query=a
+        >>> urlparse.urljoin('http://www.baidu.com/?a=1', 'http://www.baidu.com/page/1?query=a')
+            http://www.baidu.com/page/1?query=a
+        """
         return urlparse.urljoin(source, url)
 
     def get_elemtree(self, url):
+        """
+        生成dom树方便xpath分析
+        """
         etree = None
         content = self.get_content(url)
         if content:
@@ -54,7 +69,13 @@ class PositionSpider(object):
         return etree
 
     def quote_args(self, appname):
+        """
+        对传入的参数,按照对应网站charset编码
+        """
         return urllib.quote(appname.encode(self.charset))
 
     def run(self):
+        """
+        接口子类实现
+        """
         pass

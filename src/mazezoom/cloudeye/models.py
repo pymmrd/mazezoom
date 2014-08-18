@@ -306,6 +306,10 @@ class Channel(models.Model):
         Application,
         verbose_name=u'App'
     )
+    title = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=u'标题')
 
     url = models.CharField(
         max_length=255,
