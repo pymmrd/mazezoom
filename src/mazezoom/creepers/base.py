@@ -13,6 +13,7 @@ from constants import USER_AGENTS, MAX_RETRY_TIMES
 
 
 class PositionSpider(object):
+    chartset = DEFAULT_CHARSET
 
     def tryAgain(self, req, retries=0):
         """
@@ -73,6 +74,15 @@ class PositionSpider(object):
         对传入的参数,按照对应网站charset编码
         """
         return urllib.quote(appname.encode(self.charset))
+
+    def send_request(self, appname):
+        #按照网站charset编码参数
+        quote_app = self.quote_args(appname)
+        url = self.search_url % quote_app
+
+        #获取页面dom树
+        etree = self.get_elemtree(url)
+        return etree
 
     def run(self):
         """
