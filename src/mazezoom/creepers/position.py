@@ -223,23 +223,6 @@ class JiQiMaoPosition(PositionSpider):
         return results
 
 
-class ShouYouPosition(PositionSpider):
-    domain = "shouyou.178.com"
-    url = "http://shouyou.178.com/list/android.html"
-    abstract = True
-
-    def run(self, appname):
-        pass
-
-
-class Position07cn(PositionSpider):
-    domain = "www.07cn.com"
-    abstract = True
-
-    def run(self, appname):
-        pass
-
-
 class IappsPosition(PositionSpider):
     domain = "www.iapps.com"
     search_url = "http://www.iapps.im/search/%s"
@@ -371,24 +354,6 @@ class WapMyPosition(PositionSpider):
             title = item.attrib['title']
             results.append((link, title))
         return results
-
-
-class Position52SamSung(PositionSpider):
-    domain = "bbs.52samsung.com"
-    search_url = ""
-    abstract = True
-
-    def run(self, appname):
-        pass
-
-
-class SjrjyPosition(PositionSpider):
-    domain = "www.sjrjy.com"
-    search_url = ""
-    abstract = True
-
-    def run(self, appname):
-        pass
 
 
 class DownBankPosition(PositionSpider):
@@ -526,17 +491,6 @@ class Position7xz(PositionSpider):
         return results
 
 
-class Android265gPosition(PositionSpider):
-    """
-    深度定制
-    """
-    abstract = True
-    domain = "http://android.265g.com/soft/"
-
-    def run(self):
-        pass
-
-
 class PC6Position(PositionSpider):
     """
     >>>pc6 = PC6Position()
@@ -580,28 +534,6 @@ class Position3533(PositionSpider):
             title = item.text_content()
             results.append((link, title))
         return results
-
-
-class ImmikepPosition(PositionSpider):
-    """
-    深度定制
-    """
-    domain = "www.immikep.com"
-    abstract = True
-
-    def run(self, appname):
-        pass
-
-
-class XtzhongdaPosition(PositionSpider):
-    """
-    深度定制
-    """
-    domain = "www.xtzhongda.com"
-    abstract = True
-
-    def run(self, appname):
-        pass
 
 
 class Apk8Position(PositionSpider):
@@ -698,18 +630,6 @@ class SjwyxPosition(PositionSpider):
         return results
 
 
-class SoYingYongPosition(PositionSpider):
-    """
-    搜索栏无法使用，可能需要深度定制
-    """
-    domain = "www.soyingyong.com"
-    search_url = "http://www.soyingyong.com/apps/search/%s.html"
-    abstract = True
-
-    def run(self, appname):
-        pass
-
-
 class MaoRen8Position2(PositionSpider):
     """
     >>>maoren8 = MaoRen8Position()
@@ -747,17 +667,6 @@ class MaoRen8Position2(PositionSpider):
         return results
 
 
-class Zx181Position(PositionSpider):
-    """
-    搜索不可用，可能需要深度定制
-    """
-    abstract = True
-    domain = "www.zx181.cn"
-
-    def run(self, appname):
-        pass
-
-
 class Ruan8Position(PositionSpider):
     """
     >>>ruan8 = Ruan8Position()
@@ -777,6 +686,96 @@ class Ruan8Position(PositionSpider):
             title = item.text_content()
             results.append((link, title))
         return results
+
+
+class PcHomePosition(PositionSpider):
+    """
+    >>>pchome = PcHomePosition()
+    >>>pchome.run(u'微信')
+    """
+    charset = 'gbk'
+    domain = "www.pchome.com"
+    search_url = ("http://search.pchome.net/download.php"
+                  "?wd=%s&submit=%CB%D1+%CB%F7")
+    xpath = "//div[@class='tit']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Wei2008Position(PositionSpider):
+    """
+    """
+    abstract = True
+    domain = "www.wei2008.com"
+
+
+class Zx181Position(PositionSpider):
+    """
+    搜索不可用，可能需要深度定制
+    """
+    abstract = True
+    domain = "www.zx181.cn"
+
+    def run(self, appname):
+        pass
+
+
+class BBSLidroidPosition(PositionSpider):
+    """
+    """
+    abstract = True
+    domain = "bbs.lidroid.com"
+
+
+class Position189Store(PositionSpider):
+    """
+    搜索不可用
+    """
+    abstract = True
+    domain = "www.189store.com"
+
+
+class ShouYouPosition(PositionSpider):
+    domain = "shouyou.178.com"
+    url = "http://shouyou.178.com/list/android.html"
+    abstract = True
+
+    def run(self, appname):
+        pass
+
+
+class Position07cn(PositionSpider):
+    domain = "www.07cn.com"
+    abstract = True
+
+    def run(self, appname):
+        pass
+
+
+class Position52SamSung(PositionSpider):
+    domain = "bbs.52samsung.com"
+    search_url = ""
+    abstract = True
+
+    def run(self, appname):
+        pass
+
+
+class SjrjyPosition(PositionSpider):
+    domain = "www.sjrjy.com"
+    search_url = ""
+    abstract = True
+
+    def run(self, appname):
+        pass
 
 
 class Postion92Apk(PositionSpider):
@@ -805,46 +804,50 @@ class AnDuoWanPosition(PositionSpider):
     abstract = True
     domain = "an.duowan.com"
 
-class PcHomePosition(PositionSpider):
+
+class SoYingYongPosition(PositionSpider):
     """
-    >>>pchome = PcHomePosition()
-    >>>pchome.run(u'微信')
+    搜索栏无法使用，可能需要深度定制
     """
-    charset = 'gbk'
-    domain = "www.pchome.com"
-    search_url = "http://search.pchome.net/download.php?wd=%s&submit=%CB%D1+%CB%F7"
-    xpath = "//div[@class='tit']/a"
+    domain = "www.soyingyong.com"
+    search_url = "http://www.soyingyong.com/apps/search/%s.html"
+    abstract = True
 
     def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
-            results.append((link, title))
-        return results
+        pass
 
 
-class Wei2008Position(PositionSpider):
+class Android265gPosition(PositionSpider):
     """
+    深度定制
     """
     abstract = True
-    domain = "www.wei2008.com"
+    domain = "http://android.265g.com/soft/"
+
+    def run(self):
+        pass
 
 
-class BBSLidroidPosition(PositionSpider):
+class ImmikepPosition(PositionSpider):
     """
+    深度定制
     """
+    domain = "www.immikep.com"
     abstract = True
-    domain = "bbs.lidroid.com"
 
-class Position189Store(PositionSpider):
+    def run(self, appname):
+        pass
+
+
+class XtzhongdaPosition(PositionSpider):
     """
-    搜索不可用
+    深度定制
     """
+    domain = "www.xtzhongda.com"
     abstract = True
-    domain = "www.189store.com"
+
+    def run(self, appname):
+        pass
 
 
 if __name__ == "__main__":
