@@ -826,6 +826,27 @@ class PcHomePosition(PositionSpider):
         return results
 
 
+class Wei2008Position(PositionSpider):
+    """
+    """
+    abstract = True
+    domain = "www.wei2008.com"
+
+
+class BBSLidroidPosition(PositionSpider):
+    """
+    """
+    abstract = True
+    domain = "bbs.lidroid.com"
+
+class Position189Store(PositionSpider):
+    """
+    搜索不可用
+    """
+    abstract = True
+    domain = "www.189store.com"
+
+
 if __name__ == "__main__":
     #oyk = OyksoftPosition()
     #print oyk.run(u'迅雷')
