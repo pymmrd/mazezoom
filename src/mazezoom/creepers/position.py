@@ -226,6 +226,7 @@ class JiQiMaoPosition(PositionSpider):
 class ShouYouPosition(PositionSpider):
     domain = "shouyou.178.com"
     url = "http://shouyou.178.com/list/android.html"
+    abstract = True
 
     def run(self, appname):
         pass
@@ -233,6 +234,7 @@ class ShouYouPosition(PositionSpider):
 
 class Position07cn(PositionSpider):
     domain = "www.07cn.com"
+    abstract = True
 
     def run(self, appname):
         pass
@@ -374,6 +376,7 @@ class WapMyPosition(PositionSpider):
 class Position52SamSung(PositionSpider):
     domain = "bbs.52samsung.com"
     search_url = ""
+    abstract = True
 
     def run(self, appname):
         pass
@@ -382,6 +385,7 @@ class Position52SamSung(PositionSpider):
 class SjrjyPosition(PositionSpider):
     domain = "www.sjrjy.com"
     search_url = ""
+    abstract = True
 
     def run(self, appname):
         pass
@@ -526,6 +530,7 @@ class Android265gPosition(PositionSpider):
     """
     深度定制
     """
+    abstract = True
     domain = "http://android.265g.com/soft/"
 
     def run(self):
@@ -582,6 +587,7 @@ class ImmikepPosition(PositionSpider):
     深度定制
     """
     domain = "www.immikep.com"
+    abstract = True
 
     def run(self, appname):
         pass
@@ -592,6 +598,7 @@ class XtzhongdaPosition(PositionSpider):
     深度定制
     """
     domain = "www.xtzhongda.com"
+    abstract = True
 
     def run(self, appname):
         pass
@@ -608,12 +615,212 @@ class Apk8Position(PositionSpider):
 
     def run(self, appname):
         results = []
-        data = {'key': appname.encode('utf-8')}
+        data = {'key': appname.encode(self.charset)}
         headers = {'Host': self.domain, 'Referer': self.search_url}
         etree = self.send_request(data=data, headers=headers)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class XiaZaiZhiJiaPosition(PositionSpider):
+    """
+    >>>xzzj = XiaZaiZhiJiaPosition()
+    >>>xzzj.run(u'微信')
+    """
+
+    charset = 'gb2312'
+    domain = "www.xiazaizhijia.com"
+    search_url = ("http://www.xiazaizhijia.com/search.php"
+                  "?kwtype=0&keyword=%s&channel=0")
+    xpath = "//div[@class='th-name']/a[@class='green-ico']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class CngbaPosition(PositionSpider):
+    """
+    >>>cngba = CngbaPosition()
+    >>>cngba.run(u'名将决')
+    """
+    charset = "gb2312"
+    domain = "www.cngba.com"
+    search_url = "http://down.cngba.com/script/search.php?keyword=%s"
+    xpath = "//div[@class='game_Ljj']/strong/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class SjwyxPosition(PositionSpider):
+    """
+    >>>sjwyx = SjwyxPosition()
+    >>>sjwyx.run(u'龙印')
+    """
+    charset = "gb2312"
+    domain = "www.sjwyx.com"
+    search_url = "http://www.sjwyx.com/so.aspx?keyword=%s"
+    base_xpath = "//li[@class='brdr brdb']"
+    title_xpath = "child::a[@class='n']/text()"
+    other_link = "child::a"
+    down_link_token = u'下载'
+    abstract = True
+
+    def run(self, appname):
+        results = []
+        data = {'searchtext': self.quote_args(appname)}
+        etree = self.send_request(data=data)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            title = item.xpath(self.title_xpath)
+            links = item.xpath(self.other_link)
+            for link in links:
+                if link.text() == self.down_link_token:
+                    results.append((link, title))
+        return results
+
+
+class SoYingYongPosition(PositionSpider):
+    """
+    搜索栏无法使用，可能需要深度定制
+    """
+    domain = "www.soyingyong.com"
+    search_url = "http://www.soyingyong.com/apps/search/%s.html"
+    abstract = True
+
+    def run(self, appname):
+        pass
+
+
+class MaoRen8Position2(PositionSpider):
+    """
+    >>>maoren8 = MaoRen8Position()
+    >>>maoren8.run(u'全名水浒')
+    """
+    charset = 'gb2312'
+    domain = "www.maoren8.com"
+    search_url = "http://www.maoren8.com/game/"
+    link_xpath = "//div[@class='game-list-hidden animat-out']/a"
+    title_xpath = "child::h2/text()"
+    abstract = True
+
+    def run(self, appname):
+        results = []
+        data = {
+            'monder': '1',
+            'orderview': '3',
+            'search_subject': appname.encode(self.charset)
+        }
+        headers = {
+            'Host': self.domain,
+            'Referer': 'http://www.maoren8.com/game-3-0-0-0-0-0-3-0-1-0/',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Connection': 'keep-alive',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'zh-cn,es-ar;q=0.8,fr-be;q=0.6,en-us;q=0.4,en;q=0.2',
+        }
+        etree = self.send_request(data=data, headers=headers)
+        items = etree.xpath(self.link_xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.xapth(self.title_xpath)[0]
+            results.append((link, title))
+        return results
+
+
+class Zx181Position(PositionSpider):
+    """
+    搜索不可用，可能需要深度定制
+    """
+    abstract = True
+    domain = "www.zx181.cn"
+
+    def run(self, appname):
+        pass
+
+
+class Ruan8Position(PositionSpider):
+    """
+    >>>ruan8 = Ruan8Position()
+    >>>ruan8.run(u'360')
+    """
+    charset = 'gbk'
+    domain = "soft.anruan.com"
+    search_url = "http://www.anruan.com/search.php?t=all&keyword=%s"
+    xpath = "//div[@class='li']/ul/li/a[@class='tit']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Postion92Apk(PositionSpider):
+    """
+    搜索不可用，需深度定制
+    """
+    charset = "gbk"
+    domain = "www.92apk.com"
+    search_url = ""
+    abstract = True
+
+
+class AndroidtgbusPosition(PositionSpider):
+    """
+    无搜索，需要深度定制
+    """
+    charset = ""
+    domain = "android.tgbus.com"
+    abstract = True
+
+
+class AnDuoWanPosition(PositionSpider):
+    """
+    搜索质量不高
+    """
+    abstract = True
+    domain = "an.duowan.com"
+
+class PcHomePosition(PositionSpider):
+    """
+    >>>pchome = PcHomePosition()
+    >>>pchome.run(u'微信')
+    """
+    charset = 'gbk'
+    domain = "www.pchome.com"
+    search_url = "http://search.pchome.net/download.php?wd=%s&submit=%CB%D1+%CB%F7"
+    xpath = "//div[@class='tit']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
             title = item.text_content()
             results.append((link, title))
         return results
@@ -632,6 +839,19 @@ if __name__ == "__main__":
     #p3533 = Position3533()
     #print p3533.run(u'功夫西游')
 
-    apk8 = Apk8Position()
-    print apk8.run(u'天天跑酷')
+    #apk8 = Apk8Position()
+    #print apk8.run(u'天天跑酷')
 
+    #xzzj = XiaZaiZhiJiaPosition()
+    #print xzzj.run(u'微信')
+
+    #cngba = CngbaPosition()
+    #print cngba.run(u'名将决')
+    #sjwyx = SjwyxPosition()
+    #print sjwyx.run(u'龙印')
+
+    #maoren8 = MaoRen8Position()
+    #print maoren8.run(u'全民水浒')
+
+    ruan8 = Ruan8Position()
+    print ruan8.run(u'360')
