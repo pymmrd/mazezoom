@@ -502,6 +502,136 @@ class ShoujiBaiduSpider(PositionSpider):
         return results
 
 
+class Position7xz(PositionSpider):
+    """
+    >>>p7xz = Position7xz()
+    >>>p7xz.run(u'极品飞车13')
+    """
+    domain = "www.7xz.com"
+    search_url = "http://www.7xz.com/search?q=%s"
+    xpath = "//div[@class='caption']/ul/li/a[@class='a2']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Android265gPosition(PositionSpider):
+    """
+    深度定制
+    """
+    domain = "http://android.265g.com/soft/"
+
+    def run(self):
+        pass
+
+
+class PC6Position(PositionSpider):
+    """
+    >>>pc6 = PC6Position()
+    >>>pc6.run(u'弹跳忍者')
+    """
+    charset = "gb2312"
+    domain = "www.pc6.com"
+    search_url = "http://so.pc6.com/?keyword=%s"
+    xpath = "//div[@class='baseinfo']/h3/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Position3533(PositionSpider):
+    """
+    >>>p3533 = Position3533()
+    >>>p3533.run(u'功夫西游')
+    """
+    domain = "www.3533.com"
+    search_url = "http://search.3533.com/software?keyword=%s"
+    search_url1 = "http://search.3533.com/game?keyword=%s"
+    xpath = "//div[@class='appinfo']/a[@class='apptit']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class ImmikepPosition(PositionSpider):
+    """
+    深度定制
+    """
+    domain = "www.immikep.com"
+
+    def run(self, appname):
+        pass
+
+
+class XtzhongdaPosition(PositionSpider):
+    """
+    深度定制
+    """
+    domain = "www.xtzhongda.com"
+
+    def run(self, appname):
+        pass
+
+
+class Apk8Position(PositionSpider):
+    """
+    >>>apk8 = Apk8Position()
+    >>>apk8.run(u'天天跑酷')
+    """
+    domain = "www.apk8.com"
+    search_url = "http://www.apk8.com/search.php"
+    xpath = "//div[@class='main_search_pic']/ul/li/strong/a"
+
+    def run(self, appname):
+        results = []
+        data = {'key': appname.encode('utf-8')}
+        headers = {'Host': self.domain, 'Referer': self.search_url}
+        etree = self.send_request(data=data, headers=headers)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
 if __name__ == "__main__":
-    oyk = OyksoftPosition()
-    print oyk.run(u'迅雷')
+    #oyk = OyksoftPosition()
+    #print oyk.run(u'迅雷')
+
+    #p7xz = Position7xz()
+    #print p7xz.run(u'极品飞车13')
+
+    #pc6 = PC6Position()
+    #print pc6.run(u'弹跳忍者')
+
+    #p3533 = Position3533()
+    #print p3533.run(u'功夫西游')
+
+    apk8 = Apk8Position()
+    print apk8.run(u'天天跑酷')
+

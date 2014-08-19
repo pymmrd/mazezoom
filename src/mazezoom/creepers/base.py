@@ -9,11 +9,11 @@ import urlparse
 from lxml.html import fromstring
 
 #From Projects
-from constants import USER_AGENTS, MAX_RETRY_TIMES
+from constants import USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET
 
 
 class PositionSpider(object):
-    chartset = DEFAULT_CHARSET
+    charset = DEFAULT_CHARSET
 
     def tryAgain(self, req, retries=0):
         """
@@ -29,16 +29,21 @@ class PositionSpider(object):
                 content = self.tryAgain(req, retries)
         return content
 
-    def get_content(self, url, data):
+    def get_content(self, url, data, headers):
         """
         给请求加载USER-AGENT, 获取页面内容，
         """
+        content = ''
         ua = random.choice(USER_AGENTS)
-        headers = {'User-Agent': ua}
+        if headers:
+            headers['User-Agent'] = ua
+        else:
+            headers = {'User-Agent': ua}
         req = urllib2.Request(url=url, data=data, headers=headers)
         try:
             content = urllib2.urlopen(req).read()
         except urllib2.HTTPError, e:
+            print e
             if e.code == 503:
                 time.sleep(30)
                 content = self.tryAgain(req, 0)
@@ -47,7 +52,7 @@ class PositionSpider(object):
             content = self.tryAgain(req, 0)
         return content
 
-    def normalize_url(source, url):
+    def normalize_url(self, source, url):
         """
         >>> urlparse.urljoin('http://www.baidu.com/?a=1', '/page/1?query=a')
             http://www.baidu.com/page/1?query=a
@@ -56,12 +61,12 @@ class PositionSpider(object):
         """
         return urlparse.urljoin(source, url)
 
-    def get_elemtree(self, url, data=None):
+    def get_elemtree(self, url, data=None, headers=None):
         """
         生成dom树方便xpath分析
         """
         etree = None
-        content = self.get_content(url, data)
+        content = self.get_content(url, data, headers)
         if content:
             try:
                 etree = fromstring(content)
@@ -75,15 +80,17 @@ class PositionSpider(object):
         """
         return urllib.quote(appname.encode(self.charset))
 
-    def send_request(self, appname=None, url=None, data=None):
+    def send_request(self, appname=None, url=None, data=None, headers=None):
         #按照网站charset编码参数
         url = self.search_url if url is None else url
-        if data is None
+        if data is None:
             #GET 请求
             quote_app = self.quote_args(appname)
             url = url % quote_app
+        else:
+            data = urllib.urlencode(data)
         #获取页面dom树
-        etree = self.get_elemtree(url, data)
+        etree = self.get_elemtree(url, data, headers)
         return etree
 
     def run(self):
