@@ -522,7 +522,7 @@ class AndroidZonePosition(PositionSpider):
 class CrossmoPosition(PositionSpider):
     """
     >>>cs = CrossmoPosition()
-    >>>cs.run(u'疯狂的麦咭')
+    >>>cs.run(u'LT来电报号')
     """
     domain = "www.crossmo.com"
     search_url = ("http://soft.crossmo.com/soft_default.php"
@@ -531,12 +531,15 @@ class CrossmoPosition(PositionSpider):
 
     def run(self, appname):
         results = []
-        etree = self.send_request(appname)
+        headers = {'Host': 'soft.crossmo.com', 'Referer': 'soft.crossmo.com'}
+        etree = self.send_request(appname, headers=headers)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
+            print title
+            if appname in title:
+                results.append((link, title))
         return results
 
 
@@ -1035,5 +1038,7 @@ if __name__ == "__main__":
     #coolapk = CoolApkPosition()
     #print coolapk.run(u'刀塔传奇')
 
-    downbank = DownBankPosition()
-    print downbank.run(u'金山毒霸')
+    #downbank = DownBankPosition()
+    #print downbank.run(u'金山毒霸')
+    cs = CrossmoPosition()
+    print cs.run(u'LT来电报号')

@@ -87,10 +87,10 @@ class PositionSpider(CreeperBase):
         url = self.search_url if url is None else url
         if data is None:
             #GET 请求
-            if self.charset == DEFAULT_CHARSET:
-                quote_app = appname.encode(self.charset)
-            else:
-                quote_app = self.quote_args(appname)
+           # if self.charset == DEFAULT_CHARSET:
+           #      quote_app = appname.encode(self.charset)
+           #else:
+            quote_app = self.quote_args(appname)
             url = url % quote_app
         else:
             data = urllib.urlencode(data)
