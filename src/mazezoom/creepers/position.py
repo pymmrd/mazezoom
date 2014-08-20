@@ -4,6 +4,10 @@ from base import PositionSpider
 
 
 class OyksoftPosition(PositionSpider):
+    """
+    >>>oyk = OyksoftPosition()
+    >>>
+    """
     domain = "www.oyksoft.com"
     charset = 'gbk'
     search_url = "http://www.oyksoft.com/GoogleSearch.html?q=%s"
@@ -27,6 +31,12 @@ class OyksoftPosition(PositionSpider):
 
 
 class GameDogPosition(PositionSpider):
+    """
+    >>>gd = GameDogPosition()
+    >>>gd.run(u'刀塔传奇')
+    """
+
+    quality = 10
     domain = "www.gamedog.cn"
     search_url = ("http://zhannei.gamedog.cn/cse/search"
                   "?s=10392184185092281050&entry=1&q=%s")
@@ -44,6 +54,13 @@ class GameDogPosition(PositionSpider):
 
 
 class Positon365(PositionSpider):
+    """
+    pc端下载资源
+    >>>p365 = Position365()
+    >>>p365.run(u'金蝶KIS')
+    
+    """
+    quality = 4 
     charset = 'gbk'
     domain = "www.365xz8.cn"
     search_url = "http://www.365xz8.cn/soft/search.asp?act=topic&keyword=%s"
@@ -61,22 +78,35 @@ class Positon365(PositionSpider):
 
 
 class Mm10086Position(PositionSpider):
+    """
+    >>>mm10086 = Mm10086Position()
+    >>>mm10086.run(u'街头足球')
+    """
+    quality = 10
     domain = "mm.10086.cn"
     search_url = "http://mm.10086.cn/searchapp?dt=android&advanced=0&st=3&q=%s"
     xpath = "//dd[@class='sr_searchListConTt']/h2/a"
+    down_xpath = "//dd[@class='sr_searchListConTt']/a/@href"
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = item.attrib['href']
+            link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            if appname in title:
+                results.append((link, title))
         return results
 
 
 class Hack50Positon(PositionSpider):
+    """
+    pc端下载包
+    >>>hack50 = Hack50Positon()
+    >>>hack50.run(u'qq')
+    """
+    quality = 4
     domain = "www.hack50.com"
     charset = 'gbk'
     search_url = ("http://so.hack50.com/cse/search"
@@ -95,10 +125,21 @@ class Hack50Positon(PositionSpider):
 
 
 class Position520Apk(PositionSpider):
+    """
+    >>>p520apk = Position520Apk()
+    >>>p520apk.run(u'QQ部落')
+    """
+    quality = 7
     domain = "www.520apk.com"
     search_url = ("http://search.520apk.com/cse/search"
                   "?s=17910776473296434043&q=%s")
     xpath = "//h3[@class='c-title']/a"
+    url_token = '/android/' #通过url token进一步准确定位
+    down_xpath = [ #跳转入detail
+        "//a[@class='icon_downbd']/@href",
+        "//a[@class='icon_downdx']/@href",
+        "//a[@class='icon_downlt']/@href",
+    ]
 
     def run(self, appname):
         results = []
@@ -107,27 +148,43 @@ class Position520Apk(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
+            if appname in title:
+                if self.url_token in link:
+                    results.append((link, title))
         return results
 
 
 class Apk3Position(PositionSpider):
+    """
+    >>>apk3 = Apk3Position()
+    >>>apk3.run(u'刷机精灵')
+    """
+    quality = 10
+    charset = 'gb2312'
     domain = "www.apk3.com"
     search_url = "http://www.apk3.com/search.asp?m=2&s=0&word=%s&x=0&y=0"
     xpath = "//div[@class='searchTopic']/a"
+    down_xpath = "//ul[@class='downlistbox']/li/a" # Detail
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = item.attrib['href']
+            link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            if appname in title:
+                print title
+                results.append((link, title))
         return results
 
 
 class DownzaPosition(PositionSpider):
+    """
+    >>>dza = DownzaPosition()
+    >>>dza.run(u'快投')
+    """
+    quanlity = 5 #不能下载 
     charset = 'gb2312'
     domain = "www.downza.cn"
     search_url = "http://www.downza.cn/search?k=%s"
@@ -173,9 +230,15 @@ class DreamsDownPosition(PositionSpider):
 
 
 class AnZhiPosition(PositionSpider):
+    """
+    >>>anzhi = AnZhiPosition()
+    >>>anzhi.run(u'去哪儿')
+    """
+    quality = 10
     domain = "www.anzhi.com"
     search_url = "http://www.anzhi.com/search.php?keyword=%s&x=0&y=0"
     xpath = "//span[@class='app_name']/a"
+    down_url = "http://www.anzhi.com/dl_app.php?s=1763314&n=5"
 
     def run(self, appname):
         results = []
@@ -189,6 +252,13 @@ class AnZhiPosition(PositionSpider):
 
 
 class AngeeksPosition(PositionSpider):
+    """
+    >>>angeek = AngeeksPosition()
+    >>>angeek.run(u'飞机')
+    """
+    #验证下载个数
+    charset = 'gbk'
+    qunlity = 10 
     domain = "www.angeeks.com"
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=29&y=15"
     xpath = "//dd/div[@class='info']/a"
@@ -200,15 +270,21 @@ class AngeeksPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
+            print title
             results.append((link, title))
         return results
 
 
 class JiQiMaoPosition(PositionSpider):
+    """
+    >>>jiqimao = JiQiMaoPosition()
+    >>>jiqimao.run(u'金银岛')
+    """
+    quality = 10
     domain = "jiqimao.com"
     search_url = "http://jiqimao.com/search/index?a=game&w=%s"
     search_url2 = "http://jiqimao.com/search/index?a=soft&w=%s"
-    xpath = "//div[@class='applist']/li/a"
+    xpath = "//div[@class='applist']/ul/li/a"
 
     def run(self, appname):
         results = []
@@ -216,7 +292,8 @@ class JiQiMaoPosition(PositionSpider):
         etree2 = self.send_request(appname, url=self.search_url2)
         items = etree.xpath(self.xpath)
         items2 = etree2.xpath(self.xpath)
-        for item in items.extend(items2):
+        items.extend(items2)
+        for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
@@ -877,5 +954,30 @@ if __name__ == "__main__":
     #maoren8 = MaoRen8Position()
     #print maoren8.run(u'全民水浒')
 
-    ruan8 = Ruan8Position()
-    print ruan8.run(u'360')
+    #ruan8 = Ruan8Position()
+    #print ruan8.run(u'360')
+
+    #gd = GameDogPosition()
+    #print gd.run(u'刀塔传奇')
+
+    #mm10086 = Mm10086Position()
+    #print mm10086.run(u'街头足球')
+
+    #p520apk = Position520Apk()
+    #print p520apk.run(u'QQ部落')
+
+    #apk3 = Apk3Position()
+    #print apk3.run(u'刷机精灵')
+
+    #dza = DownzaPosition()
+    #print dza.run(u'快投')
+
+    #anzhi = AnZhiPosition()
+    #print anzhi.run(u'去哪儿')
+
+    #angeek = AngeeksPosition()
+    #print angeek.run(u'飞机')
+
+    jiqimao = JiQiMaoPosition()
+    print jiqimao.run(u'金银岛')
+

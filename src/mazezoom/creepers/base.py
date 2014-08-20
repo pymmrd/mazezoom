@@ -45,10 +45,10 @@ class PositionSpider(object):
         except urllib2.HTTPError, e:
             print e
             if e.code == 503:
-                time.sleep(30)
+                time.sleep(0.1)
                 content = self.tryAgain(req, 0)
         except:
-            time.sleep(30)
+            time.sleep(0.1)
             content = self.tryAgain(req, 0)
         return content
 
@@ -85,7 +85,10 @@ class PositionSpider(object):
         url = self.search_url if url is None else url
         if data is None:
             #GET 请求
-            quote_app = self.quote_args(appname)
+            if self.charset == DEFAULT_CHARSET:
+                quote_app = appname.encode(self.charset)
+            else:
+                quote_app = self.quote_args(appname)
             url = url % quote_app
         else:
             data = urllib.urlencode(data)
