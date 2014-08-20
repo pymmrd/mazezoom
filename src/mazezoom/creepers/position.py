@@ -11,7 +11,6 @@
     3. 获取软件的下载地址.
     4. 下载软件进行md5值匹配.
 """
-
 from base import PositionSpider
 
 
