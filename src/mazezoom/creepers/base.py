@@ -103,3 +103,7 @@ class PositionSpider(CreeperBase):
         接口子类实现
         """
         pass
+
+
+class ChannelSpider(CreeperBase):
+    pass

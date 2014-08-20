@@ -17,17 +17,14 @@ from base import PositionSpider
 class OyksoftPosition(PositionSpider):
     """
     >>>oyk = OyksoftPosition()
-    >>>oyk.run(u'刀塔传奇')
+    >>>oyk.run(u'腾讯手机管家')
     """
     domain = "www.oyksoft.com"
     charset = 'gbk'  # 对传入的appname以此字符集进行编码
-    search_url = "http://www.oyksoft.com/GoogleSearch.html?q=%s"
-    base_xpath = ("//table[@class='gsc-table-result']/tbody/"
-                  "tr/td[@class='gsc-table-cell-snippet-close']")
-    title_xpath = ("child::div[@class='gs-title gsc-table-cell-thumbnail"
-                   " gsc-thumbnail-left']/a[@class='gs-title']")
-    link_xpath = ("child::div[@class='gs-title gsc-table-cell-thumbnail"
-                  " gsc-thumbnail-left']/a[@class='gs-title']/@href")
+    search_url = "http://www.oyksoft.com/search.asp?action=s&sType=ResName&keyword=%s"
+    base_xpath = "//div[@class='searched']/div[@class='title']"
+    link_xpath = "child::a/strong"
+    andorid_token = 'Android'
 
     def run(self, appname):
         results = []
@@ -35,9 +32,13 @@ class OyksoftPosition(PositionSpider):
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         for item in items:
-            link = item.xpath(self.link_xpath)[0]
-            title = item.xpath(self.title_xpath)[0].text_content()
-            results.append((link, title))
+            strong = item.xpath(self.link_xpath)[0]
+            parent = strong.getparent()
+            link = self.normalize_url(self.search_url, parent.attrib['href'])
+            title = item.text_content()
+            if self.andorid_token in title:
+                print title
+                results.append((link, title))
         return results
 
 
@@ -47,7 +48,7 @@ class GameDogPosition(PositionSpider):
     >>>gd.run(u'刀塔传奇')
     """
 
-    quality = 10
+    quanlity = 10
     domain = "www.gamedog.cn"
     search_url = ("http://zhannei.gamedog.cn/cse/search"
                   "?s=10392184185092281050&entry=1&q=%s")
@@ -70,7 +71,7 @@ class Position365(PositionSpider):
     >>>p365 = Position365()
     >>>p365.run(u'金蝶KIS')
     """
-    quality = 4
+    quanlity = 4
     charset = 'gbk'
     domain = "www.365xz8.cn"
     search_url = "http://www.365xz8.cn/soft/search.asp?act=topic&keyword=%s"
@@ -93,7 +94,7 @@ class Mm10086Position(PositionSpider):
     >>>mm10086 = Mm10086Position()
     >>>mm10086.run(u'街头足球')
     """
-    quality = 10
+    quanlity = 10
     domain = "mm.10086.cn"
     search_url = "http://mm.10086.cn/searchapp?dt=android&advanced=0&st=3&q=%s"
     xpath = "//dd[@class='sr_searchListConTt']/h2/a"
@@ -117,7 +118,7 @@ class Hack50Positon(PositionSpider):
     >>>hack50 = Hack50Positon()
     >>>hack50.run(u'qq')
     """
-    quality = 4
+    quanlity = 4
     domain = "www.hack50.com"
     charset = 'gbk'
     search_url = ("http://so.hack50.com/cse/search"
@@ -140,7 +141,7 @@ class Position520Apk(PositionSpider):
     >>>p520apk = Position520Apk()
     >>>p520apk.run(u'QQ部落')
     """
-    quality = 7
+    quanlity = 7
     domain = "www.520apk.com"
     search_url = ("http://search.520apk.com/cse/search"
                   "?s=17910776473296434043&q=%s")
@@ -170,7 +171,7 @@ class Apk3Position(PositionSpider):
     >>>apk3 = Apk3Position()
     >>>apk3.run(u'刷机精灵')
     """
-    quality = 10
+    quanlity = 10
     charset = 'gb2312'
     domain = "www.apk3.com"
     search_url = "http://www.apk3.com/search.asp?m=2&s=0&word=%s&x=0&y=0"
@@ -245,7 +246,7 @@ class AnZhiPosition(PositionSpider):
     >>>anzhi = AnZhiPosition()
     >>>anzhi.run(u'去哪儿')
     """
-    quality = 10
+    quanlity = 10
     domain = "www.anzhi.com"
     search_url = "http://www.anzhi.com/search.php?keyword=%s&x=0&y=0"
     xpath = "//span[@class='app_name']/a"
@@ -269,7 +270,7 @@ class AngeeksPosition(PositionSpider):
     """
     #验证下载个数
     charset = 'gbk'
-    qunlity = 10
+    quanlity = 10
     domain = "www.angeeks.com"
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=29&y=15"
     xpath = "//dd/div[@class='info']/a"
@@ -291,7 +292,7 @@ class JiQiMaoPosition(PositionSpider):
     >>>jiqimao = JiQiMaoPosition()
     >>>jiqimao.run(u'金银岛')
     """
-    quality = 10
+    quanlity = 10
     domain = "jiqimao.com"
     search_url = "http://jiqimao.com/search/index?a=game&w=%s"
     search_url2 = "http://jiqimao.com/search/index?a=soft&w=%s"
@@ -357,7 +358,7 @@ class SjapkPosition(PositionSpider):
     >>>sjapk = SjapkPosition()
     >>>sjapk.run(u'喜羊羊之灰太狼闯关')
     """
-    quality = 10
+    quanlity = 10
     charset = 'gb2312'
     domain = "www.sjapk.com"
     search_url = "http://www.sjapk.com/Search.asp"
@@ -380,6 +381,7 @@ class CoolApkPosition(PositionSpider):
     >>>coolapk = CoolApkPosition()
     >>>coolapk.run(u'刀塔传奇')
     """
+    quanlity = 10
     domain = "www.coolapk.com"
     search_url = "http://www.coolapk.com/search?q=%s"
     xpath = ("//ul[@class='media-list ex-card-app-list']"
@@ -523,6 +525,7 @@ class CrossmoPosition(PositionSpider):
     >>>cs = CrossmoPosition()
     >>>cs.run(u'LT来电报号')
     """
+    quanlity = 10
     domain = "www.crossmo.com"
     search_url = ("http://soft.crossmo.com/soft_default.php"
                   "?act=search&searchkey=%s")
@@ -569,10 +572,11 @@ class ShoujiBaiduSpider(PositionSpider):
     >>>shouji = ShoujiBaiduSpider()
     >>>shouji.run(u'HOT市场')
     """
+    quanlity = 10
     domain = "shouji.baidu.com"
     search_url = ("http://shouji.baidu.com/s"
                   "?wd=%s&data_type=app&"
-                  "f=header_software%40input%40btn_search"
+                  "f=header_software@input@btn_search"
                   "&from=web_alad_5")
     xpath = "//div[@class='top']/a[@class='app-name']"
 
@@ -581,9 +585,10 @@ class ShoujiBaiduSpider(PositionSpider):
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = item.attrib['href']
+            link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            if appname in title:
+                results.append((link, title))
         return results
 
 
@@ -592,6 +597,7 @@ class Position7xz(PositionSpider):
     >>>p7xz = Position7xz()
     >>>p7xz.run(u'极品飞车13')
     """
+    quanlity = 10
     domain = "www.7xz.com"
     search_url = "http://www.7xz.com/search?q=%s"
     xpath = "//div[@class='caption']/ul/li/a[@class='a2']"
@@ -612,6 +618,7 @@ class PC6Position(PositionSpider):
     >>>pc6 = PC6Position()
     >>>pc6.run(u'弹跳忍者')
     """
+    quanlity = 10
     charset = "gb2312"
     domain = "www.pc6.com"
     search_url = "http://so.pc6.com/?keyword=%s"
@@ -633,6 +640,7 @@ class Position3533(PositionSpider):
     >>>p3533 = Position3533()
     >>>p3533.run(u'功夫西游')
     """
+    quanlity = 10
     domain = "www.3533.com"
     search_url = "http://search.3533.com/software?keyword=%s"
     search_url1 = "http://search.3533.com/game?keyword=%s"
@@ -657,6 +665,7 @@ class Apk8Position(PositionSpider):
     >>>apk8 = Apk8Position()
     >>>apk8.run(u'天天跑酷')
     """
+    quanlity = 10
     domain = "www.apk8.com"
     search_url = "http://www.apk8.com/search.php"
     xpath = "//div[@class='main_search_pic']/ul/li/strong/a"
@@ -680,6 +689,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
     >>>xzzj.run(u'微信')
     """
 
+    quanlity = 10
     charset = 'gb2312'
     domain = "www.xiazaizhijia.com"
     search_url = ("http://www.xiazaizhijia.com/search.php"
@@ -702,6 +712,7 @@ class CngbaPosition(PositionSpider):
     >>>cngba = CngbaPosition()
     >>>cngba.run(u'名将决')
     """
+    quanlity = 10
     charset = "gb2312"
     domain = "www.cngba.com"
     search_url = "http://down.cngba.com/script/search.php?keyword=%s"
@@ -969,8 +980,8 @@ class XtzhongdaPosition(PositionSpider):
 
 
 if __name__ == "__main__":
-    #oyk = OyksoftPosition()
-    #print oyk.run(u'迅雷')
+    oyk = OyksoftPosition()
+    print oyk.run(u'腾讯手机管家')
 
     #p7xz = Position7xz()
     #print p7xz.run(u'极品飞车13')
@@ -1039,5 +1050,12 @@ if __name__ == "__main__":
 
     #downbank = DownBankPosition()
     #print downbank.run(u'金山毒霸')
-    cs = CrossmoPosition()
-    print cs.run(u'LT来电报号')
+
+    #cs = CrossmoPosition()
+    #print cs.run(u'LT来电报号')
+
+    #shouji = ShoujiBaiduSpider()
+    #print shouji.run(u'HOT市场')
+
+    #p7xz = Position7xz()
+    #print p7xz.run(u'刀塔传奇')
