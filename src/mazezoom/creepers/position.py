@@ -1,4 +1,16 @@
 # -*- coding:utf-8 -*-
+#Author: zoug
+#Email: b.zougang@gmail.com
+#Date: 2014/08/18
+
+"""
+渠道搜索爬虫：
+    1. 以各渠道的搜索作为入口,输入应用程序名称进行搜索，
+       支持GET和POST请求,对特定渠道需要伪装headers.
+    2. 各渠道搜索质量不一，可以加入各种特征进行准确定位.
+    3. 获取软件的下载地址.
+    4. 下载软件进行md5值匹配.
+"""
 
 from base import PositionSpider
 
@@ -6,10 +18,10 @@ from base import PositionSpider
 class OyksoftPosition(PositionSpider):
     """
     >>>oyk = OyksoftPosition()
-    >>>
+    >>>oyk.run(u'刀塔传奇')
     """
     domain = "www.oyksoft.com"
-    charset = 'gbk'
+    charset = 'gbk'  # 对传入的appname以此字符集进行编码
     search_url = "http://www.oyksoft.com/GoogleSearch.html?q=%s"
     base_xpath = ("//table[@class='gsc-table-result']/tbody/"
                   "tr/td[@class='gsc-table-cell-snippet-close']")
@@ -53,25 +65,25 @@ class GameDogPosition(PositionSpider):
         return results
 
 
-class Positon365(PositionSpider):
+class Position365(PositionSpider):
     """
     pc端下载资源
     >>>p365 = Position365()
     >>>p365.run(u'金蝶KIS')
-    
     """
-    quality = 4 
+    quality = 4
     charset = 'gbk'
     domain = "www.365xz8.cn"
     search_url = "http://www.365xz8.cn/soft/search.asp?act=topic&keyword=%s"
     xpath = "//div[@class='searchTopic']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = item.attrib['href']
+            link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
         return results
@@ -134,8 +146,8 @@ class Position520Apk(PositionSpider):
     search_url = ("http://search.520apk.com/cse/search"
                   "?s=17910776473296434043&q=%s")
     xpath = "//h3[@class='c-title']/a"
-    url_token = '/android/' #通过url token进一步准确定位
-    down_xpath = [ #跳转入detail
+    url_token = '/android/'  # 通过url token进一步准确定位
+    down_xpath = [  # 跳转入detail
         "//a[@class='icon_downbd']/@href",
         "//a[@class='icon_downdx']/@href",
         "//a[@class='icon_downlt']/@href",
@@ -164,7 +176,7 @@ class Apk3Position(PositionSpider):
     domain = "www.apk3.com"
     search_url = "http://www.apk3.com/search.asp?m=2&s=0&word=%s&x=0&y=0"
     xpath = "//div[@class='searchTopic']/a"
-    down_xpath = "//ul[@class='downlistbox']/li/a" # Detail
+    down_xpath = "//ul[@class='downlistbox']/li/a"  # Detail
 
     def run(self, appname):
         results = []
@@ -184,7 +196,7 @@ class DownzaPosition(PositionSpider):
     >>>dza = DownzaPosition()
     >>>dza.run(u'快投')
     """
-    quanlity = 5 #不能下载 
+    quanlity = 5  # 不能下载
     charset = 'gb2312'
     domain = "www.downza.cn"
     search_url = "http://www.downza.cn/search?k=%s"
@@ -258,7 +270,7 @@ class AngeeksPosition(PositionSpider):
     """
     #验证下载个数
     charset = 'gbk'
-    qunlity = 10 
+    qunlity = 10
     domain = "www.angeeks.com"
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=29&y=15"
     xpath = "//dd/div[@class='info']/a"
@@ -301,9 +313,15 @@ class JiQiMaoPosition(PositionSpider):
 
 
 class IappsPosition(PositionSpider):
+    """
+    IOS渠道
+    >>>iapps = IappsPosition()
+    >>>iapps.run(u'没有刹车')
+    """
     domain = "www.iapps.com"
     search_url = "http://www.iapps.im/search/%s"
     xpath = "//h2[@class='entry-title']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -321,6 +339,7 @@ class MaoRen8Position(PositionSpider):
     domain = "www.maoren8.com"
     search_url = "http://www.maoren8.com/searcher/"
     xpath = "//div[@id='card_box_list']/ul/li/div[@class='card_title']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -335,6 +354,11 @@ class MaoRen8Position(PositionSpider):
 
 
 class SjapkPosition(PositionSpider):
+    """
+    >>>sjapk = SjapkPosition()
+    >>>sjapk.run(u'喜羊羊之灰太狼闯关')
+    """
+    quality = 10
     charset = 'gb2312'
     domain = "www.sjapk.com"
     search_url = "http://www.sjapk.com/Search.asp"
@@ -342,7 +366,7 @@ class SjapkPosition(PositionSpider):
 
     def run(self, appname):
         results = []
-        data = {'Key': self.quote_args(appname)}
+        data = {'Key': appname.encode(self.charset)}
         etree = self.send_request(data=data)
         items = etree.xpath(self.xpath)
         for item in items:
@@ -353,9 +377,14 @@ class SjapkPosition(PositionSpider):
 
 
 class CoolApkPosition(PositionSpider):
-    domain = "www.cookapk.com"
+    """
+    >>>coolapk = CoolApkPosition()
+    >>>coolapk.run(u'刀塔传奇')
+    """
+    domain = "www.coolapk.com"
     search_url = "http://www.coolapk.com/search?q=%s"
-    xpath = "//li[@class='media']/div[@class='media-body']/h4/a"
+    xpath = ("//ul[@class='media-list ex-card-app-list']"
+             "/li[@class='media']/div[@class='media-body']/h4/a")
 
     def run(self, appname):
         results = []
@@ -384,13 +413,15 @@ class Position365Nokia(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            if appname in title:
+                results.append((link, title))
         return results
 
 
 class MyFilesPosition(PositionSpider):
 
     """
+    pc渠道
     >>>myfiles = MyFilesPosition()
     >>>myfiles.run(u'驱动精灵')
     """
@@ -399,6 +430,7 @@ class MyFilesPosition(PositionSpider):
     search_url = "http://so.myfiles.com.cn/soft.aspx?q=%s&Submit2="
     xpath = ("//div[@class='rj-list']/div[@class='list1']"
              "/ul/li[@class='rjbt']/a")
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -412,8 +444,8 @@ class MyFilesPosition(PositionSpider):
 
 
 class WapMyPosition(PositionSpider):
-
     """
+    Symbian
     >>>wap = WapMyPosition()
     >>>wap.run(u'360手机卫士')
     """
@@ -421,6 +453,7 @@ class WapMyPosition(PositionSpider):
     domain = "www.wapmy.cn"
     search_url = "http://www.wapmy.cn/wapmys/webmy/search.jsp"
     xpath = "//p[@class='listname']/b/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -435,6 +468,7 @@ class WapMyPosition(PositionSpider):
 
 class DownBankPosition(PositionSpider):
     """
+    PC客户端
     >>>downbank = DownBankPosition()
     >>>downbank.run(u'金山毒霸')
     """
@@ -442,6 +476,7 @@ class DownBankPosition(PositionSpider):
     domain = "www.downbank.cn"
     search_url = "http://www.downbank.cn/search.asp?keyword=%s&x=38&y=10"
     xpath = "//div[@class='searchTopic']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -456,6 +491,7 @@ class DownBankPosition(PositionSpider):
 
 class AndroidZonePosition(PositionSpider):
     """
+    回复后下载
     >>>az = AndroidZonePosition()
     >>>az.run(u'手机QQ')
     """
@@ -468,6 +504,7 @@ class AndroidZonePosition(PositionSpider):
                    "?mod=forum&searchid=204469&orderby=lastpost"
                    "&ascdesc=desc&searchsubmit=yes&kw=%s")
     xpath = "//li[@class='pbw']/h3[@class='xs3']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -732,8 +769,10 @@ class MaoRen8Position2(PositionSpider):
             'Accept-Encoding': 'gzip, deflate',
             'Content-Type': 'application/x-www-form-urlencoded',
             'Connection': 'keep-alive',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'zh-cn,es-ar;q=0.8,fr-be;q=0.6,en-us;q=0.4,en;q=0.2',
+            'Accept': ('text/html,application/xhtml+xml'
+                       ',application/xml;q=0.9,*/*;q=0.8'),
+            'Accept-Language': ('zh-cn,es-ar;q=0.8,fr-be;'
+                                'q=0.6,en-us;q=0.4,en;q=0.2'),
         }
         etree = self.send_request(data=data, headers=headers)
         items = etree.xpath(self.link_xpath)
@@ -978,6 +1017,23 @@ if __name__ == "__main__":
     #angeek = AngeeksPosition()
     #print angeek.run(u'飞机')
 
-    jiqimao = JiQiMaoPosition()
-    print jiqimao.run(u'金银岛')
+    #jiqimao = JiQiMaoPosition()
+    #print jiqimao.run(u'金银岛')
 
+    #p365 = Position365()
+    #print p365.run(u'金蝶KIS')
+
+    #sjapk = SjapkPosition()
+    #print sjapk.run(u'喜羊羊')
+
+    #nokia365 = Position365Nokia()
+    #nokia365.run(u'水果忍者')
+
+    #myfiles = MyFilesPosition()
+    #myfiles.run(u'驱动精灵')
+
+    #coolapk = CoolApkPosition()
+    #print coolapk.run(u'刀塔传奇')
+
+    downbank = DownBankPosition()
+    print downbank.run(u'金山毒霸')

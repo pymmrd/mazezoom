@@ -12,9 +12,7 @@ from lxml.html import fromstring
 from constants import USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET
 
 
-class PositionSpider(object):
-    charset = DEFAULT_CHARSET
-
+class CreeperBase(object):
     def tryAgain(self, req, retries=0):
         """
          尝试最大次数(MAX_RETRY_TIMES)后请求退出
@@ -79,6 +77,10 @@ class PositionSpider(object):
         对传入的参数,按照对应网站charset编码
         """
         return urllib.quote(appname.encode(self.charset))
+
+
+class PositionSpider(CreeperBase):
+    charset = DEFAULT_CHARSET
 
     def send_request(self, appname=None, url=None, data=None, headers=None):
         #按照网站charset编码参数
