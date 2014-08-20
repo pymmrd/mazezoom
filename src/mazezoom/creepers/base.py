@@ -78,6 +78,12 @@ class CreeperBase(object):
         """
         return urllib.quote(appname.encode(self.charset))
 
+    def run(self):
+        """
+        接口子类实现
+        """
+        pass
+
 
 class PositionSpider(CreeperBase):
     charset = DEFAULT_CHARSET
@@ -98,12 +104,18 @@ class PositionSpider(CreeperBase):
         etree = self.get_elemtree(url, data, headers)
         return etree
 
-    def run(self):
-        """
-        接口子类实现
-        """
-        pass
 
 
 class ChannelSpider(CreeperBase):
-    pass
+
+    def send_request(self, url, headers=None):
+
+        if headers is None:
+            headers = {}
+        if 'Host' not in headers:
+            headers['Host'] = self.domain
+        if 'Referer' not in headers:
+            headers['Referer'] = self.domain
+
+        etree = self.get_elemtree(url, headers=headers)
+        return etree
