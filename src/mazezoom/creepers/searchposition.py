@@ -536,6 +536,101 @@ class BkillPosition(PositionSpider):
             print link, title
         return results
 
+class AibalaPosition(PositionSpider):
+    """
+    关注数，列表页与结果页不一致
+    """
+    domain = "www.aibala.com"
+    search_url = "http://www.aibala.com/android-search-1-0-0-%s-1-1"
+    xpath = "//ul[@class='block']/li//div[@class='tabRightTL']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class VmallPosition(PositionSpider):
+    """
+    华为开发者联盟-->华为应用市场
+    """
+    domain = "app.vmall.com"
+    search_url = "http://app.vmall.com/search/%s"
+    xpath = "//div[@class='list-game-app dotline-btn nofloat']/div[@class='game-info  whole']/h4[@class='title']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class YruanPosition(PositionSpider):
+    """
+    搜索结果不区分平台
+    """
+    domain = "www.yruan.com"
+    search_url = "http://www.yruan.com/search.php?keyword=%s"
+    xpath = "//span[@class='item_name']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            print link,title
+            results.append((link, title))
+        return results
+
+class AnzowPosition(PositionSpider):
+    """
+    无下载量
+    """
+    domain = "www.anzow.com"
+    search_url = "http://www.anzow.com/Search.shtml?stype=anzow&q=%s"
+    xpath = "//div[@class='box boxsbg']//dd[@class='down_title']/h2/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            print link,title
+            results.append((link, title))
+        return results
+
+class Xz7Position(PositionSpider):
+    """
+    无下载量
+    """
+    domain = "www.7xz.com"
+    search_url = "http://www.7xz.com/search?q=%s"
+    xpath = "//a[@class='a2']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            print link,title
+            results.append((link, title))
+        return results
+
 if __name__ == "__main__":
     #haipk = HaipkPosition()
     #print haipk.run(u'微信')
@@ -626,3 +721,18 @@ if __name__ == "__main__":
 
     #bkill = BkillPosition()
     #print bkill.run(u'网易')
+
+    #aibala = AibalaPosition()
+    #print aibala.run(u'网易')
+
+    #vmall = VmallPosition()
+    #print vmall.run(u'有道')
+
+    #yruan = YruanPosition()
+    #print yruan.run(u'网易')
+
+    #anzow = AnzowPosition()
+    #print anzow.run(u'网易')
+
+    xz7 = Xz7Position()
+    print xz7.run(u'腾讯')
