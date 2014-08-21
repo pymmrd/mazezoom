@@ -1,15 +1,19 @@
 # -*- coding:utf-8 -*-
 
 #StdLib imports
+import os
 import time
 import random
 import urllib
 import urllib2
+import shortuuid
 import urlparse
+from datetime import datetime
 from lxml.html import fromstring
 
 #From Projects
-from constants import USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET
+from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
+                       POSITION_APP_DIR, CHANNAL_APP_DIR)
 
 
 class CreeperBase(object):
@@ -27,7 +31,7 @@ class CreeperBase(object):
                 content = self.tryAgain(req, retries)
         return content
 
-    def get_content(self, url, data, headers):
+    def get_content(self, url, data=None, headers=None):
         """
         给请求加载USER-AGENT, 获取页面内容，
         """
@@ -105,6 +109,45 @@ class PositionSpider(CreeperBase):
         return etree
 
 
+class DownloadAppSpider(CreeperBase):
+
+    def get_storage(self, is_position=False):
+        today = datetime.today()
+        unique_dir = self.unique_name()
+        if is_position:
+            sub_path = os.path.join(
+                POSITION_APP_DIR,
+                today.strftime('%Y'),
+                today.strftime('%m'),
+                today.strftime('%d'),
+                #unique_dir
+            )
+        else:
+            sub_path = os.path.join(
+                CHANNAL_APP_DIR,
+                today.strftime('%Y'),
+                today.strftime('%m'),
+                today.strftime('%d'),
+                #unique_dir
+            )
+        if not os.path.exists(sub_path):
+            os.makedirs(sub_path)
+        filename = self.unique_name()
+        storage = os.path.join(sub_path, filename)
+        return storage
+
+    def unique_name(self):
+        return shortuuid.uuid()
+
+
+    def run(self, url, domain=None, referer=None, headers=None):
+        storage = self.get_storage()
+        content = self.get_content(url, headers=headers)
+        with open(storage, 'a') as f:
+            f.write(content)
+            f.flush()
+        return storage
+
 
 class ChannelSpider(CreeperBase):
 
@@ -119,3 +162,11 @@ class ChannelSpider(CreeperBase):
 
         etree = self.get_elemtree(url, headers=headers)
         return etree
+
+
+if __name__ == "__main__":
+    url = "http://apps.wandoujia.com/apps/net.myvst.v2/download"
+    domain = "apps.wandoujia.com"
+    referer = "www.oyksoft.com/soft/32456.html"
+    downloader = DownloadAppSpider()
+    print downloader.run(url, domain, referer)
