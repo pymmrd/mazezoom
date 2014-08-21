@@ -47,10 +47,9 @@ class Apk91Position(PositionSpider):
             results.append((link, title))
         return results
 
-#error
 class AngeeksPosition(PositionSpider):
     domain = "apk.angeeks.com"
-    #charset = 'gb2312'
+    charset = 'gb2312'
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=0&y=0"
     xpath = "//div[@class='info']/a"
 
@@ -62,6 +61,7 @@ class AngeeksPosition(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class It168Position(PositionSpider):
@@ -98,18 +98,23 @@ class PcHomePosition(PositionSpider):
 
 #error
 class QQPosition(PositionSpider):
+    """
+    Ajax
+    """
     domain = "sj.qq.com"
-    search_url = "http://sj.qq.com/myapp/search.htm?kw=%s"
-    xpath = "//a[@class='appName']"
+    #search_url = "http://sj.qq.com/myapp/search.htm?kw=%s"
+    search_url = "http://sj.qq.com/myapp/searchAjax.htm?kw=%E7%BD%91%E6%98%93&pns=&sid="
+    xpath = "//a"
 
     def run(self, appname):
         results = []
-        etree = self.send_request(appname)
+	etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class MumayiPosition(PositionSpider):
@@ -291,13 +296,14 @@ class LiqucnPosition(PositionSpider):
             results.append((link, title))
         return results
 
-#erro英文有结果，中文没有结果
 class CrskyPosition(PositionSpider):
+    """
+    搜索结果比页面展示条目要少
+    """
     domain = "www.crsky.com"
     charset = 'gb2312'
     search_url = "http://sj.crsky.com/query.aspx?keyword=%s&type=android"
-    #xpath = "//div[@class='list_block app_wrap']//div[@class='right']//a"
-    xpath = "//a"
+    xpath = "//div[@class='right']//a"
 
     def run(self, appname):
         results = []
@@ -307,6 +313,7 @@ class CrskyPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class DPosition(PositionSpider):
@@ -324,6 +331,43 @@ class DPosition(PositionSpider):
             results.append((link, title))
         return results
 
+class AndroidcnPosition(PositionSpider):
+    """
+    应用、游戏、资讯、壁纸、主题使用不同二级域名
+    列表页与结果页下载次数不一致
+    """
+    domain = "www.androidcn.com"
+    search_url = "http://down.androidcn.com/search/q/%s"
+    xpath = "//div[@class='app-info']/h2/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class ApkcnPosition(PositionSpider):
+    domain = "www.apkcn.com"
+    search_url = "http://www.apkcn.com/search/"
+    xpath = "//div[@class='box']/div[@class='post indexpost']/h3/a"
+
+    def run(self, appname):
+        results = []
+        data = {'keyword': appname.encode(self.charset), 'select': 'all'}
+        etree = self.send_request(data=data)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
 if __name__ == "__main__":
     #haipk = HaipkPosition()
     #print haipk.run(u'微信')
@@ -335,7 +379,7 @@ if __name__ == "__main__":
     #print apk91.run(u'微信')
 
     #angeeks = AngeeksPosition()
-    #print angeeks.run(u'微信')
+    #print angeeks.run(u'刀塔')
     
     #it168 = It168Position()
     #print it168.run(u'微信')
@@ -344,7 +388,7 @@ if __name__ == "__main__":
     #print pchome.run(u'微信')
 
     #qq = QQPosition()
-    #print qq.run(u'网易')
+    #print qq.run(u'qq')
 
     #mumayi = MumayiPosition()
     #print mumayi.run(u'微信')
@@ -380,7 +424,13 @@ if __name__ == "__main__":
     #print liqucn.run(u'腾讯')
 
     #crsky = CrskyPosition()
-    #print crsky.run(u'网易')
+    #print crsky.run(u'腾讯')
  
-    d = DPosition()
-    print d.run(u'网易')
+    #d = DPosition()
+    #print d.run(u'网易')
+
+    #androidcn = AndroidcnPosition()
+    #print androidcn.run(u'腾讯')
+
+    #apkcn = ApkcnPosition()
+    #print apkcn.run(u'腾讯')
