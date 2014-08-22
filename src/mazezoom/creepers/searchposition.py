@@ -19,6 +19,11 @@ class HaipkPosition(PositionSpider):
         return results
 
 class GfanPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    评分次数
+    位置：    信息页
+    """
     domain = "apk.gfan.com"
     search_url = "http://apk.gfan.com/search?q=%s"
     xpath = "//span[@class='apphot-tit']/a"
@@ -34,21 +39,36 @@ class GfanPosition(PositionSpider):
         return results
 
 class Apk91Position(PositionSpider):
+    """
+    下载次数：否
+    备选：    好评差评次数
+    位置：    信息页
+    搜索：    分类搜索
+    """
     domain = "apk.gfan.com"
     search_url = "http://apk.91.com/soft/android/search/1_5_0_0_%s"
+    search_url1 = "http://apk.91.com/game/android/search/1_5_%s"
     xpath = "//div[@class='zoom']/h4/a"
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class AngeeksPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "apk.angeeks.com"
     charset = 'gb2312'
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=0&y=0"
@@ -66,6 +86,11 @@ class AngeeksPosition(PositionSpider):
         return results
 
 class It168Position(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    搜索：    结果不区分平台
+    """
     domain = "down.it168.com"
     charset = 'gb2312'
     search_url = "http://down.it168.com/soft_search.html?keyword=%s"
@@ -82,6 +107,11 @@ class It168Position(PositionSpider):
         return results
 
 class PcHomePosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    搜索：    不区分平台
+    """
     domain = "download.pchome.net"
     #charset = 'gbk'
     search_url = "http://download.pchome.net/search-%s---0-1.html"
@@ -99,6 +129,8 @@ class PcHomePosition(PositionSpider):
 
 class QQPosition(PositionSpider):
     """
+    下载次数：是
+    位置：    信息页
     Json,Ajax,目前搜索结果只能取到前10个
     """
     domain = "sj.qq.com"
@@ -121,6 +153,10 @@ class QQPosition(PositionSpider):
         return results
 
 class MumayiPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    列表页
+    """
     domain = "android.mumayi.com"
     search_url = "http://s.mumayi.com/index.php?q=%s"
     xpath = "//ul[@class='applist']//h3[@class='hidden']/a"
@@ -135,7 +171,12 @@ class MumayiPosition(PositionSpider):
             results.append((link, title))
         return results
 
+#安卓频道跳转到百度手机助手
 class SkycnPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "www.skycn.com"
     search_url = "http://shouji.baidu.com/s?wd=%s&data_type=app&from=as"
     xpath = "//a[@class='app-name']"
@@ -151,6 +192,10 @@ class SkycnPosition(PositionSpider):
         return results
 
 class ZolPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "sj.zol.com.cn"
     charset = 'gbk'
     search_url = "http://xiazai.zol.com.cn/search?wd=%s&type=1"
@@ -167,6 +212,10 @@ class ZolPosition(PositionSpider):
         return results
 
 class SinaPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "tech.sina.com.cn"
     charset = 'gb2312'
     search_url = "http://down.tech.sina.com.cn/3gsoft/iframelist.php?classid=0&keyword=%s&tag=&osid=4"
@@ -183,6 +232,10 @@ class SinaPosition(PositionSpider):
         return results
 
 class DuotePosition(PositionSpider):
+    """
+    下载次数：是(人气)
+    位置：    信息页
+    """
     domain = "www.duote.com"
     charset = 'gb2312'
     search_url = "http://www.duote.com/searchPhone.php?searchType=&so=%s"
@@ -199,6 +252,10 @@ class DuotePosition(PositionSpider):
         return results
 
 class ImobilePosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "www.imobile.com.cn"
     search_url = "http://app.imobile.com.cn/android/search/%s.html"
     xpath = "//ul[@class='ranking_list']/li/div[@class='ico']/h3/a"
@@ -214,22 +271,35 @@ class ImobilePosition(PositionSpider):
         return results
 
 class ApkzuPosition(PositionSpider):
+    """
+    下载次数：是(人气)
+    位置：    信息页
+    """
     domain = "www.apkzu.com"
     charset = 'gb2312'
     search_url = "http://www.apkzu.com/search.asp?k=%s&c=1"
+    search_url1 = "http://www.apkzu.com/search.asp?k=%s&c=2"
     xpath = "//div[@class='recList']/div[@class='recSinW btmLine1']/dl/dt/a"
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class NduoaPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "www.nduoa.com"
     search_url = "http://www.nduoa.com/search?q=%s"
     xpath = "//ul[@class='apklist clearfix']//div[@class='name']/a"
@@ -245,6 +315,10 @@ class NduoaPosition(PositionSpider):
         return results
 
 class Android115Position(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "www.155.cn"
     charset = 'gb2312'
     search_url = "http://android.155.cn/search.php?kw=%s&index=soft"
