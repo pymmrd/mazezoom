@@ -16,7 +16,27 @@ from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
                        POSITION_APP_DIR, CHANNAL_APP_DIR)
 
 
+class RegisterSubClass(type):
+    def __init__(cls, name, bases, attrs):
+        try:
+            if PositionSpider in bases:
+                if not hasattr(cls, 'abstract'):
+                    if not hasattr(PositionSpider, 'subclass'):
+                        PositionSpider.subclass = []
+                    PositionSpider.subclass.append(cls)
+
+            if ChannelSpider in bases:
+                if not hasattr(ChannelSpider, 'subclass'):
+                    ChannelSpider.subclass = []
+                ChannelSpider.subclass.append(cls)
+        except NameError:
+            pass
+
+
 class CreeperBase(object):
+
+    __metaclass__ = RegisterSubClass
+
     def tryAgain(self, req, retries=0):
         """
          尝试最大次数(MAX_RETRY_TIMES)后请求退出
@@ -113,7 +133,6 @@ class DownloadAppSpider(CreeperBase):
 
     def get_storage(self, is_position=False):
         today = datetime.today()
-        unique_dir = self.unique_name()
         if is_position:
             sub_path = os.path.join(
                 POSITION_APP_DIR,
@@ -138,7 +157,6 @@ class DownloadAppSpider(CreeperBase):
 
     def unique_name(self):
         return shortuuid.uuid()
-
 
     def run(self, url, domain=None, referer=None, headers=None):
         storage = self.get_storage()
