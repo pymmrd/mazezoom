@@ -631,6 +631,93 @@ class Xz7Position(PositionSpider):
             results.append((link, title))
         return results
 
+class WandoujiaPosition(PositionSpider):
+    """
+    安装次数
+    """
+    domain = "www.wandoujia.com"
+    search_url = "http://www.wandoujia.com/search?key=%s"
+    xpath = "//ul[@id='j-search-list']/li[@class='card']/div[@class='app-desc']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            print link,title
+            results.append((link, title))
+        return results
+
+class Android159Position(PositionSpider):
+    """
+    机客网安卓市场
+    应用和游戏分类搜索
+    """
+    domain = "android.159.com"
+    charset = 'gb2312'
+    search_url = "http://2013.159.com/appshop/appsoftSearch.aspx?keyword=%s&MobleBrandTypeId=3170&submit=搜索"
+    search_url1 = "http://2013.159.com/appshop/appgameSearch.aspx?keyword=%s&MobleBrandTypeId=3170&submit=搜索"
+    xpath = "//div[@class='typecontent_title f14 appzp6 flod']/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class Position3533(PositionSpider):
+    """
+    应用、游戏、主题、壁纸分类搜索，无下载量，列表页不区分平台，结果页包含多种平台下载地址
+    """
+    domain = "www.3533.com"
+    search_url = "http://search.3533.com/software?keyword=%s"
+    search_url1 = "http://search.3533.com/game?keyword=%s"
+    xpath = "//div[@class='applist']/ul/li//div[@class='appinfo']/a[@class='apptit']"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class MuzisoftPosition(PositionSpider):
+    """
+    网站做得很烂，页面经常有错误
+    """
+    domain = "www.muzisoft.com"
+    charset = 'gb2312'
+    search_url = "http://www.muzisoft.com/plus/search.php?kwtype=0&q=%s&imageField.x=0&imageField.y=0"
+    xpath = "//div[@class='searchitem']//dt/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
 if __name__ == "__main__":
     #haipk = HaipkPosition()
     #print haipk.run(u'微信')
@@ -734,5 +821,17 @@ if __name__ == "__main__":
     #anzow = AnzowPosition()
     #print anzow.run(u'网易')
 
-    xz7 = Xz7Position()
-    print xz7.run(u'腾讯')
+    #xz7 = Xz7Position()
+    #print xz7.run(u'腾讯')
+
+    #wandoujia = WandoujiaPosition()
+    #print wandoujia.run(u'网易')
+
+    #android159 = Android159Position()
+    #print android159.run(u'qq')
+
+    #p3533 = Position3533()
+    #print p3533.run(u'网易')
+
+    #muzisoft = MuzisoftPosition()
+    #print muzisoft.run(u'网易')
