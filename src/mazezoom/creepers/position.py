@@ -25,6 +25,24 @@ class OyksoftPosition(PositionSpider):
     base_xpath = "//div[@class='searched']/div[@class='title']"
     link_xpath = "child::a/strong"
     andorid_token = 'Android'
+    times_xpath = "//div[@class='softjj']/a[@class='listdbt']/text()"
+
+    def download_times(self, title):
+        """
+        总下载次数：2444
+        """
+        seperator = "："
+        etree = self.send_request(title)
+        item = etree.xpath(self.times_xpath)
+        times = None
+        if item:
+            item = item[0]
+            try:
+                times = item.split(seperator)[-1]
+            except (TypeError, IndexError, ValueError):
+                pass
+        return times
+    
 
     def run(self, appname):
         results = []
@@ -53,6 +71,7 @@ class GameDogPosition(PositionSpider):
     search_url = ("http://zhannei.gamedog.cn/cse/search"
                   "?s=10392184185092281050&entry=1&q=%s")
     xpath = "//a[@class='result-game-item-title-link']"
+    android = u'安卓版'
 
     def run(self, appname):
         results = []
@@ -61,7 +80,8 @@ class GameDogPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
+            if self.android in title:
+                results.append((link, title))
         return results
 
 
@@ -97,17 +117,24 @@ class Mm10086Position(PositionSpider):
     quanlity = 10
     domain = "mm.10086.cn"
     search_url = "http://mm.10086.cn/searchapp?dt=android&advanced=0&st=3&q=%s"
-    xpath = "//dd[@class='sr_searchListConTt']/h2/a"
-    down_xpath = "//dd[@class='sr_searchListConTt']/a/@href"
+    base_xpath = "//dd[@class='sr_searchListConTt']"
+    xpath = "child::h2/a"
+    down_xpath = "child::a/@href"
+
+    def download_app(self, url):
+        pass
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
+            item = item.xpath(self.xpath)
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             if appname in title:
+                down_link = item.xpath(self.down_xpath)[0] 
+                down_link = self.normalize_url(self.search_url, down_link) 
                 results.append((link, title))
         return results
 

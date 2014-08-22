@@ -153,20 +153,25 @@ class ChannelSpider(CreeperBase):
 
     def send_request(self, url, headers=None):
 
-        if headers is None:
-            headers = {}
-        if 'Host' not in headers:
-            headers['Host'] = self.domain
-        if 'Referer' not in headers:
-            headers['Referer'] = self.domain
-
+        #if headers is None:
+        #    headers = {}
+        #if 'Host' not in headers:
+        #    headers['Host'] = self.domain
+        #if 'Referer' not in headers:
+        #    headers['Referer'] = self.domain
         etree = self.get_elemtree(url, headers=headers)
         return etree
 
+    def download_app(self, url):
+        downloader = DownloadAppSpider()
+        storage = downloader.run(url)
+        return storage
+
 
 if __name__ == "__main__":
-    url = "http://apps.wandoujia.com/apps/net.myvst.v2/download"
+    #url = "http://apps.wandoujia.com/apps/net.myvst.v2/download"
+    url = "http://pc1.gamedog.cn/big/online/juese/233490/tiantianaixiyouyxdog_an.apk"
     domain = "apps.wandoujia.com"
     referer = "www.oyksoft.com/soft/32456.html"
     downloader = DownloadAppSpider()
-    print downloader.run(url, domain, referer)
+    print downloader.run(url)
