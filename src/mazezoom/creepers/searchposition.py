@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import json
 from base import PositionSpider
 
 class HaipkPosition(PositionSpider):
@@ -96,23 +97,25 @@ class PcHomePosition(PositionSpider):
             results.append((link, title))
         return results
 
-#error
 class QQPosition(PositionSpider):
     """
-    Ajax
+    Json,Ajax,目前搜索结果只能取到前10个
     """
     domain = "sj.qq.com"
-    #search_url = "http://sj.qq.com/myapp/search.htm?kw=%s"
-    search_url = "http://sj.qq.com/myapp/searchAjax.htm?kw=%E7%BD%91%E6%98%93&pns=&sid="
-    xpath = "//a"
+    search_url = "http://sj.qq.com/myapp/searchAjax.htm?kw=%s&pns=&sid="
+    detail_url = "http://sj.qq.com/myapp/detail.htm?apkName=%s"
 
     def run(self, appname):
         results = []
-	etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
+        quote_app = self.quote_args(appname)
+        url = self.search_url % quote_app
+        content = self.get_content(url)
+        output = json.loads(content)    #output['obj']['appDetails'][0].keys()
+        appList = output['obj']['appDetails']
+        for app in appList:
+            link = self.detail_url % app['pkgName']
+            title = app['appName']
+            #downcount = app['appDownCount']
             results.append((link, title))
             print link, title
         return results
@@ -393,7 +396,7 @@ class ShoujiPosition(PositionSpider):
     search_url = (
         "http://soft.shouji.com.cn/sort/search.jsp"
         "?html=soft"
-        "&phone=100060" #100060代表安卓平台
+        "&phone=100060"    #100060代表安卓平台
         "&inputname=soft"
         "&softname=%s"
         "&thsubmit=搜索"
@@ -414,7 +417,6 @@ class ShoujiPosition(PositionSpider):
         etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
         items2 = etree2.xpath(self.xpath)
-        #items.extend(items2)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
@@ -427,23 +429,23 @@ class ShoujiPosition(PositionSpider):
             print link, title
         return results
 
-#error
 class Mobile1Position(PositionSpider):
     """
-    json
+    json返回数据
     """
     domain = "www.1mobile.tw"
-    #search_url = "http://www.1mobile.tw/index.php?c=search.index&keywords=%s"
     search_url = "http://www.1mobile.tw/index.php?c=search.json&keywords=%s&page=1"
-    xpath = "//div[@class='list_item']//a"
 
     def run(self, appname):
         results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
+        quote_app = self.quote_args(appname)
+        url = self.search_url % quote_app
+        content = self.get_content(url)
+        output = json.loads(content)
+        appList = output['appList']
+        for app in appList:
+            link = app['appLink']
+            title = app['appTitle']
             results.append((link, title))
             print link, title
         return results
@@ -523,7 +525,7 @@ class BkillPosition(PositionSpider):
             'area': 'name',
             'category': '0',
             'field[condition]': 'Android',
-            'order': 'downcount', #updatetime
+            'order': 'downcount',    #updatetime
             'submit': '搜 索',
             'way': 'DESC'
         }
@@ -718,6 +720,47 @@ class MuzisoftPosition(PositionSpider):
             print link, title
         return results
 
+class Position7613(PositionSpider):
+    """
+    搜索结果不区分平台，无下载量
+    """
+    domain = "www.7613.com"
+    charset = 'gb2312'
+    search_url = "http://www.7613.com/search.asp?keyword=%s"
+    xpath = "//table[@id='senfe']/tbody/tr/td[3]//a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+class BaicentPosition(PositionSpider):
+    """
+    搜索结果不区分平台，类别，杂乱
+    """
+    domain = "www.baicent.com"
+    charset = 'gb2312'
+    search_url = "http://www.baicent.com/plus/search.php?kwtype=0&q=%s&searchtype=title"
+    xpath = "//div[@class='resultlist']/ul/li/h3/a"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
+
 if __name__ == "__main__":
     #haipk = HaipkPosition()
     #print haipk.run(u'微信')
@@ -738,7 +781,7 @@ if __name__ == "__main__":
     #print pchome.run(u'微信')
 
     #qq = QQPosition()
-    #print qq.run(u'qq')
+    #print qq.run(u'网易')
 
     #mumayi = MumayiPosition()
     #print mumayi.run(u'微信')
@@ -792,7 +835,7 @@ if __name__ == "__main__":
     #print shouji.run(u'腾讯')
 
     #mobile1 = Mobile1Position()
-    #print mobile1.run(u'qq')
+    #print mobile1.run(u'网易')
 
     #onlinedown = OnlineDownPosition()
     #print onlinedown.run(u'腾讯')
@@ -835,3 +878,9 @@ if __name__ == "__main__":
 
     #muzisoft = MuzisoftPosition()
     #print muzisoft.run(u'网易')
+
+    #p7613 = Position7613()
+    #print p7613.run(u'腾讯')
+
+    #baicent = BaicentPosition()
+    #print baicent.run(u'腾讯')
