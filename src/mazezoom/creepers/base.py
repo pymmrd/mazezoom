@@ -22,13 +22,13 @@ class RegisterSubClass(type):
             if PositionSpider in bases:
                 if not hasattr(cls, 'abstract'):
                     if not hasattr(PositionSpider, 'subclass'):
-                        PositionSpider.subclass = []
-                    PositionSpider.subclass.append(cls)
+                        PositionSpider.subclass = {}
+                    PositionSpider.subclass[cls.domain] = cls
 
             if ChannelSpider in bases:
                 if not hasattr(ChannelSpider, 'subclass'):
-                    ChannelSpider.subclass = []
-                ChannelSpider.subclass.append(cls)
+                    ChannelSpider.subclass = {}
+                ChannelSpider.subclass[cls.domain] = cls
         except NameError:
             pass
 
