@@ -102,6 +102,11 @@ class CreeperBase(object):
         """
         return urllib.quote(appname.encode(self.charset))
 
+    def download_app(self, url):
+        downloader = DownloadAppSpider()
+        storage = downloader.run(url)
+        return storage
+
     def run(self):
         """
         接口子类实现
@@ -127,6 +132,19 @@ class PositionSpider(CreeperBase):
         #获取页面dom树
         etree = self.get_elemtree(url, data, headers)
         return etree
+
+    def verify_app(self, url=None, down_link=None, chksum=None):
+        """
+        url: detail页面链接
+        down_link: 下载链接
+        chsksum: 校验和
+        """
+        #如果没有传入down_link,就需要向detail页面发送请求
+        if not down_link and url:
+            etree = self.send_request(url)
+            down_link = etree.xpath(self.down_xpath)[0]
+        storage = self.download_app(down_link)
+        return storage
 
 
 class DownloadAppSpider(CreeperBase):
@@ -179,11 +197,6 @@ class ChannelSpider(CreeperBase):
         #    headers['Referer'] = self.domain
         etree = self.get_elemtree(url, headers=headers)
         return etree
-
-    def download_app(self, url):
-        downloader = DownloadAppSpider()
-        storage = downloader.run(url)
-        return storage
 
 
 if __name__ == "__main__":

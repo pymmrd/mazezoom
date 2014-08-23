@@ -60,6 +60,8 @@ class OykSoftChannel(ChannelSpider):
 
 class GameDogChannel(ChannelSpider):
     """
+    ***无下载次数***
+
     页面包含因子：
         更新时间：2014-08-22 12:31
         网游类别：角色
@@ -100,6 +102,8 @@ class GameDogChannel(ChannelSpider):
 
 class Mm10086Channel(ChannelSpider):
     """
+    ***无下载次数***
+
     开发者　：广州承兴营销管理有限公司
     所属类别：游戏 网络游戏
     更新时间：2014-08-14
@@ -107,6 +111,7 @@ class Mm10086Channel(ChannelSpider):
     商品 I D ：300008279684
     系统支持：Android 2.3 及以上
     评论
+
     """
     domain = "mm.10086.cn"
     down_xpath = "//ul[@class='ml40 o-hidden']/li[@class='mt20']/a[2]/@href"
@@ -125,22 +130,77 @@ class Mm10086Channel(ChannelSpider):
 
 class Channel520Apk(ChannelSpider):
     """
-    >>>p520apk = Position520Apk()
-    >>>p520apk.run(u'QQ部落')
+    ***无下载次数***
+    类别：动作游戏
+    语言：简体中文
+    版本：V2.6.9
+    大小：22.01MB
+    时间：2013-12-30
+    要求：Android 2.1 以上
+    标签：QQ部落下载QQ部落安卓版
     """
     domain = "www.520apk.com"
+    down_xpath = "//a[@class='icon_downbd']/@href"
+    fuzzy_xpath = "//div[@class='center']/span"
+    lable_xpath = "child::text()"
+    value_xpath = "child::i/text()"
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            try:
+                label = item.xpath(self.label_xpath)[0].strip()
+                value = item.xpath(self.value_xpath)[0].strip()
+            except IndexError:
+                pass
+            else:
+                result[label] = value
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class Apk3Channel(ChannelSpider):
     """
-    >>>apk3 = Apk3Position()
-    >>>apk3.run(u'刷机精灵')
+    ***无下载次数***
+    软件大小：4.44 MB
+    推荐星级：4星级软件
+    更新时间：2014-08-19
+    软件类别：国产软件 / 系统管理
+    软件语言：简体中文
+    授权方式：免费版
+   【相关软件】
+        刷机精灵Android官方版 1.0.5
+        刷机精灵 2.1.9
     """
+
     domain = "www.apk3.com"
+    seperator = ":"
+    down_xpath = "//ul[@class='downlistbox']/li/a"  # Detail
+    xpath = "//ul[@id='downinfobox']/li/text()"
+    version_xpath = "//div[@class='downInfoTitle']/b/text()"
 
-
-class DreamsDownChannel(ChannelSpider):
-    domain = "www.dreamsdown.com"
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.xpath)
+        version = etree.xpath(self.version_xpath)
+        if version:
+            version = version[0].strip()
+        for item in items:
+            label, value = item.split(self.seperator)
+            result[label] = value
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class AnZhiChannel(ChannelSpider):
@@ -291,3 +351,11 @@ if __name__ == '__main__':
     url = "http://mm.10086.cn/android/info/300008279684.html?from=www&stag=cT0lRTglQTElOTclRTUlQTQlQjQlRTglQjYlQjMlRTclOTAlODMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTEmYWN0aXZlPTE%3D"
     mm10086 = Mm10086Channel()
     mm10086.run(url)
+
+    url = "http://www.520apk.com/android/dongzuoyouxi/100012517.html"
+    c520 = Channel520Apk()
+    c520.run(url)
+
+    url = "http://www.apk3.com/soft/4393.html"
+    apk3 = Apk3Channel()
+    apk3.run(url)

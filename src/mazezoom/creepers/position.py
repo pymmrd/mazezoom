@@ -19,12 +19,16 @@ class OyksoftPosition(PositionSpider):
     >>>oyk = OyksoftPosition()
     >>>oyk.run(u'腾讯手机管家')
     """
+    andorid_token = 'Android'
     domain = "www.oyksoft.com"
     charset = 'gbk'  # 对传入的appname以此字符集进行编码
-    search_url = "http://www.oyksoft.com/search.asp?action=s&sType=ResName&keyword=%s"
+    search_url = (
+        "http://www.oyksoft.com/search.asp?"
+        "action=s&sType=ResName&keyword=%s"
+    )
     base_xpath = "//div[@class='searched']/div[@class='title']"
+    down_xpath = "//a[@class='normal']/@href"  # detail
     link_xpath = "child::a/strong"
-    andorid_token = 'Android'
     times_xpath = "//div[@class='softjj']/a[@class='listdbt']/text()"
 
     def download_times(self, title):
@@ -42,9 +46,8 @@ class OyksoftPosition(PositionSpider):
             except (TypeError, IndexError, ValueError):
                 pass
         return times
-    
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         #获取搜索结果title和链接
@@ -55,8 +58,13 @@ class OyksoftPosition(PositionSpider):
             link = self.normalize_url(self.search_url, parent.attrib['href'])
             title = item.text_content()
             if self.andorid_token in title:
-                print title
-                results.append((link, title))
+                if is_accurate:  # 精确匹配
+                    match = self.verify_app(url=link, chksum=chksum)
+                    if match:
+                        results.append((link, title))
+                else:
+                    #模糊匹配
+                    results.append((link, title))
         return results
 
 
@@ -67,13 +75,14 @@ class GameDogPosition(PositionSpider):
     """
 
     quanlity = 10
+    android = u'安卓版'
     domain = "www.gamedog.cn"
     search_url = ("http://zhannei.gamedog.cn/cse/search"
                   "?s=10392184185092281050&entry=1&q=%s")
     xpath = "//a[@class='result-game-item-title-link']"
-    android = u'安卓版'
+    down_xpath = "//dd[@id='downs_box']/span[1]/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
@@ -81,7 +90,12 @@ class GameDogPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             if self.android in title:
-                results.append((link, title))
+                if is_accurate:  # 精确匹配
+                    match = self.verify_app(url=link, chksum=chksum)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -121,10 +135,7 @@ class Mm10086Position(PositionSpider):
     xpath = "child::h2/a"
     down_xpath = "child::a/@href"
 
-    def download_app(self, url):
-        pass
-
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.base_xpath)
@@ -133,9 +144,14 @@ class Mm10086Position(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             if appname in title:
-                down_link = item.xpath(self.down_xpath)[0] 
-                down_link = self.normalize_url(self.search_url, down_link) 
-                results.append((link, title))
+                down_link = item.xpath(self.down_xpath)[0]
+                down_link = self.normalize_url(self.search_url, down_link)
+                if is_accurate:
+                    match = self.verify_app(down_link=down_link, chksum=chksum)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -151,6 +167,7 @@ class Hack50Positon(PositionSpider):
     search_url = ("http://so.hack50.com/cse/search"
                   "?s=1849264326530945843&ie=gbk&q=%s&m=2&x=20&y=12")
     xpath = "//h3[@class='c-title']/a"
+    abstract = True
 
     def run(self, appname):
         results = []
@@ -174,13 +191,17 @@ class Position520Apk(PositionSpider):
                   "?s=17910776473296434043&q=%s")
     xpath = "//h3[@class='c-title']/a"
     url_token = '/android/'  # 通过url token进一步准确定位
-    down_xpath = [  # 跳转入detail
-        "//a[@class='icon_downbd']/@href",
-        "//a[@class='icon_downdx']/@href",
-        "//a[@class='icon_downlt']/@href",
-    ]
+    down_xpath = "//a[@class='icon_downbd']/@href"
+        #"//a[@class='icon_downdx']/@href",
+        #"//a[@class='icon_downlt']/@href",
 
-    def run(self, appname):
+    def verify_app(self, url):
+        etree = self.send_request(url)
+        down_link = etree.xpath(self.down_xpath)[0]
+        storage = self.download_app(down_link)
+        return storage
+
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
@@ -189,7 +210,12 @@ class Position520Apk(PositionSpider):
             title = item.text_content()
             if appname in title:
                 if self.url_token in link:
-                    results.append((link, title))
+                    if is_accurate:
+                        match = self.verify_app(link, chksum)
+                        if match:
+                            results.append((link, title))
+                    else:
+                        results.append((link, title))
         return results
 
 
@@ -205,16 +231,27 @@ class Apk3Position(PositionSpider):
     xpath = "//div[@class='searchTopic']/a"
     down_xpath = "//ul[@class='downlistbox']/li/a"  # Detail
 
-    def run(self, appname):
+    def verify_app(self, url, chksum):
+        etree = self.send_request(url)
+        down_link = etree.xpath(self.down_xpath)[0]
+        storage = self.download_app(down_link)
+        return storage
+
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
+            title = item.text_content().strip()
             if appname in title:
-                print title
-                results.append((link, title))
+                if is_accurate:  # 精确匹配
+                    match = self.verify_app(link, chksum)
+                    if match:
+                        results.append((link, title))
+                else:
+                    #模糊匹配
+                    results.append((link, title))
         return results
 
 
@@ -223,11 +260,18 @@ class DownzaPosition(PositionSpider):
     >>>dza = DownzaPosition()
     >>>dza.run(u'快投')
     """
-    quanlity = 5  # 不能下载
+    quanlity = 10
     charset = 'gb2312'
     domain = "www.downza.cn"
+    android_token = "Android"
+    andorid_xpath = "//div[@class='bread f_mirco']/a[2]/text()"
     search_url = "http://www.downza.cn/search?k=%s"
     xpath = "//div[@class='soft_list mb_20 clearfix']/dl/dd/h2/a"
+    down_xpath = "//div[@class='down_view_down_list fl']/ul/li/a/@href"
+
+    def verify_app(self, url, down_link):
+        storage = self.download_app(url)
+        return storage
 
     def run(self, appname):
         results = []
@@ -235,8 +279,14 @@ class DownzaPosition(PositionSpider):
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
-            title = item.text_content()
-            results.append((link, title))
+            detail = self.send_request(link)
+            android = detail.xpath(self.andorid_xpath)
+            if android and android[0].strip() == self.android_token:
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    down_link = down_link[0]
+                title = item.text_content().strip()
+                results.append((link, title))
         return results
 
 
