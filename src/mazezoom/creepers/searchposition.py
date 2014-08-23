@@ -216,6 +216,30 @@ class ZolPosition(PositionSpider):
             results.append((link, title))
         return results
 
+class PcOnlinePosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
+    domain = "dl.pconline.com.cn"
+    charset = 'gb2312'
+    search_url = ("http://ks.pconline.com.cn/download.shtml"
+                 "?q=%s"
+                 "&downloadType=Android%%CF%%C2%%D4%%D8")    # %%表示%
+    xpath = "//a[@class='aTitle']"
+
+    def run(self, appname):
+        results = []
+        data = {}
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
 class SinaPosition(PositionSpider):
     """
     下载次数：是
@@ -502,6 +526,11 @@ class ApkcnPosition(PositionSpider):
         return results
 
 class SohoPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    同 app.sohu.com
+    """
     domain = "download.sohu.com"
     search_url = "http://download.sohu.com/search?words=%s"
     xpath = "//div[@class='yylb_box']/div[@class='yylb_main']/p[@class='yylb_title']/strong/a"
@@ -519,7 +548,10 @@ class SohoPosition(PositionSpider):
 
 class ShoujiPosition(PositionSpider):
     """
-    应用和游戏分类搜索，域名不同，无下载次数
+    下载次数：否
+    备选：    评论次数
+    位置：    信息页
+    搜索：    应用和游戏分类搜索，域名不同
     """
     domain = "soft.shouji.com.cn"
     domain1 = "game.shouji.com.cn"
@@ -561,7 +593,9 @@ class ShoujiPosition(PositionSpider):
 
 class Mobile1Position(PositionSpider):
     """
-    json返回数据
+    下载次数：是
+    位置：    信息页
+    搜索：    json返回数据
     """
     domain = "www.1mobile.tw"
     search_url = "http://www.1mobile.tw/index.php?c=search.json&keywords=%s&page=1"
@@ -582,6 +616,9 @@ class Mobile1Position(PositionSpider):
 
 class OnlineDownPosition(PositionSpider):
     """
+    下载次数：否
+    备选：    人气数
+    位置：    信息页
     排行列表页有下载量，搜索列表页无，结果页无
     """
     domain = "www.onlinedown.net"
@@ -608,6 +645,10 @@ class OnlineDownPosition(PositionSpider):
         return results
 
 class EoemarketPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
     domain = "www.eoemarket.com"
     search_url = "http://www.eoemarket.com/search_.html?keyword=%s&pageNum=1"
     xpath = "//ol[@class='RlistName']/li[1]/span/a"
@@ -625,7 +666,9 @@ class EoemarketPosition(PositionSpider):
 
 class ApkolPosition(PositionSpider):
     """
-    结果页打开慢，安装次数
+    下载次数：否
+    备选：    安装次数
+    搜索：    信息页打开慢
     """
     domain = "www.apkol.com"
     search_url = "http://www.apkol.com/search?keyword=%s"
@@ -643,6 +686,12 @@ class ApkolPosition(PositionSpider):
         return results
 
 class BkillPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    人气
+    位置：    信息页
+    搜索：    高级搜索
+    """
     domain = "www.bkill.com"
     charset = 'gb2312'
     search_url = "http://www.bkill.com/d/search.php?mod=do&n=1"
@@ -670,7 +719,10 @@ class BkillPosition(PositionSpider):
 
 class AibalaPosition(PositionSpider):
     """
-    关注数，列表页与结果页不一致
+    下载次数：否
+    备选：    关注数
+    位置：    信息页
+    搜索：    列表页与结果页不一致
     """
     domain = "www.aibala.com"
     search_url = "http://www.aibala.com/android-search-1-0-0-%s-1-1"
@@ -689,6 +741,8 @@ class AibalaPosition(PositionSpider):
 
 class VmallPosition(PositionSpider):
     """
+    下载次数：是
+    位置：    信息页
     华为开发者联盟-->华为应用市场
     """
     domain = "app.vmall.com"
@@ -708,7 +762,9 @@ class VmallPosition(PositionSpider):
 
 class YruanPosition(PositionSpider):
     """
-    搜索结果不区分平台
+    下载次数：是
+    位置：    信息页
+    搜索:     搜索结果不区分平台
     """
     domain = "www.yruan.com"
     search_url = "http://www.yruan.com/search.php?keyword=%s"
@@ -727,7 +783,7 @@ class YruanPosition(PositionSpider):
 
 class AnzowPosition(PositionSpider):
     """
-    无下载量
+    下载次数：否
     """
     domain = "www.anzow.com"
     search_url = "http://www.anzow.com/Search.shtml?stype=anzow&q=%s"
@@ -744,9 +800,42 @@ class AnzowPosition(PositionSpider):
             results.append((link, title))
         return results
 
+class ZhuodownPosition(PositionSpider):
+    """
+    下载次数：是
+    位置:     信息页
+    搜索：    高级搜索
+    """
+    domain = "www.zhuodown.com"
+    charset = 'gb2312'
+    search_url = (
+        "http://www.zhuodown.com/plus/search.php"
+        "?typeid=22"
+        "&q=%s"
+        "&starttime=-1"
+        "&channeltype=0" 
+        "&orderby=sortrank"
+        "&pagesize=20"
+        "&kwtype=1"
+        "&searchtype=titlekeyword"
+        "搜索=搜索"
+    )
+    xpath = "//div[@class='listbox']/ul[@class='e2']/li/a[2]"
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            print link,title
+            results.append((link, title))
+        return results
+
 class Xz7Position(PositionSpider):
     """
-    无下载量
+    下载次数：否
     """
     domain = "www.7xz.com"
     search_url = "http://www.7xz.com/search?q=%s"
@@ -765,7 +854,9 @@ class Xz7Position(PositionSpider):
 
 class WandoujiaPosition(PositionSpider):
     """
-    安装次数
+    下载次数：否
+    备选：    安装量
+    位置：    信息页
     """
     domain = "www.wandoujia.com"
     search_url = "http://www.wandoujia.com/search?key=%s"
@@ -784,8 +875,10 @@ class WandoujiaPosition(PositionSpider):
 
 class Android159Position(PositionSpider):
     """
+    下载次数：是
+    位置:     信息页
+    搜索：    应用和游戏分类搜索
     机客网安卓市场
-    应用和游戏分类搜索
     """
     domain = "android.159.com"
     charset = 'gb2312'
@@ -809,7 +902,8 @@ class Android159Position(PositionSpider):
 
 class Position3533(PositionSpider):
     """
-    应用、游戏、主题、壁纸分类搜索，无下载量，列表页不区分平台，结果页包含多种平台下载地址
+    下载次数：否
+    搜索：    应用、游戏、主题、壁纸分类搜索，结果页包含多种平台下载地址
     """
     domain = "www.3533.com"
     search_url = "http://search.3533.com/software?keyword=%s"
@@ -852,7 +946,8 @@ class MuzisoftPosition(PositionSpider):
 
 class Position7613(PositionSpider):
     """
-    搜索结果不区分平台，无下载量
+    下载次数：否
+    搜索:     搜索结果不区分平台，无下载量
     """
     domain = "www.7613.com"
     charset = 'gb2312'
@@ -872,7 +967,9 @@ class Position7613(PositionSpider):
 
 class BaicentPosition(PositionSpider):
     """
-    搜索结果不区分平台，类别，杂乱
+    下载次数：是
+    位置:     信息页
+    搜索：    搜索结果不区分平台，类别杂乱，可选高级搜索
     """
     domain = "www.baicent.com"
     charset = 'gb2312'
@@ -921,6 +1018,9 @@ if __name__ == "__main__":
   
     #zol = ZolPosition()
     #print zol.run(u'网易')
+
+    #pconline = PcOnlinePosition()
+    #print pconline.run(u'腾讯')
 
     #sina = SinaPosition()
     #print sina.run(u'新浪')
@@ -996,6 +1096,9 @@ if __name__ == "__main__":
 
     #anzow = AnzowPosition()
     #print anzow.run(u'网易')
+
+    #zhuodown = ZhuodownPosition()
+    #print zhuodown.run(u'网易')
 
     #xz7 = Xz7Position()
     #print xz7.run(u'腾讯')
