@@ -4,6 +4,11 @@ import json
 from base import PositionSpider
 
 class HaipkPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    热度/评分次数
+    位置：    信息页
+    """
     domain = "apk.haipk.com"
     search_url = "http://apk.hiapk.com/search?key=%s"
     xpath = "//span[@class='list_title font12']/a"
@@ -131,7 +136,7 @@ class QQPosition(PositionSpider):
     """
     下载次数：是
     位置：    信息页
-    Json,Ajax,目前搜索结果只能取到前10个
+    搜索：    Json,Ajax,目前搜索结果只能取到前10个
     """
     domain = "sj.qq.com"
     search_url = "http://sj.qq.com/myapp/searchAjax.htm?kw=%s&pns=&sid="
@@ -336,26 +341,35 @@ class Android115Position(PositionSpider):
 
 class Shop985Position(PositionSpider):
     """
-    搜索结果没有区分平台
+    下载次数：是
+    位置：    信息页
+    搜索：    分类搜索，搜索结果没有区分平台
     """
     domain = "d.958shop.com"
     charset = 'gb2312'
     search_url = "http://d.958shop.com/search/?keywords=%s&cn=soft"
+    search_url1 = "http://d.958shop.com/search/?keywords=%s&cn=game"
     xpath = "//span[@class='t_name01']/a[@class='b_f']"
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
             results.append((link, title))
+            print link, title
         return results
 
 class LiqucnPosition(PositionSpider):
     """
-    根据Cookie或者referer来区别用户手机系统
+    下载次数：否
+    位置：    信息页
+    搜索：    根据Cookie或者referer来区别用户手机系统
     """
     domain = "www.liqucn.com"
     android_referer = 'http://os-android.liqucn.com/'
@@ -373,14 +387,16 @@ class LiqucnPosition(PositionSpider):
             results.append((link, title))
         return results
 
-class CrskyPosition(PositionSpider):
+class CnmoPosition(PositionSpider):
     """
-    搜索结果比页面展示条目要少
+    下载次数：否
+    备选：    赞次数
+    位置：    信息页
     """
-    domain = "www.crsky.com"
+    domain = "www.cnmo.com"
     charset = 'gb2312'
-    search_url = "http://sj.crsky.com/query.aspx?keyword=%s&type=android"
-    xpath = "//div[@class='right']//a"
+    search_url = "http://app.cnmo.com/search/c=a&s=%s&p=2&f=1"    #p=2代表Android平台
+    xpath = "//ul[@class='ResList']/li/div[@class='Righttitle'][1]/a"
 
     def run(self, appname):
         results = []
@@ -393,7 +409,36 @@ class CrskyPosition(PositionSpider):
             print link, title
         return results
 
+class CrskyPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    访问量
+    位置：    信息页
+    搜索：    搜索结果比浏览器展示条目要少
+    """
+    domain = "www.crsky.com"
+    charset = 'gb2312'
+    search_url = "http://sj.crsky.com/query.aspx?keyword=%s&type=android"
+    xpath = "//div[@class='right']//a"
+
+    def run(self, appname):
+        results = []
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
+                   'Refererhttp': 'http://sj.crsky.com/query.aspx?keyword=%cd%f8%d2%d7&type=android'}
+        etree = self.send_request(appname, headers=headers)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+        return results
+
 class DPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    列表页
+    """
     domain = "www.d.cn"
     search_url = "http://android.d.cn/search/app/?keyword=%s"
     xpath = "//p[@class='g-name']/a"
@@ -410,17 +455,23 @@ class DPosition(PositionSpider):
 
 class AndroidcnPosition(PositionSpider):
     """
+    下载次数：是
+    位置：    信息页
     应用、游戏、资讯、壁纸、主题使用不同二级域名
     列表页与结果页下载次数不一致
     """
     domain = "www.androidcn.com"
     search_url = "http://down.androidcn.com/search/q/%s"
-    xpath = "//div[@class='app-info']/h2/a"
+    search_url1 = "http://game.androidcn.com/search/q/%s"
+    xpath = "//h2/a"
 
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
+        etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        items.extend(items2)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
@@ -429,13 +480,18 @@ class AndroidcnPosition(PositionSpider):
         return results
 
 class ApkcnPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    无
+    搜索：    post
+    """
     domain = "www.apkcn.com"
     search_url = "http://www.apkcn.com/search/"
     xpath = "//div[@class='box']/div[@class='post indexpost']/h3/a"
 
     def run(self, appname):
         results = []
-        data = {'keyword': appname.encode(self.charset), 'select': 'all'}
+        data = {'keyword': appname.encode(self.charset), 'select': 'phone'}
         etree = self.send_request(data=data)
         items = etree.xpath(self.xpath)
         for item in items:
@@ -890,14 +946,17 @@ if __name__ == "__main__":
     #liqucn = LiqucnPosition()
     #print liqucn.run(u'腾讯')
 
+    #cnmo = CnmoPosition()
+    #print cnmo.run(u'腾讯')
+
     #crsky = CrskyPosition()
-    #print crsky.run(u'腾讯')
+    #print crsky.run(u'网易')
  
     #d = DPosition()
     #print d.run(u'网易')
 
     #androidcn = AndroidcnPosition()
-    #print androidcn.run(u'腾讯')
+    #print androidcn.run(u'qq')
 
     #apkcn = ApkcnPosition()
     #print apkcn.run(u'腾讯')
