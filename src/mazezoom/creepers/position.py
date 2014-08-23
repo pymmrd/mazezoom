@@ -11,6 +11,7 @@
     3. 获取软件的下载地址.
     4. 下载软件进行md5值匹配.
 """
+import re
 from base import PositionSpider
 
 
@@ -99,30 +100,6 @@ class GameDogPosition(PositionSpider):
         return results
 
 
-class Position365(PositionSpider):
-    """
-    pc端下载资源
-    >>>p365 = Position365()
-    >>>p365.run(u'金蝶KIS')
-    """
-    quanlity = 4
-    charset = 'gbk'
-    domain = "www.365xz8.cn"
-    search_url = "http://www.365xz8.cn/soft/search.asp?act=topic&keyword=%s"
-    xpath = "//div[@class='searchTopic']/a"
-    abstract = True
-
-    def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
-        return results
-
-
 class Mm10086Position(PositionSpider):
     """
     >>>mm10086 = Mm10086Position()
@@ -155,31 +132,6 @@ class Mm10086Position(PositionSpider):
         return results
 
 
-class Hack50Positon(PositionSpider):
-    """
-    pc端下载包
-    >>>hack50 = Hack50Positon()
-    >>>hack50.run(u'qq')
-    """
-    quanlity = 4
-    domain = "www.hack50.com"
-    charset = 'gbk'
-    search_url = ("http://so.hack50.com/cse/search"
-                  "?s=1849264326530945843&ie=gbk&q=%s&m=2&x=20&y=12")
-    xpath = "//h3[@class='c-title']/a"
-    abstract = True
-
-    def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
-            results.append((link, title))
-        return results
-
-
 class Position520Apk(PositionSpider):
     """
     >>>p520apk = Position520Apk()
@@ -195,12 +147,6 @@ class Position520Apk(PositionSpider):
         #"//a[@class='icon_downdx']/@href",
         #"//a[@class='icon_downlt']/@href",
 
-    def verify_app(self, url):
-        etree = self.send_request(url)
-        down_link = etree.xpath(self.down_xpath)[0]
-        storage = self.download_app(down_link)
-        return storage
-
     def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
@@ -211,7 +157,7 @@ class Position520Apk(PositionSpider):
             if appname in title:
                 if self.url_token in link:
                     if is_accurate:
-                        match = self.verify_app(link, chksum)
+                        match = self.verify_app(link, chksum=chksum)
                         if match:
                             results.append((link, title))
                     else:
@@ -229,11 +175,12 @@ class Apk3Position(PositionSpider):
     domain = "www.apk3.com"
     search_url = "http://www.apk3.com/search.asp?m=2&s=0&word=%s&x=0&y=0"
     xpath = "//div[@class='searchTopic']/a"
-    down_xpath = "//ul[@class='downlistbox']/li/a"  # Detail
+    down_xpath = "//ul[@class='downlistbox']/li/a/@href"  # Detail
 
     def verify_app(self, url, chksum):
         etree = self.send_request(url)
         down_link = etree.xpath(self.down_xpath)[0]
+        down_link = self.normalize_url(url, down_link)
         storage = self.download_app(down_link)
         return storage
 
@@ -269,52 +216,27 @@ class DownzaPosition(PositionSpider):
     xpath = "//div[@class='soft_list mb_20 clearfix']/dl/dd/h2/a"
     down_xpath = "//div[@class='down_view_down_list fl']/ul/li/a/@href"
 
-    def verify_app(self, url, down_link):
-        storage = self.download_app(url)
-        return storage
-
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
+            title = item.text_content().strip()
             detail = self.send_request(link)
             android = detail.xpath(self.andorid_xpath)
             if android and android[0].strip() == self.android_token:
+
                 down_link = detail.xpath(self.down_xpath)
                 if down_link:
                     down_link = down_link[0]
-                title = item.text_content().strip()
-                results.append((link, title))
-        return results
 
-
-class DreamsDownPosition(PositionSpider):
-    domain = "www.dreamsdown.com"
-    charset = 'gbk'
-    search_url = (
-        "http://search.discuz.qq.com/f/discuz"
-        "?mod=curforum&formhash=096d51fb"
-        "&srchtype=title&srhfid=170"
-        "&srhlocality=forum%3A%3Aforumdisplay&sId=19235686"
-        "&ts=1408356224&cuId=0&cuName="
-        "&gId=7&agId=0&egIds=&fmSign=&ugSign7="
-        "&sign=7e9565583d199fecff9503b381840530"
-        "&charset=gbk&source=discuz"
-        "&fId=170&q=%s&srchtxt=%s&searchsubmit=true"
-    )
-    xpath = "//h3[@class='title']/a"
-
-    def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
-            results.append((link, title))
+                if is_accurate:  # 精确匹配
+                    match = self.verify_app(down_link=down_link, chksum=chksum)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -326,17 +248,48 @@ class AnZhiPosition(PositionSpider):
     quanlity = 10
     domain = "www.anzhi.com"
     search_url = "http://www.anzhi.com/search.php?keyword=%s&x=0&y=0"
-    xpath = "//span[@class='app_name']/a"
-    down_url = "http://www.anzhi.com/dl_app.php?s=1763314&n=5"
+    base_xpath = "//div[@class='app_list border_three']/ul/li"
+    link_xpath = (
+        "child::div[@class='app_info']/"
+        "span[@class='app_name']/a/@href"
+    )
+    title_xpath = (
+        "child::div[@class='app_info']/"
+        "span[@class='app_name']/a/text()"
+    )
+    down_xpath = "child::div[@class='app_down']/a/@onclick"
+    down_url = "http://www.anzhi.com/dl_app.php?s=%s&n=7"
 
-    def run(self, appname):
+    def download_link(self, etree):
+        #opendown(1322730);
+        down_link = ''
+        down_text = etree.xpath(self.down_xpath)
+        if down_text:
+            down_text = down_text[0]
+            regx = re.compile('opendown\((?P<pk>\d+)\).+')
+            match = regx.match(down_text)
+            if match is not None:
+                pk = match.group('pk')
+                down_link = self.down_url % pk
+        return down_link
+
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
+            link = self.normalize_url(
+                self.search_url,
+                item.xpath(self.link_xpath)[0]
+            )
+            title = item.xpath(self.title_xpath)[0]
+            down_link = self.download_lin(item)
+            if is_accurate:
+                match = self.verify_app(down_link=down_link, chksum=chksum)
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 
@@ -350,17 +303,30 @@ class AngeeksPosition(PositionSpider):
     quanlity = 10
     domain = "www.angeeks.com"
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=29&y=15"
-    xpath = "//dd/div[@class='info']/a"
+    base_xpath = "//ul[@id='mybou']/li/dl/dd"
+    link_xpath = "child::div[@class='info']/a/@href"
+    title_xpath = "child::div[@class='info']/a/text()"
+    down_xpath = "child::div[@class='dowl']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            print title
-            results.append((link, title))
+            link = self.normalize_url(
+                self.search_url,
+                item.xpath(self.link_xpath)[0]
+            )
+            title = item.xpath(self.title_xpath)[0]
+            down_link = item.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+            if is_accurate:  # 精确匹配
+                match = self.verify_app(down_link=down_link, chksum=chksum)
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 
@@ -1055,6 +1021,83 @@ class XtzhongdaPosition(PositionSpider):
     def run(self, appname):
         pass
 
+
+class DreamsDownPosition(PositionSpider):
+    domain = "www.dreamsdown.com"
+    charset = 'gbk'
+    search_url = (
+        "http://search.discuz.qq.com/f/discuz"
+        "?mod=curforum&formhash=096d51fb"
+        "&srchtype=title&srhfid=170"
+        "&srhlocality=forum%3A%3Aforumdisplay&sId=19235686"
+        "&ts=1408356224&cuId=0&cuName="
+        "&gId=7&agId=0&egIds=&fmSign=&ugSign7="
+        "&sign=7e9565583d199fecff9503b381840530"
+        "&charset=gbk&source=discuz"
+        "&fId=170&q=%s&srchtxt=%s&searchsubmit=true"
+    )
+    xpath = "//h3[@class='title']/a"
+    abstract = True
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Hack50Positon(PositionSpider):
+    """
+    pc端下载包
+    >>>hack50 = Hack50Positon()
+    >>>hack50.run(u'qq')
+    """
+    quanlity = 4
+    domain = "www.hack50.com"
+    charset = 'gbk'
+    search_url = ("http://so.hack50.com/cse/search"
+                  "?s=1849264326530945843&ie=gbk&q=%s&m=2&x=20&y=12")
+    xpath = "//h3[@class='c-title']/a"
+    abstract = True
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = item.attrib['href']
+            title = item.text_content()
+            results.append((link, title))
+        return results
+
+
+class Position365(PositionSpider):
+    """
+    pc端下载资源
+    >>>p365 = Position365()
+    >>>p365.run(u'金蝶KIS')
+    """
+    quanlity = 4
+    charset = 'gbk'
+    domain = "www.365xz8.cn"
+    search_url = "http://www.365xz8.cn/soft/search.asp?act=topic&keyword=%s"
+    xpath = "//div[@class='searchTopic']/a"
+    abstract = True
+
+    def run(self, appname):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
 
 if __name__ == "__main__":
     oyk = OyksoftPosition()
