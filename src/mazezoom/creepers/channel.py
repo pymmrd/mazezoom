@@ -349,14 +349,61 @@ class AngeeksChannel(ChannelSpider):
     >>>angeek.run(u'飞机')
     """
     domain = "www.angeeks.com"
+    down_xpath = "//div[@class='rgmainsrimg']/a/@href"
+    seperator = u':'
+    version_xpath = "//dl[@class='clear_div hr']/dd/span[@class='ko']/text()"
+    fuzzy_xpath = "//div[@class='rgmainslx']/span/text()"
+    label = u'下载次数'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        version = etree.xpath(self.version_xpath)
+        if version:
+            version = version[0].split(self.seperator)[-1]
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+        times = result.get(self.label)
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class JiQiMaoChannel(ChannelSpider):
     """
-    >>>jiqimao = JiQiMaoPosition()
-    >>>jiqimao.run(u'金银岛')
     """
+    down_xpath = "//div[@class='appmsg_titlemid']/table/tr[3]/td/a/@href"
+    seperator = u"；"
+    fuzzy_xpath = "//div[@class='appmsg_titlemid']/table/tr/td/span/text()"
     domain = "jiqimao.com"
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class SjapkChannel(ChannelSpider):
@@ -365,6 +412,12 @@ class SjapkChannel(ChannelSpider):
     >>>sjapk.run(u'喜羊羊之灰太狼闯关')
     """
     domain = "www.sjapk.com"
+    down_xpath = ""
+    fuzzy_xpath = ""
+
+    def run(self, url):
+        pass
+    
 
 
 class CoolApkChannel(ChannelSpider):

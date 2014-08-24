@@ -382,7 +382,12 @@ class JiQiMaoPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            if is_accurate:
+                match = self.verify_app(link, chksum=chksum)
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 
