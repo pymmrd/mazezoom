@@ -3,24 +3,37 @@
 import json
 from base import PositionSpider
 
-class HaipkPosition(PositionSpider):
+class HiapkPosition(PositionSpider):
     """
     下载次数：否
     备选：    热度/评分次数
     位置：    信息页
     """
-    domain = "apk.haipk.com"
+    domain = "apk.hiapk.com"
     search_url = "http://apk.hiapk.com/search?key=%s"
     xpath = "//span[@class='list_title font12']/a"
+    down_xpath = "//a[@class='link_btn']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
+            title = item.text_content().strip()
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)[0]
+            down_link = self.normalize_url(link, down_link)
+
+            if is_accurate:    #精确匹配
+                match = self.verify_app(
+                    down_link=down_link,
+                    chksum=chksum
+                )
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 class GfanPosition(PositionSpider):
@@ -989,8 +1002,8 @@ class BaicentPosition(PositionSpider):
 
 
 if __name__ == "__main__":
-    #haipk = HaipkPosition()
-    #print haipk.run(u'微信')
+    hiapk = HiapkPosition()
+    print hiapk.run(u'微信')
 
     #gfan = GfanPosition()
     #print gfan.run(u'微信')
