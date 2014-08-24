@@ -30,7 +30,6 @@ class HiapkChannel(ChannelSpider):
     上架时间： 2014-07-17 
     """
 
-    seperator = u"："
     domain = "apk.hiapk.com"
     fuzzy_xpath = "//div[@class='code_box_border']/div[@class='line_content']"
     lable_xpath = "child::span[1]/text()"
@@ -55,7 +54,47 @@ class HiapkChannel(ChannelSpider):
            storage = self.download_app(down_link)
         return result 
 
+class AngeeksChannel(ChannelSpider):
+    """
+    >>>angeek = AngeeksPosition()
+    >>>angeek.run(u'飞机')
+    """
+    domain = "www.angeeks.com"
+    down_xpath = "//div[@class='rgmainsrimg']/a/@href"
+    seperator = u'：'
+    version_xpath = "//dl[@class='clear_div hr']/dd/span[@class='ko']/text()"
+    fuzzy_xpath = "//div[@class='rgmainslx']/span/text()"
+    label = u'下载次数'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        version = etree.xpath(self.version_xpath)
+        if version:
+            version = version[0].split(self.seperator)[-1]
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+        times = result.get(self.label)
+        print times
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 if __name__ == '__main__':
     url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     hiapk = HiapkChannel()
     print hiapk.run(url)
+
+    #url = "http://apk.angeeks.com/soft/10069485.html"
+    #angeeks = AngeeksChannel()
+    #print angeeks.run(url)

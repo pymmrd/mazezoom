@@ -90,17 +90,34 @@ class AngeeksPosition(PositionSpider):
     domain = "apk.angeeks.com"
     charset = 'gb2312'
     search_url = "http://apk.angeeks.com/search?keywords=%s&x=0&y=0"
-    xpath = "//div[@class='info']/a"
+    base_xpath = "//ul[@id='mybou']/li/dl/dd"
+    link_xpath = "child::div[@class='info']/a/@href"
+    title_xpath = "child::div[@class='info']/a/text()"
+    down_xpath = "child::div[@class='dowl']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
-            print link, title
+            link = self.normalize_url(
+                self.search_url,
+                item.xpath(self.link_xpath)[0]
+            )
+            title = item.xpath(self.title_xpath)[0]
+            down_link = item.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                down_link = self.normalize_url(self.search_url, down_link)
+            if is_accurate:    # 精确匹配
+                match = self.verify_app(
+                    down_link=down_link,
+                    chksum=chksum
+                )
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 class It168Position(PositionSpider):
@@ -1002,8 +1019,8 @@ class BaicentPosition(PositionSpider):
 
 
 if __name__ == "__main__":
-    hiapk = HiapkPosition()
-    print hiapk.run(u'微信')
+    #hiapk = HiapkPosition()
+    #print hiapk.run(u'微信')
 
     #gfan = GfanPosition()
     #print gfan.run(u'微信')
@@ -1011,8 +1028,8 @@ if __name__ == "__main__":
     #apk91 = Apk91Position()
     #print apk91.run(u'微信')
 
-    #angeeks = AngeeksPosition()
-    #print angeeks.run(u'刀塔')
+    angeeks = AngeeksPosition()
+    print angeeks.run(u'微信')
     
     #it168 = It168Position()
     #print it168.run(u'微信')
