@@ -5,7 +5,7 @@ import os
 import time
 import random
 import urllib
-import urllib2
+import requests
 import shortuuid
 import urlparse
 from datetime import datetime
@@ -37,6 +37,10 @@ class CreeperBase(object):
 
     __metaclass__ = RegisterSubClass
 
+    def __init__(self):
+        self.session = requests.session()
+        self.session.headers['User-Agent'] = random.choice(USER_AGENTS)
+
     def tryAgain(self, req, retries=0):
         """
          尝试最大次数(MAX_RETRY_TIMES)后请求退出
@@ -56,22 +60,13 @@ class CreeperBase(object):
         给请求加载USER-AGENT, 获取页面内容，
         """
         content = ''
-        ua = random.choice(USER_AGENTS)
         if headers:
-            headers['User-Agent'] = ua
+            self.session.headers.update(headers)
+        if data is not None:
+            ack = self.session.post(url, data)
         else:
-            headers = {'User-Agent': ua}
-        req = urllib2.Request(url=url, data=data, headers=headers)
-        try:
-            content = urllib2.urlopen(req).read()
-        except urllib2.HTTPError, e:
-            print e
-            if e.code == 503:
-                time.sleep(0.1)
-                content = self.tryAgain(req, 0)
-        except:
-            time.sleep(0.1)
-            content = self.tryAgain(req, 0)
+            ack = self.session.get(url)
+        content = ack.content
         return content
 
     def normalize_url(self, source, url):
@@ -113,6 +108,9 @@ class CreeperBase(object):
         """
         pass
 
+    def __del__(self):
+        self.session.close()
+
 
 class PositionSpider(CreeperBase):
     charset = DEFAULT_CHARSET
@@ -120,15 +118,13 @@ class PositionSpider(CreeperBase):
     def send_request(self, appname=None, url=None, data=None, headers=None):
         #按照网站charset编码参数
         url = self.search_url if url is None else url
-        if data is None:
+        if data is None and appname:
             #GET 请求
            # if self.charset == DEFAULT_CHARSET:
            #      quote_app = appname.encode(self.charset)
            #else:
             quote_app = self.quote_args(appname)
             url = url % quote_app
-        else:
-            data = urllib.urlencode(data)
         #获取页面dom树
         etree = self.get_elemtree(url, data, headers)
         return etree
@@ -141,7 +137,7 @@ class PositionSpider(CreeperBase):
         """
         #如果没有传入down_link,就需要向detail页面发送请求
         if not down_link and url:
-            etree = self.send_request(url)
+            etree = self.send_request(url=url)
             down_link = etree.xpath(self.down_xpath)[0]
         storage = self.download_app(down_link)
         return storage

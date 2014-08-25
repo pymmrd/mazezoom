@@ -428,20 +428,19 @@ class CoolApkChannel(ChannelSpider):
     domain = "www.coolapk.com"
 
 
-class Channel365Nokia(ChannelSpider):
-    """
-    >>>nokia365 = Position365Nokia()
-    >>>nokia365.run(u'HTC')
-    """
-    domain = "www.365nokia.cn"
-
-
 class CrossmoChannel(ChannelSpider):
     """
-    >>>cs = CrossmoPosition()
-    >>>cs.run(u'LT来电报号')
+    开 发 商：源结科技
+    软件类别： 生活助手 
+    更新时间：2014-08-20
+    推荐指数： 
+    版　　本：2.0.0
+    下载次数：189 
+    价　　格：免费 
     """
     domain = "www.crossmo.com"
+    fuzzy_xpath = "//div[@class='aniu']/dt/text()"
+
 
 
 class ShoujiBaiduChannel(ChannelSpider):

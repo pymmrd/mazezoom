@@ -444,6 +444,7 @@ class Position365Nokia(PositionSpider):
     domain = "www.365nokia.cn"
     search_url = "http://www.365nokia.cn/search.asp?q=%s"
     xpath = "//div[@class='list-r']/ur/li/a"
+    abstract = True
 
     def run(self, appname, chksum=None, is_accurate=True):
         results = []
@@ -1214,5 +1215,5 @@ if __name__ == "__main__":
     #shouji = ShoujiBaiduSpider()
     #print shouji.run(u'HOT市场')
 
-    #p7xz = Position7xz()
-    #print p7xz.run(u'刀塔传奇')
+    p7xz = Position7xz()
+    print p7xz.run(u'刀塔传奇')
