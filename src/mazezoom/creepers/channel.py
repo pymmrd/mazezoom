@@ -15,6 +15,8 @@
 """
 
 import re
+import json
+import base64
 from base import ChannelSpider
 
 
@@ -345,8 +347,6 @@ class AnZhiChannel(ChannelSpider):
 
 class AngeeksChannel(ChannelSpider):
     """
-    >>>angeek = AngeeksPosition()
-    >>>angeek.run(u'飞机')
     """
     domain = "www.angeeks.com"
     down_xpath = "//div[@class='rgmainsrimg']/a/@href"
@@ -381,12 +381,238 @@ class AngeeksChannel(ChannelSpider):
 
 class JiQiMaoChannel(ChannelSpider):
     """
+    下载次数：97340 
+    类型：角色
+    资源：免费版
+    更新时间：2013-11-21
+    大小：未知
+    系统：安卓android
     """
     down_xpath = "//div[@class='appmsg_titlemid']/table/tr[3]/td/a/@href"
-    seperator = u"；"
+    seperator = u"\uff1a"
     fuzzy_xpath = "//div[@class='appmsg_titlemid']/table/tr/td/span/text()"
     domain = "jiqimao.com"
     label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            print content
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link, session=self.session)
+        return result
+
+
+class SjapkChannel(ChannelSpider):
+    """
+    资费类型：完全免费
+    语言：中文
+    最低系统：2.3.3
+    版本：1.0
+    """
+    domain = "www.sjapk.com"
+    down_xpath = "//div[@class='main_r_xiazai5']/a/@href"
+    fuzzy_xpath = "//div[@class='main_r_f']/p"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        seperator = u'：'
+        version_label = "版本"
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            values = item.text_content().strip().split(' ')
+            values = [v for v in values if bool(v)]
+            for vl in values:
+                lv = vl.split(seperator)
+                if len(lv) == 2:
+                    result[lv[0].strip()] = lv[1].strip()
+
+        version = result.get(version_label, None)
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = self.normalize_url(url, down_link[0])
+            storage = self.download_app(down_link, session=self.session)
+        return result
+
+
+class CoolApkChannel(ChannelSpider):
+    """
+     52人关注，6万+次下载，300个评论，1
+     3个权限，简体中文，127.00 M，
+     支持2.2及更高版本，3天前更新 
+    """
+    domain = "www.coolapk.com"
+    fuzzy_xpath = "//div[@class='hidden-md hidden-lg ex-page-infobar']/div/a/span"
+    down_xpath = "//div[@class='ex-page-header']/following::script[1]/text()"
+    label_xpath = "child::text()"
+    value_xpath = "child::strong/text()"
+    version_xpath = "/h1[@class='media-heading ex-apk-view-title']/small/text()"
+
+    def get_version(self, etree):
+        version = None
+        version_raw = etree.xpath(self.version_xpath)
+        if version_raw:
+            version = version_raw[0]
+        return version
+
+    def download_link(self, etree):
+
+        def extra_param():
+            extra = ''
+            extra_regx = re.compile('.+\((?P<extra>\d+)\).+')
+            extra_xpath = "//div[@class='media-btns ex-apk-view-btns']/a/@onclick"
+            extra_raw = etree.xpath(extra_xpath)
+            #onDownloadApk(0);
+            if extra_raw:
+                extra_raw = extra_raw[0]
+                match = extra_regx.match(extra_raw)
+                if match is not None:
+                    token = match.group('extra')
+                    if token != '0':
+                        extra = "&extra=%s" % token
+            return extra
+
+        down_link = None
+        down_regx = re.compile(r'.+apkDownloadUrl\s=\s"(?P<url>.+)";')
+        item = etree.xpath(self.down_xpath) 
+        if item:
+            item = item[0]
+            content = item.strip().split('\n')[0]
+            down_match = down_regx.match(content)
+            if down_match is not None:
+                extra = extra_param() 
+                down_link = 'http://%s%s%s' % (self.domain, down_match.group('url'), extra)
+        return down_link
+
+    def download_times(self, result): 
+        times = None
+        label = u"下载"
+        translate = u"万"
+        regx = re.compile('\d+')
+        number_text = result.get(label, '')
+        if number_text:
+            match = regx.search(number_text)
+            if match is not None:
+                try:
+                    times = int(match.group())
+                except (TypeError, ValueError):
+                    #log
+                    pass
+                else:
+                    if translate in number_text:
+                        times = times * 10000
+        return times
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            value = item.xpath(self.value_xpath)[0].strip()
+            label = item.xpath(self.label_xpath)[0].strip()
+            result[label] = value
+
+        times = self.download_times(result)
+
+        down_link = self.download_link(etree) 
+        if down_link:
+            storage = self.download_app(down_link, session=self.session)
+        return result
+
+
+class CrossmoChannel(ChannelSpider):
+    """
+    开 发 商：源结科技
+    软件类别： 生活助手 
+    更新时间：2014-08-20
+    推荐指数： 
+    版　　本：2.0.0
+    下载次数：189 
+    价　　格：免费 
+    """
+    domain = "www.crossmo.com"
+    fuzzy_xpath = "//div[@class='aniu']/dl/dt/text()"
+    head_xpath = "//head"
+    label = u'下载次数'
+    seperator = u'：'
+
+    def get_appkey(self, etree):
+        appkey = None
+        head = etree.xpath(self.head_xpath)[0].text_content()
+        regx = re.compile("var\sone_Key='(?P<key>.+)';")
+        match = regx.search(head)
+        if match is not None:
+            appkey = match.group('key')
+        return appkey
+
+    def get_appid(self, url):
+        """  
+        url: http://soft.crossmo.com/softinfo_505012.html
+        """
+        return url.split('_')[-1].split('.')[0]
+
+    def download_link(self, appkey, appid):
+        check_app = (
+            "http://soft.crossmo.com/softdown_topc_v5.php?"
+            "crossmo=%s&downloadtype=checkapks&appid=%s"
+        ) %(appkey, appid)
+        down_app = (
+            "http://soft.crossmo.com/softdown_topc_v5.php?"
+            "crossmo=%s&downloadtype=local&appid=%s"
+        ) % (appkey, appid)
+        headers = {
+            'X-Requested-With':'XMLHttpRequest',
+            'Referer': url
+        }
+        import pdb
+        pdb.set_trace()
+        self.update_request_headers(headers)
+        self.send_request(url=check_app, tree=False)
+        content = self.send_request(url=down_app, tree=False)
+        data = base64.b64decode(content)
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+        try:
+            times = int(result.get(self.label))
+        except (TypeError, ValueError):
+            times = 0
+        appkey = self.get_appkey(etree)
+        appid = self.get_appid(url)
+        down_link = self.download_link(appkey, appid)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link,session=self.session)
+        return result
+
+
+class ShoujiBaiduChannel(ChannelSpider):
+    """
+    >>>shouji = ShoujiBaiduSpider()
+    >>>shouji.run(u'HOT市场')
+    """
+
+    domain = "shouji.baidu.com"
 
     def run(self, url):
         result = {}
@@ -406,58 +632,29 @@ class JiQiMaoChannel(ChannelSpider):
         return result
 
 
-class SjapkChannel(ChannelSpider):
-    """
-    >>>sjapk = SjapkPosition()
-    >>>sjapk.run(u'喜羊羊之灰太狼闯关')
-    """
-    domain = "www.sjapk.com"
-    down_xpath = ""
-    fuzzy_xpath = ""
-
-    def run(self, url):
-        pass
-    
-
-
-class CoolApkChannel(ChannelSpider):
-    """
-    >>>coolapk = CoolApkPosition()
-    >>>coolapk.run(u'刀塔传奇')
-    """
-    domain = "www.coolapk.com"
-
-
-class CrossmoChannel(ChannelSpider):
-    """
-    开 发 商：源结科技
-    软件类别： 生活助手 
-    更新时间：2014-08-20
-    推荐指数： 
-    版　　本：2.0.0
-    下载次数：189 
-    价　　格：免费 
-    """
-    domain = "www.crossmo.com"
-    fuzzy_xpath = "//div[@class='aniu']/dt/text()"
-
-
-
-class ShoujiBaiduChannel(ChannelSpider):
-    """
-    >>>shouji = ShoujiBaiduSpider()
-    >>>shouji.run(u'HOT市场')
-    """
-
-    domain = "shouji.baidu.com"
-
-
 class Channel7xz(ChannelSpider):
     """
     >>>p7xz = Position7xz()
     >>>p7xz.run(u'极品飞车13')
     """
     domain = "www.7xz.com"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class PC6Channel(ChannelSpider):
@@ -467,6 +664,23 @@ class PC6Channel(ChannelSpider):
     """
     domain = "www.pc6.com"
 
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 
 class Channel3533(ChannelSpider):
     """
@@ -474,6 +688,23 @@ class Channel3533(ChannelSpider):
     >>>p3533.run(u'功夫西游')
     """
     domain = "www.3533.com"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class Apk8Channel(ChannelSpider):
@@ -483,6 +714,23 @@ class Apk8Channel(ChannelSpider):
     """
     domain = "www.apk8.com"
 
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 
 class XiaZaiZhiJiaChannel(ChannelSpider):
     """
@@ -490,6 +738,23 @@ class XiaZaiZhiJiaChannel(ChannelSpider):
     >>>xzzj.run(u'微信')
     """
     domain = "www.xiazaizhijia.com"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class CngbaChannel(ChannelSpider):
@@ -499,6 +764,23 @@ class CngbaChannel(ChannelSpider):
     """
     domain = "www.cngba.com"
 
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 
 class SjwyxChannel(ChannelSpider):
     """
@@ -506,6 +788,23 @@ class SjwyxChannel(ChannelSpider):
     >>>sjwyx.run(u'龙印')
     """
     domain = "www.sjwyx.com"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 
 class Ruan8Channel(ChannelSpider):
@@ -515,6 +814,23 @@ class Ruan8Channel(ChannelSpider):
     """
     domain = "soft.anruan.com"
 
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 
 class PcHomeChannel(ChannelSpider):
     """
@@ -522,6 +838,23 @@ class PcHomeChannel(ChannelSpider):
     >>>pchome.run(u'微信')
     """
     domain = "www.pchome.com"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            result[label.strip()] = value.strip()
+
+        times = int(result.get(self.label))
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
 
 if __name__ == '__main__':
     #url = "http://www.oyksoft.com/soft/32456.html"
@@ -548,6 +881,22 @@ if __name__ == '__main__':
     #anzhi = AnZhiChannel()
     #anzhi.run(url)
 
-    url = "http://www.downza.cn/soft/22271.html"
-    downza = DownzaChannel()
-    downza.run(url)
+    #url = "http://www.downza.cn/soft/22271.html"
+    #downza = DownzaChannel()
+    #downza.run(url)
+
+    #url = "http://www.coolapk.com/game/sh.lilith.dgame.uc"
+    #ca = CoolApkChannel()
+    #ca.run(url)
+
+    #url = "http://www.sjapk.com/36195.Html"
+    #js = SjapkChannel()
+    #print js.run(url)
+
+    #url = "http://jiqimao.com/game-199571/"
+    #jiqimao = JiQiMaoChannel()
+    #jiqimao.run(url)
+
+    url = "http://soft.crossmo.com/softinfo_13185.html"
+    cs = CrossmoChannel()
+    cs.run(url)

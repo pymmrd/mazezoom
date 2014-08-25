@@ -97,9 +97,12 @@ class CreeperBase(object):
         """
         return urllib.quote(appname.encode(self.charset))
 
-    def download_app(self, url):
-        downloader = DownloadAppSpider()
-        storage = downloader.run(url)
+    def unquote(self, v):
+        return urllib.unquote(v)
+
+    def download_app(self, url, headers=None, session=None):
+        downloader = DownloadAppSpider(session)
+        storage = downloader.run(url, headers=headers)
         return storage
 
     def run(self):
@@ -107,6 +110,17 @@ class CreeperBase(object):
         接口子类实现
         """
         pass
+
+    def update_request_headers(self, headers):
+        self.session.headers.update(headers)
+
+
+    def delete_request_headers(self, keys):
+        for key in keys:
+            try:
+                del self.session.headers[key]
+            except KeyError:
+                pass
 
     def __del__(self):
         self.session.close()
@@ -145,6 +159,11 @@ class PositionSpider(CreeperBase):
 
 
 class DownloadAppSpider(CreeperBase):
+    def __init__(self, session=None):
+        if session:
+            self.session = session
+        else:
+            self.session = requests.session()
 
     def get_storage(self, is_position=False):
         today = datetime.today()
@@ -173,7 +192,7 @@ class DownloadAppSpider(CreeperBase):
     def unique_name(self):
         return shortuuid.uuid()
 
-    def run(self, url, domain=None, referer=None, headers=None):
+    def run(self, url, headers=None):
         storage = self.get_storage()
         content = self.get_content(url, headers=headers)
         with open(storage, 'a') as f:
@@ -184,15 +203,13 @@ class DownloadAppSpider(CreeperBase):
 
 class ChannelSpider(CreeperBase):
 
-    def send_request(self, url, headers=None):
-
-        #if headers is None:
-        #    headers = {}
-        #if 'Host' not in headers:
-        #    headers['Host'] = self.domain
-        #if 'Referer' not in headers:
-        #    headers['Referer'] = self.domain
-        etree = self.get_elemtree(url, headers=headers)
+    def send_request(self, url, headers=None, tree=True):
+        if tree:
+            #获取页面dom树
+            etree = self.get_elemtree(url, headers)
+        else:
+            #获取response的 raw string
+            etree = self.get_content(url, headers)
         return etree
 
 
