@@ -115,18 +115,19 @@ class CreeperBase(object):
 class PositionSpider(CreeperBase):
     charset = DEFAULT_CHARSET
 
-    def send_request(self, appname=None, url=None, data=None, headers=None):
-        #按照网站charset编码参数
+    def send_request(self, appname=None, url=None,
+                     data=None, headers=None, tree=True):
         url = self.search_url if url is None else url
         if data is None and appname:
-            #GET 请求
-           # if self.charset == DEFAULT_CHARSET:
-           #      quote_app = appname.encode(self.charset)
-           #else:
             quote_app = self.quote_args(appname)
             url = url % quote_app
-        #获取页面dom树
-        etree = self.get_elemtree(url, data, headers)
+
+        if tree:
+            #获取页面dom树
+            etree = self.get_elemtree(url, data, headers)
+        else:
+            #获取response的 raw string
+            etree = self.get_content(url, data, headers)
         return etree
 
     def verify_app(self, url=None, down_link=None, chksum=None):
