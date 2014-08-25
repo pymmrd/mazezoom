@@ -19,6 +19,7 @@ from base import ChannelSpider
 
 class HiapkChannel(ChannelSpider):
     """
+    ***无下载次数***
     url ： http://apk.hiapk.com/appinfo/com.tencent.mm
     作者： 腾讯科技广州分公司
     热度： 2.3亿热度
@@ -33,7 +34,7 @@ class HiapkChannel(ChannelSpider):
     domain = "apk.hiapk.com"
     fuzzy_xpath = "//div[@class='code_box_border']/div[@class='line_content']"
     lable_xpath = "child::span[1]/text()"
-    value_xpath = "child::span[2]/text()"
+    value_xpath = "child::span[2]/text()|child::span[@class='font14']/text()"
     down_xpath = "//a[@class='link_btn']/@href"
 
     def run(self, url):
@@ -44,20 +45,22 @@ class HiapkChannel(ChannelSpider):
         for item in items:
             if item is not None:
                 label = item.xpath(self.lable_xpath)[0]
-                value = item.xpath(self.value_xpath)[0]
+                value = item.xpath(self.value_xpath)[-1]
                 print label, value
                 result[label.strip()] = value.strip()
 
         down_link = etree.xpath(self.down_xpath)[0]
         down_link = self.normalize_url(url, down_link)
-        if down_link:
-           storage = self.download_app(down_link)
+        #if down_link:
+           #storage = self.download_app(down_link)
         return result 
 
 class AngeeksChannel(ChannelSpider):
     """
-    >>>angeek = AngeeksPosition()
-    >>>angeek.run(u'飞机')
+    url：http://apk.angeeks.com/soft/10069485.html
+    软件大小： 3.4MB 
+    更新时间：2012-03-20
+    下载次数：3774
     """
     domain = "www.angeeks.com"
     down_xpath = "//div[@class='rgmainsrimg']/a/@href"
@@ -90,6 +93,43 @@ class AngeeksChannel(ChannelSpider):
             storage = self.download_app(down_link)
         return result
 
+class It168Channel(ChannelSpider):
+    """
+    url: http://down.it168.com/315/321/130157/index.shtml
+    软件大小: 24MB
+    软件作者: 腾讯
+    语言界面: 简体中文
+    软件授权: 免费软件
+    下载次数: 614285
+    更新时间: 2014-2-11
+    """
+    domain = "down.it168.com"
+    seperator = u'：'
+    fuzzy_xpath = "//div[@class='right_con1_2 mt8 border1']/ul/li"
+    label_xpath = "child::span[1]/text()"
+    value_xpath = "child::a/text()|child::span[2]/text()|child::text()"
+    down_xpath = "//li[@class='sign11 four_li1']/a/@href"
+    label = u'下载次数:'
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            label = item.xpath(self.label_xpath)[0].strip()
+            value = item.xpath(self.value_xpath)[-1].strip()
+            result[label] = value
+        times = result.get(self.label)
+        print times
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return result
+
 if __name__ == '__main__':
     url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     hiapk = HiapkChannel()
@@ -98,3 +138,7 @@ if __name__ == '__main__':
     #url = "http://apk.angeeks.com/soft/10069485.html"
     #angeeks = AngeeksChannel()
     #print angeeks.run(url)
+
+    #url = "http://down.it168.com/315/321/130157/index.shtml"
+    #it168 = It168Channel()
+    #print it168.run(url)
