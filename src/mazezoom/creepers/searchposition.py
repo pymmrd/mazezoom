@@ -1,5 +1,9 @@
 # -*- coding:utf-8 -*-
 
+#Author:chenyu
+#Date:2014/08/24
+#Email:chenyuxxgl@126.com
+
 import json
 from base import PositionSpider
 
@@ -128,17 +132,31 @@ class It168Position(PositionSpider):
     """
     domain = "down.it168.com"
     charset = 'gb2312'
+    suffix = u'.apk'
     search_url = "http://down.it168.com/soft_search.html?keyword=%s"
     xpath = "//div[@class='r3']/ul/li/h3/a"
+    down_xpath = "//li[@class='sign11 four_li1']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)[0]
+            if down_link.endswith(self.suffix):
+                print title, down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class PcHomePosition(PositionSpider):
@@ -1028,8 +1046,8 @@ if __name__ == "__main__":
     #apk91 = Apk91Position()
     #print apk91.run(u'微信')
 
-    angeeks = AngeeksPosition()
-    print angeeks.run(u'微信')
+    #angeeks = AngeeksPosition()
+    #print angeeks.run(u'微信')
     
     #it168 = It168Position()
     #print it168.run(u'微信')
