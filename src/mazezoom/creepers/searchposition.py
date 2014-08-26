@@ -4,6 +4,7 @@
 #Date:2014/08/24
 #Email:chenyuxxgl@126.com
 
+import re
 import json
 from base import PositionSpider
 
@@ -40,6 +41,7 @@ class HiapkPosition(PositionSpider):
                 results.append((link, title))
         return results
 
+#
 class GfanPosition(PositionSpider):
     """
     下载次数：否
@@ -49,30 +51,42 @@ class GfanPosition(PositionSpider):
     domain = "apk.gfan.com"
     search_url = "http://apk.gfan.com/search?q=%s"
     xpath = "//span[@class='apphot-tit']/a"
-
-    def run(self, appname):
+    down_xpath = "//a[@id='computerLoad']/@href"
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)[0]
+
+            if is_accurate:    #精确匹配
+                match = self.verify_app(
+                    down_link=down_link,
+                    chksum=chksum
+                )
+                if match:
+                    results.append((link, title))
+            else:
+                results.append((link, title))
         return results
 
 class Apk91Position(PositionSpider):
     """
-    下载次数：否
-    备选：    好评差评次数
+    下载次数：是（文字）
     位置：    信息页
     搜索：    分类搜索
+    极少数detail页里没有down_link
     """
     domain = "apk.gfan.com"
     search_url = "http://apk.91.com/soft/android/search/1_5_0_0_%s"
     search_url1 = "http://apk.91.com/game/android/search/1_5_%s"
     xpath = "//div[@class='zoom']/h4/a"
+    down_xpath = "//a[@class='s_btn s_btn4']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         etree2 = self.send_request(appname, url=self.search_url1)
@@ -80,10 +94,30 @@ class Apk91Position(PositionSpider):
         items2 = etree2.xpath(self.xpath)
         items.extend(items2)
         for item in items:
+            down_link = None
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            detail = self.get_elemtree(link)
+            try:
+                down_link = detail.xpath(self.down_xpath)[0]
+                down_link = self.normalize_url(self.search_url, down_link)
+            except:
+                pass
+
             print link, title
+            print down_link
+
+            if down_link is not None:
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        print "----------"
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class AngeeksPosition(PositionSpider):
@@ -169,6 +203,9 @@ class PcHomePosition(PositionSpider):
     #charset = 'gbk'
     search_url = "http://download.pchome.net/search-%s---0-1.html"
     xpath = "//div[@class='tit']/a"
+    pagedown_xpath = "//div[@class='dl-info-btn']/a/@href"
+    os_token = 'Android'
+    value_xpath = "//div[@class='dl-info-con']/ul/li/text()|//div[@class='dl-info-con']/ul/li/a/text()"
 
     def run(self, appname):
         results = []
@@ -177,6 +214,13 @@ class PcHomePosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
+            detail = self.send_request(link)
+            values = detail.xpath(value_xpath)
+            pagedown_link = detail.xpath(pagedown_xpath)[0]
+            if os_token in values:
+                print link, title
+                downdetail = self.get_content(pagedown_link)
+                r = re.comple(r'windowOpen\(''\)')
             results.append((link, title))
         return results
 
