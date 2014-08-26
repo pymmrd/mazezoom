@@ -234,14 +234,7 @@ class DownzaChannel(ChannelSpider):
     version_xpath = "//h1/text()"
     down_xpath = "//div[@class='down_view_down_list fl']/ul/li/a/@href"
 
-
-    def run(self, appname, chksum=None, is_accurate=True):
-        result = {}
-        dlabel = u"下载次数" 
-        stroage = None
-        etree = self.send_request(url)
-        items = etree.xpath(self.fuzzy_xpath)
-
+    def get_version(self, etree):
         version = ''
         version_raw = etree.xpath(self.version_xpath)
         if version_raw:
@@ -249,15 +242,23 @@ class DownzaChannel(ChannelSpider):
             match = self.version_regx.search(version_raw)
             if match is not None:
                 version = match.group()
+        return version
 
+
+    def run(self, appname, chksum=None, is_accurate=True):
+        result = {}
+        dlabel = u"下载次数" 
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        version = self.get_version(etree)
         for item in items:
             if item.strip():
                 label, value = item.split(self.seperator)
-                print label, value
                 result[label.strip()] = value.strip()
+
         times = int(result.get(dlabel, 0))
-        import pdb
-        pdb.set_trace()
+
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
@@ -576,12 +577,9 @@ class CrossmoChannel(ChannelSpider):
             'X-Requested-With':'XMLHttpRequest',
             'Referer': url
         }
-        import pdb
-        pdb.set_trace()
         self.update_request_headers(headers)
         self.send_request(url=check_app, tree=False)
-        content = self.send_request(url=down_app, tree=False)
-        data = base64.b64decode(content)
+        return down_app
 
 
     def run(self, url):
@@ -597,11 +595,11 @@ class CrossmoChannel(ChannelSpider):
             times = int(result.get(self.label))
         except (TypeError, ValueError):
             times = 0
+
         appkey = self.get_appkey(etree)
         appid = self.get_appid(url)
         down_link = self.download_link(appkey, appid)
         if down_link:
-            down_link = down_link[0]
             storage = self.download_app(down_link,session=self.session)
         return result
 
@@ -613,6 +611,29 @@ class ShoujiBaiduChannel(ChannelSpider):
     """
 
     domain = "shouji.baidu.com"
+    seperator = u':'
+    fuzzy_xpath = "//div[@class='detail']/span/text()"
+    down_xpath = "//div[@class='area-download']/a[@class='apk']/@href"
+    down_label = u"下载次数"
+    version_label = u'版本'
+
+    def download_times(self, result): 
+        times = None
+        translate = u"万"
+        regx = re.compile('\d+')
+        number_text = result.get(self.down_label, '')
+        if number_text:
+            match = regx.search(number_text)
+            if match is not None:
+                try:
+                    times = int(match.group())
+                except (TypeError, ValueError):
+                    #log
+                    pass
+                else:
+                    if translate in number_text:
+                        times = times * 10000
+        return times
 
     def run(self, url):
         result = {}
@@ -620,24 +641,44 @@ class ShoujiBaiduChannel(ChannelSpider):
         etree = self.send_request(url)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
-            content = item.text_content().strip()
+            content = item.strip()
             label, value = content.split(self.seperator)
             result[label.strip()] = value.strip()
 
-        times = int(result.get(self.label))
+        version = result.get(self.version_label, '')
+        times = self.download_times(result)
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
         return result
 
 
 class Channel7xz(ChannelSpider):
     """
-    >>>p7xz = Position7xz()
-    >>>p7xz.run(u'极品飞车13')
+    无下载次数
+    大小：1.17MB
+    格式：apk
+    更新日期：2012-09-25 13:25:52
+    适用于：Android 1.6及以上
+    专题： 赛车飞行 EA 
     """
     domain = "www.7xz.com"
+    seperator = u'：'
+    fuzzy_xpath = "//ul[@class='values_one']/li"
+    version_regx = re.compile(r'\d+(?:(\.\d+))+')
+    down_xpath = "//div[@class='diannao']/a[@class='d_pc_normal_dn']/@href"
+    version_xpath = "//div[@class='title']/span[@class='left']/strong/text()"
+
+    def get_version(self, etree):
+        version = ''
+        version_raw = etree.xpath(self.version_xpath)
+        if version_raw:
+            version_raw = version_raw[0].strip()
+            match = self.version_regx.search(version_raw)
+            if match is not None:
+                version = match.group()
+        return version
 
     def run(self, url):
         result = {}
@@ -646,23 +687,32 @@ class Channel7xz(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            result[label.strip()] = value.strip()
-
-        times = int(result.get(self.label))
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                result[label.strip()] = value.strip()
+        version = self.get_version(etree)
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
         return result
 
 
 class PC6Channel(ChannelSpider):
     """
-    >>>pc6 = PC6Position()
-    >>>pc6.run(u'弹跳忍者')
+    无下载次数
+    售价：免费
+    类别：飞行射击
+    更新：2014/8/25
+    系统支持：安卓, 2.2以上
+    版本：v6.0.1官网版
+    大小：47M
     """
     domain = "www.pc6.com"
+    seperator = u'：'
+    fuzzy_xpath = "//div[@class='left3']/div"
+    down_xpath = "//div[@class='left2']/a[@class='wdj']/@href"
 
     def run(self, url):
         result = {}
@@ -671,14 +721,14 @@ class PC6Channel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            result[label.strip()] = value.strip()
-
-        times = int(result.get(self.label))
+            elems = content.split('\n')
+            for elem in elems:
+                label, value = elem.split(self.seperator)
+                result[label.strip()] = value.strip()
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -709,10 +759,32 @@ class Channel3533(ChannelSpider):
 
 class Apk8Channel(ChannelSpider):
     """
-    >>>apk8 = Apk8Position()
-    >>>apk8.run(u'天天跑酷')
+    游戏版本：2.0.0
+    游戏类型：卡牌手游游戏
+    适用固件：安卓1.5以上
+    游戏语言：中文
+    文件大小：128M
+    游戏提供：已通过手机安全软件检测
+    更新时间：2014-08-25 18:59:33
+    游戏标签：
+
+    所属专题：手机卡牌游戏  动作卡牌类安卓网游  
+
     """
     domain = "www.apk8.com"
+    times_xpath = "//span[@id='downNum']/text()"
+    seperator = u'：'
+    down_xpath = "//div[@class='downnew']/a[@class='bt_bd']/@href"
+    fuzzy_xpath = "//div[@class='detailsleft']/ol[@class='feileis']/li"
+    version_label = u'游戏版本'
+
+    def download_times(self, etree):
+        times = 0
+        try:
+            times = int(etree.xpath(self.times_xpath)[0])
+        except (TypeError, ValueError, IndexError):
+            times = 0
+        return times
 
     def run(self, url):
         result = {}
@@ -721,39 +793,85 @@ class Apk8Channel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            result[label.strip()] = value.strip()
-
-        times = int(result.get(self.label))
+            elems = content.split('\n')
+            for elem in elems:
+                label, value = elem.split(self.seperator)
+                result[label.strip()] = value.strip()
+        version = result.get(self.version_label, '') 
+        times = self.download_times(etree)
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
         return result
 
 
 class XiaZaiZhiJiaChannel(ChannelSpider):
     """
-    >>>xzzj = XiaZaiZhiJiaPosition()
-    >>>xzzj.run(u'微信')
+     微信 V5.3.1.51 for Android安卓版
+     软件大小：25.12 MB
+     下载次数：6454次
+     所属类型：聊天社交
+     更新时间：2014-07-21
     """
+
+    seperator = u'：'
+    charset = 'gb2312'
     domain = "www.xiazaizhijia.com"
+    fuzzy_xpath = "//div[@class='AMI_desc']/div[@class='clearfix']/dl"
+    version_regx = re.compile(r'\d+(?:(\.\d+))+')
+    down_label = '下载次数'
+    version_xpath = "//h1/a/text()"
+    down_xpath = "//a[class='AMIC_downStylea']/@href"
+
+    def get_version(self, etree):
+        version = ''
+        version_raw = etree.xpath(self.version_xpath)
+        if version_raw:
+            version_raw = version_raw[0].strip()
+            match = self.version_regx.search(version_raw)
+            if match is not None:
+                version = match.group()
+        return version
+
+    def download_times(self, result):
+        times = 0
+        regx = re.compile('(?P<times>\d+)')
+        times_str = result.get(self.down_label, '')
+        match = regx.search(times_str)
+        if match is not None:
+            try:
+                times = int(match.group('times'))
+            except (TypeError, ValueError):
+                pass
+        return times
 
     def run(self, url):
         result = {}
         storage = None
-        etree = self.send_request(url)
+        self.send_request(url, tree=False)
+        headers = {
+            'X-Requested-With':'XMLHttpRequest',
+            'Referer': url
+        }
+        self.update_request_headers(headers)
+        etree = self.send_request('%s?' % url, ignore=True)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
-            content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            result[label.strip()] = value.strip()
+            title = item.xpath("child::dt/text()")[0]
+            script_dom = item.xpath("child::dd/script/@src")
+            if script_dom:
+                import pdb
+                pdb.set_trace()
+                value = ''
+            
 
-        times = int(result.get(self.label))
+        times = self.download_times(result)
+        version = self.get_version(etree)
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -897,6 +1015,26 @@ if __name__ == '__main__':
     #jiqimao = JiQiMaoChannel()
     #jiqimao.run(url)
 
-    url = "http://soft.crossmo.com/softinfo_13185.html"
-    cs = CrossmoChannel()
-    cs.run(url)
+    #url = "http://soft.crossmo.com/softinfo_13185.html"
+    #cs = CrossmoChannel()
+    #cs.run(url)
+
+    #url = "http://shouji.baidu.com/soft/item?docid=6865605&from=&f=search_app_%E6%9F%9A%E5%AD%90%E7%9B%B8%E6%9C%BA%40list_1_title%401%40header_software_input_btn_search"
+    #shouji = ShoujiBaiduChannel()
+    #shouji.run(url)
+
+    #url = "http://www.7xz.com/games/view/10020683"
+    #c7xz = Channel7xz()
+    #c7xz.run(url)
+
+    #url = "http://www.pc6.com/azyx/82254.html"
+    #pc6 = PC6Channel()
+    #pc6.run(url)
+    #url = "http://www.apk8.com/game/game_14104.html"
+    #apk8 = Apk8Channel()
+    #apk8.run(url)
+
+    url = "http://www.xiazaizhijia.com/shouji/6570.html"
+    xiazai = XiaZaiZhiJiaChannel()
+    xiazai.run(url)
+

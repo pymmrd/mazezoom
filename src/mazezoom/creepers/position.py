@@ -537,7 +537,7 @@ class PC6Position(PositionSpider):
     quanlity = 10
     charset = "gb2312"
     domain = "www.pc6.com"
-    search_url = "http://so.pc6.com/?keyword=%s"
+    search_url = "http://www.pc6.com/search2.asp?keyword=%s&searchType=down&rootID=465%2C466"
     xpath = "//div[@class='baseinfo']/h3/a"
 
     def run(self, appname):

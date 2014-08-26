@@ -12,6 +12,7 @@ from datetime import datetime
 from lxml.html import fromstring
 
 #From Projects
+import multi_code
 from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
                        POSITION_APP_DIR, CHANNAL_APP_DIR)
 
@@ -78,12 +79,14 @@ class CreeperBase(object):
         """
         return urlparse.urljoin(source, url)
 
-    def get_elemtree(self, url, data=None, headers=None):
+    def get_elemtree(self, url, data=None, headers=None, ignore=False):
         """
         生成dom树方便xpath分析
         """
         etree = None
         content = self.get_content(url, data, headers)
+        if ignore: #针对页面存在错误编码和多编码现象处理
+            content = content.decode(self.charset, 'ignore')
         if content:
             try:
                 etree = fromstring(content)
@@ -112,10 +115,16 @@ class CreeperBase(object):
         pass
 
     def update_request_headers(self, headers):
+        """
+        添加HTTP请求头
+        """
         self.session.headers.update(headers)
 
 
     def delete_request_headers(self, keys):
+        """
+        删除不需要的请求头
+        """
         for key in keys:
             try:
                 del self.session.headers[key]
@@ -203,10 +212,10 @@ class DownloadAppSpider(CreeperBase):
 
 class ChannelSpider(CreeperBase):
 
-    def send_request(self, url, headers=None, tree=True):
+    def send_request(self, url, headers=None, tree=True, ignore=False):
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, headers)
+            etree = self.get_elemtree(url, headers, ignore=ignore)
         else:
             #获取response的 raw string
             etree = self.get_content(url, headers)
