@@ -4,6 +4,7 @@
 #Date:2014/08/24
 #Email:chenyuxxgl@126.com
 
+import re
 import json
 from base import PositionSpider
 
@@ -202,6 +203,9 @@ class PcHomePosition(PositionSpider):
     #charset = 'gbk'
     search_url = "http://download.pchome.net/search-%s---0-1.html"
     xpath = "//div[@class='tit']/a"
+    pagedown_xpath = "//div[@class='dl-info-btn']/a/@href"
+    os_token = 'Android'
+    value_xpath = "//div[@class='dl-info-con']/ul/li/text()|//div[@class='dl-info-con']/ul/li/a/text()"
 
     def run(self, appname):
         results = []
@@ -210,6 +214,13 @@ class PcHomePosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
+            detail = self.send_request(link)
+            values = detail.xpath(value_xpath)
+            pagedown_link = detail.xpath(pagedown_xpath)[0]
+            if os_token in values:
+                print link, title
+                downdetail = self.get_content(pagedown_link)
+                r = re.comple(r'windowOpen\(''\)')
             results.append((link, title))
         return results
 
