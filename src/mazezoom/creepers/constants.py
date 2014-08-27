@@ -34,3 +34,6 @@ CHANNEL_TASK_KEY = 'channel_task'
 POSITION_TASK_KEY = 'position_task'
 POSITION_DISPATCH_KEY = 'position_dispatch'
 
+andorid_token = ['android', u'安卓']
+ios_token = ['ipad','iphone']
+
