@@ -203,12 +203,12 @@ class It168Channel(ChannelSpider):
         result = {}
         storage = None
         etree = self.send_request(url)
-
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             label = item.xpath(self.label_xpath)[0].strip()
             value = item.xpath(self.value_xpath)[-1].strip()
             result[label] = value
+
         times = result.get(self.label)
         print times
 
@@ -216,6 +216,172 @@ class It168Channel(ChannelSpider):
         if down_link:
             down_link = down_link[0]
             storage = self.download_app(down_link)
+
+        return result
+
+class PcHomeChannel(ChannelSpider):
+    """
+    url: http://download.pchome.net/mobile/System/files/down-26039-1.html
+    更新时间：2014-05-27
+    软件大小：10.12MB
+    软件分类：文件管理
+    开发商：微信电话本
+    软件性质：[免费软件]
+    支持系统：Android
+    """
+    domain = "download.pchome.net"
+    seperator = u'：'
+    fuzzy_xpath = "//div[@class='dl-info-con']/ul/li[@style='width:100%;']/preceding-sibling::li"
+    label_xpath = "child::span[1]/text()"
+    value_xpath = "child::text()|child::a/text()"
+    pagedown_xpath = "//div[@class='dl-con-left']//div[@class='dl-info-btn']/a/@href"
+    down_xpath = "//dl[@class='clearfix']/dd[last()]/a/@onclick"
+    times_xpath = "//div[@class='dl-download clearfix']/div[@class='dl-info-btn']/a/span[@class='i2']/text()"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        times = etree.xpath(self.times_xpath)[0]
+        print times
+
+        pagedown_link = etree.xpath(self.pagedown_xpath)[0]
+        print pagedown_link
+        downdetail = self.send_request(pagedown_link)
+        onclick = downdetail.xpath(self.down_xpath)[0]
+        r = re.compile("windowOpen\('([^']+)'\);")
+        onclick_content = r.search(onclick)
+        down_link = onclick_content.group(1)
+        print down_link
+        if down_link:
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            label = item.xpath(self.label_xpath)[0].strip()
+            value = item.xpath(self.value_xpath)[0].strip()
+            print label, value
+            result[label] = value
+
+        return result
+
+class QQChannel(ChannelSpider):
+    """
+    url: http://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm
+    版本号：V5.3.1.67_r745169
+    更新时间：2014年7月11日
+    开发商：腾讯
+    """
+    domain = "sj.qq.com"
+    seperator = u'：'
+    fuzzy_xpath = "//div[@class='det-othinfo-container J_Mod']"
+    label_xpath = "child::div[@class='det-othinfo-tit']/text()"
+    value_xpath = "child::div[@class='det-othinfo-data']/text()"
+    down_xpath = "//div[@class='det-ins-btn-box']/a[@class='det-down-btn']/@href"
+    times_xpath = "//div[@class='det-ins-num']/text()"
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        times = etree.xpath(self.times_xpath)[0]
+        print times
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            print down_link
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            label = item.xpath(self.label_xpath)[0].strip()
+            value = item.xpath(self.value_xpath)[-1].strip()
+            print label, value
+            result[label] = value
+
+        return result
+
+class MumayiChannel(ChannelSpider):
+    """
+    url: http://www.mumayi.com/android-28640.html
+    软件类型：免费软件
+    所属类别：新闻资讯
+    更新时间：18 小时前
+    程序大小：18.62MB
+    """
+    domain = "sj.qq.com"
+    seperator = u'：'
+    fuzzy_xpath = "//ul[@class='istyle fl']/li[@class='isli gray']|//ul[@class='istyle fl']/li[@class='isli']"
+    label_xpath = "child::span[@class='iname']/text()"
+    value_xpath = "child::text()|child::font/text()"
+    down_xpath = "//a[@class='download fl']/@href"
+
+    def download_times(self, title):
+        """
+        下载次数：1620472次
+        """
+        from searchposition import MumayiPosition
+        position = MumayiPosition()
+        times = position.download_times(title)
+        return times
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            print down_link
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            label = item.xpath(self.label_xpath)[0].strip()
+            value = item.xpath(self.value_xpath)[0].strip()
+            print label, value
+            result[label] = value
+
+        return result
+
+class SkycnChannel(ChannelSpider):
+    """
+    url: http://shouji.baidu.com/soft/item?docid=6722314&from=as&f=software%40indexrecommend%401
+    大小: 6.9MB 
+    版本: 5.0.1.11 
+    下载次数: 9646万
+    """
+    domain = "www.skycn.com"
+    fuzzy_xpath = "//div[@class='content-right']/div[@class='detail']/span/text()"
+    down_xpath = "//div[@class='area-download']/a[@class='apk']/@href"
+    label = u'下载次数'
+    
+
+    def run(self, url):
+        seperator = u':'
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            print down_link
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(seperator)
+            print label, value
+            result[label] = value
+
+        times = result.get(self.label) 
+        print times
         return result
 
 if __name__ == '__main__':
@@ -238,3 +404,20 @@ if __name__ == '__main__':
     #url = "http://down.it168.com/315/321/130157/index.shtml"
     #it168 = It168Channel()
     #print it168.run(url)
+
+    #url = "http://download.pchome.net/mobile/System/files/detail-26039.html"
+    #pchome = PcHomeChannel()
+    #print pchome.run(url)
+
+    #url = "http://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm"
+    #qq = QQChannel()
+    #print qq.run(url)
+
+    #url = "http://www.mumayi.com/android-28640.html"
+    #mumayi = MumayiChannel()
+    #print mumayi.run(url)
+    #print mumayi.download_times(u'网易新闻 V4.0.1')
+
+    #url = "http://shouji.baidu.com/soft/item?docid=6722314&from=as&f=software%40indexrecommend%401"
+    #skycn = SkycnChannel()
+    #print skycn.run(url)
