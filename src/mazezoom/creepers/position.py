@@ -628,11 +628,14 @@ class CngbaPosition(PositionSpider):
     >>>cngba = CngbaPosition()
     >>>cngba.run(u'名将决')
     """
-    quanlity = 10
+    quanlity = 5 #无下载资源
     charset = "gb2312"
     domain = "www.cngba.com"
     search_url = "http://down.cngba.com/script/search.php?keyword=%s"
     xpath = "//div[@class='game_Ljj']/strong/a"
+
+    def download_times(self):
+        pass
 
     def run(self, appname):
         results = []
@@ -655,6 +658,7 @@ class Ruan8Position(PositionSpider):
     search_url = "http://www.anruan.com/search.php?t=all&keyword=%s"
     xpath = "//div[@class='li']/ul/li/a[@class='tit']"
 
+
     def run(self, appname):
         results = []
         etree = self.send_request(appname)
@@ -672,10 +676,18 @@ class PcHomePosition(PositionSpider):
     >>>pchome.run(u'微信')
     """
     charset = 'gbk'
-    domain = "www.pchome.com"
+    domain = "www.pchome.net"
     search_url = ("http://search.pchome.net/download.php"
                   "?wd=%s&submit=%CB%D1+%CB%F7")
     xpath = "//div[@class='tit']/a"
+    seperator = "："
+    times_xpath = "child::div[@class='dw']/span"
+    down_xpath = "child::div[@class='dw']/a/@href"
+
+    def download_times(self):
+        pass
+        
+        
 
     def run(self, appname):
         results = []
@@ -824,7 +836,9 @@ class SjwyxPosition(PositionSpider):
     title_xpath = "child::a[@class='n']/text()"
     other_link = "child::a"
     down_link_token = u'下载'
-    abstract = True
+
+    def download_times(self):
+        pass
 
     def run(self, appname):
         results = []
