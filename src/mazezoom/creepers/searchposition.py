@@ -6,6 +6,7 @@
 
 import re
 import json
+import time
 from base import PositionSpider
 
 class HiapkPosition(PositionSpider):
@@ -291,14 +292,16 @@ class MumayiPosition(PositionSpider):
         """
         下载次数：1620467次
         """
-        seperator = u':'
+        seperator = u'下载次数：'
         etree = self.send_request(title)
         item = etree.xpath(self.times_xpath)
         times = None
         if item:
             item = item[0]
+            print item
             try:
-                times = item.split(seperator)[-1]    #error
+                times = item.split(seperator)[-1] 
+                print times
             except (TypeError, IndexError, ValueError):
                 pass
         return times
@@ -373,18 +376,38 @@ class ZolPosition(PositionSpider):
     charset = 'gbk'
     search_url = "http://xiazai.zol.com.cn/search?wd=%s&type=1"
     xpath = "//ul[@class='results-text']/li[@class='item']/div[@class='item-header clearfix']/a"
-    down_xpath = ""
+    down_xpath = "//ul[@class='download-items']/li[@class='item'][1]/a[@class='downLoad-button androidDown-button']/@onclick"
+    token = 'sj'
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
+            print link, title
             results.append((link, title))
+            detail = self.get_elemtree(link)
+            onclick = detail.xpath(self.down_xpath)[0]
+            r = re.compile("corpsoft\('([^']+)','1'\)")
+            onclick_content = r.search(onclick)
+            down_link = onclick_content.group(1)
+            down_link = self.normalize_url(link, down_link)
+            print down_link
+
+            if self.token in link:
+                if is_accurate:    #精确匹配
+                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0'}
+                    match = self.download_app(down_link, headers=headers)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
+
         return results
 
+#error js生成下载链接，token未取到
 class PcOnlinePosition(PositionSpider):
     """
     下载次数：是
@@ -396,8 +419,9 @@ class PcOnlinePosition(PositionSpider):
                  "?q=%s"
                  "&downloadType=Android%%CF%%C2%%D4%%D8")    # %%表示%
     xpath = "//a[@class='aTitle']"
+    down_xpath = "//a[@class='btn sbDownload']/@tempurl"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         data = {}
         etree = self.send_request(appname)
@@ -405,10 +429,24 @@ class PcOnlinePosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath) #js根据token计算真实的下载地址
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#error js生成下载链接，有超时时间设置
 class SinaPosition(PositionSpider):
     """
     下载次数：是
@@ -429,6 +467,7 @@ class SinaPosition(PositionSpider):
             results.append((link, title))
         return results
 
+#error onclick动态生成下载链接
 class DuotePosition(PositionSpider):
     """
     下载次数：是(人气)
@@ -438,17 +477,33 @@ class DuotePosition(PositionSpider):
     charset = 'gb2312'
     search_url = "http://www.duote.com/searchPhone.php?searchType=&so=%s"
     xpath = "//div[@class='list_item']/div[@class='tit_area']/span[@class='name']/a"
+    down_xpath = "//div[@class='btn_trig'][1]/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath) 
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#下载文件量超过23M，连接会被断开
 class ImobilePosition(PositionSpider):
     """
     下载次数：是
@@ -457,17 +512,33 @@ class ImobilePosition(PositionSpider):
     domain = "www.imobile.com.cn"
     search_url = "http://app.imobile.com.cn/android/search/%s.html"
     xpath = "//ul[@class='ranking_list']/li/div[@class='ico']/h3/a"
+    down_xpath = "//div[@class='download_install']/a[@class='download']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#error 下载页面打不开
 class ApkzuPosition(PositionSpider):
     """
     下载次数：是(人气)
@@ -501,15 +572,32 @@ class NduoaPosition(PositionSpider):
     domain = "www.nduoa.com"
     search_url = "http://www.nduoa.com/search?q=%s"
     xpath = "//ul[@class='apklist clearfix']//div[@class='name']/a"
+    title_xpath = "child::span[1]/text()"
+    down_xpath = "//a[@id='BDTJDownload']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
+            title = item.xpath(self.title_xpath)[0]
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                down_link = self.normalize_url(self.search_url, down_link)
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class Android115Position(PositionSpider):
@@ -521,17 +609,34 @@ class Android115Position(PositionSpider):
     charset = 'gb2312'
     search_url = "http://android.155.cn/search.php?kw=%s&index=soft"
     xpath = "//ul[@class='gmc-c']/li/strong/a"
+    down_xpath = "//div[@class='c1_bot']/a[@class='down']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                down_link = self.normalize_url(self.search_url, down_link)
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#error 下载页面跳转过多
 class Shop985Position(PositionSpider):
     """
     下载次数：是
@@ -541,23 +646,53 @@ class Shop985Position(PositionSpider):
     domain = "d.958shop.com"
     charset = 'gb2312'
     search_url = "http://d.958shop.com/search/?keywords=%s&cn=soft"
-    search_url1 = "http://d.958shop.com/search/?keywords=%s&cn=game"
+    #search_url1 = "http://d.958shop.com/search/?keywords=%s&cn=game"    #游戏下载页面跳转3次
     xpath = "//span[@class='t_name01']/a[@class='b_f']"
+    os_token = 'Android'
+    platform_xpath = "//table[@class='m_word']/tr[6]/td/a/text()"
+    #info_xpath = "child::td//text()"
+    down_xpath = "//div[@class='todown1']/a[1]/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
-        etree2 = self.send_request(appname, url=self.search_url1)
+        #etree2 = self.send_request(appname, url=self.search_url1)
         items = etree.xpath(self.xpath)
-        items2 = etree2.xpath(self.xpath)
-        items.extend(items2)
+        #items2 = etree2.xpath(self.xpath)
+        #items.extend(items2)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
-            print link, title
+            detail = self.get_elemtree(link)
+            platform = detail.xpath(self.platform_xpath)[0]
+            if self.os_token in platform:
+                #print platform
+                print link, title,"--------------------------"
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    down_link = down_link[0]
+                    if down_link == '#goto_download':
+                        down_url = link+down_link
+                        down_page = self.get_elemtree(down_url)
+                        down_xpath = "//dd[@class='down_u']/a/@href"
+                        down_link = down_page.xpath(down_xpath)[0]
+
+                    else:
+                        down_link = down_link
+                    print down_link
+
+                    if is_accurate:    #精确匹配
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                    else:
+                        results.append((link, title))
         return results
 
+#有连接断开的风险
 class LiqucnPosition(PositionSpider):
     """
     下载次数：否
@@ -568,18 +703,37 @@ class LiqucnPosition(PositionSpider):
     android_referer = 'http://os-android.liqucn.com/'
     search_url = "http://search.liqucn.com/download/%s"
     xpath = "//li[@class='appli_info']/a"
+    down_xpath = "//a[@id='content_mobile_href']/@href"
+    os_token = 'os-android'
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         headers = {'Referer': self.android_referer}
         etree = self.send_request(appname, headers=headers)
         items = etree.xpath(self.xpath)
         for item in items:
+            time.sleep(2)
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if self.os_token in link:
+                if down_link:
+                    down_link = down_link[0]
+                    print down_link
+                    if is_accurate:    #精确匹配
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                    else:
+                        results.append((link, title))
         return results
 
+#error 下载地址js
 class CnmoPosition(PositionSpider):
     """
     下载次数：否
@@ -1183,8 +1337,8 @@ if __name__ == "__main__":
     #print mumayi.run(u'微信')
     #print mumayi.download_times(u'网易新闻 V4.0.1')
 
-    skycn = SkycnPosition()
-    print skycn.run(u'微信')
+    #skycn = SkycnPosition()
+    #print skycn.run(u'微信')
   
     #zol = ZolPosition()
     #print zol.run(u'网易')
@@ -1199,7 +1353,7 @@ if __name__ == "__main__":
     #print duote.run(u'网易')
 
     #imobile = ImobilePosition()
-    #print imobile.run(u'微信')
+    #print imobile.run(u'网易')
 
     #apkzu = ApkzuPosition()
     #print apkzu.run(u'网易')
@@ -1213,8 +1367,8 @@ if __name__ == "__main__":
     #shop985 = Shop985Position()
     #print shop985.run(u'网易')
 
-    #liqucn = LiqucnPosition()
-    #print liqucn.run(u'腾讯')
+    liqucn = LiqucnPosition()
+    print liqucn.run(u'腾讯')
 
     #cnmo = CnmoPosition()
     #print cnmo.run(u'腾讯')

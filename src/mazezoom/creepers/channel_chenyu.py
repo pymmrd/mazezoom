@@ -384,6 +384,185 @@ class SkycnChannel(ChannelSpider):
         print times
         return result
 
+class ZolChannel(ChannelSpider):
+    """
+    url: http://sj.zol.com.cn/mkey/
+    下载次数： 93,866次 
+    """
+    domain = "sj.zol.com.cn"
+    down_xpath = "//ul[@class='download-items']/li[@class='item'][1]/a[@class='downLoad-button androidDown-button']/@onclick"
+    fuzzy_xpath = "//ul[@class='summary-text clearfix']/li[@class='item-3']/span/text()"
+    label = u'下载次数：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        onclick = etree.xpath(self.down_xpath)[0]
+        r = re.compile("corpsoft\('([^']+)','1'\)")
+        onclick_content = r.search(onclick)
+        down_link = onclick_content.group(1)
+        down_link = self.normalize_url(url, down_link)
+        print down_link
+
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0'}
+        storage = self.download_app(down_link, headers=headers)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        label, value = items
+        print label
+        print value
+        result[label] = value
+
+        times = result.get(self.label)
+        print times
+        return result
+
+class NduoaChannel(ChannelSpider):
+    """
+    url: http://www.nduoa.com/apk/detail/808577
+    version: (4.0.1)
+    下载次数：8,740,875次下载
+    版本：5.0.1.11 
+    大小：18.62 MB 
+    作者：网易
+    更新：发布于4天前
+    """
+    domain = "www.nduoa.com"
+    fuzzy_xpath = "//div[@class='apkinfo']"
+    version_xpath = "child::div[@class='head']/div[@class='name']/span[@class='version']/text()"
+    times_xpath = "child::div[@class='head']/div[@class='levelCount']/span[@class='count']/text()"
+    size_xpath = "child::div[@class='size row']/text()"
+    author_xpath = "child::div[@class='author row']/text()"
+    authorvalue_xpath = "child::div[@class='author row']/span/a/text()"
+    updatetime_xpath = "child::div[@class='updateTime row']/text()"    
+    updatetimevalue_xpath = "child::div[@class='updateTime row']/em/text()"
+    down_xpath = "//a[@id='BDTJDownload']/@href"
+    label = u'下载次数'
+
+
+    def run(self, url):
+        seperator = u'：'
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            down_link = self.normalize_url(url, down_link)
+            print down_link
+            storage = self.download_app(down_link)
+
+        item = etree.xpath(self.fuzzy_xpath)[0]
+        version = item.xpath(self.version_xpath)[0]
+        r_version = re.compile('\((.+)\)')
+        version = r_version.search(version).group(1)
+        result['version'] = version
+        times = item.xpath(self.times_xpath)[0]
+        r_times = re.compile('([0-9,]+)')
+        times = r_times.search(times).group(0)
+        times = re.sub(',','',times)
+        result[self.label] = times
+        size = item.xpath(self.size_xpath)[0]
+        size_label, size_value = size.split(seperator)
+        result[size_label] = size_value
+        author = item.xpath(self.author_xpath)[0]
+        author = re.sub(u'：','',author)
+        authorvalue = item.xpath(self.authorvalue_xpath)[0]
+        result[author] = authorvalue
+        updatetime = item.xpath(self.updatetime_xpath)[0]
+        updatetime = re.sub(u'：','',updatetime)
+        updatetimevalue = item.xpath(self.updatetimevalue_xpath)[0]
+        result[updatetime] = updatetimevalue
+
+        times = result.get(self.label)
+        print times
+        return result
+
+class Android115Channel(ChannelSpider):
+    """
+    url: http://android.155.cn/soft/10198.html
+    生活实用
+    中文
+    完全免费
+    3M
+    5756
+    开发商：互联网
+    2014-08-22
+    """
+    domain = "www.155.cn"
+    fuzzy_xpath = "//div[@class='content-right']/div[@class='detail']/span/text()"
+    down_xpath = "//div[@class='c1_bot']/a[@class='down']/@href"
+    time_xpath = "//div[@class='c1_xxi']/span[font]/text()"
+    label = u'下载次数'
+
+
+    def run(self, url):
+        seperator = u':'
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            print down_link
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(seperator)
+            print label, value
+            result[label] = value
+
+        #times = result.get(self.label)
+        times = etree.xpath(self.time_xpath)[0].strip()
+        print times
+        return result
+
+class LiqucnChannel(ChannelSpider):
+    """
+    url: http://os-android.liqucn.com/rj/12910.shtml
+    下载次数：2950444次
+    大小：13.62MB
+    更新时间：2014-08-26
+    标签： 来电归属地,隐私保护,体检,防骚扰,杀毒,拦截,来电防火墙
+    """
+
+    domain = "www.liqucn.com"
+    fuzzy_xpath = "//table[@class='lineheight_0913']/tr/td"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//a[@id='content_mobile_href']/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+        print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
 if __name__ == '__main__':
     #url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     #hiapk = HiapkChannel()
@@ -421,3 +600,19 @@ if __name__ == '__main__':
     #url = "http://shouji.baidu.com/soft/item?docid=6722314&from=as&f=software%40indexrecommend%401"
     #skycn = SkycnChannel()
     #print skycn.run(url)
+
+    #url = "http://sj.zol.com.cn/mkey/"
+    #zol = ZolChannel()
+    #print zol.run(url)
+
+    #url = "http://www.nduoa.com/apk/detail/11990"
+    #nduoa = NduoaChannel()
+    #print nduoa.run(url)
+
+    #url = "http://android.155.cn/soft/10198.html"
+    #android115 = Android115Channel()
+    #print android115.run(url)
+
+    #url = "http://os-android.liqucn.com/rj/12910.shtml"
+    #liqucn = LiqucnChannel()
+    #print liqucn.run(url)
