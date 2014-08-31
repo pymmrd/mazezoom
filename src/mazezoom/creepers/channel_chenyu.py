@@ -782,6 +782,97 @@ class OnlineDownChannel(ChannelSpider):
            storage = self.download_app(down_link)
         return result
 
+#error 乱码
+class EoemarketChannel(ChannelSpider):
+    """
+    url: http://www.eoemarket.com/soft/33223.html
+    下载：26万次
+    大小：21.8MB
+    版本：4.4.3
+    更新时间：2014-08-19
+    分类：阅读与图书
+    适用：1.6以上
+    """
+
+    domain = "www.eoemarket.com"
+    fuzzy_xpath = "//ol[@class='feileis']/li"
+    info_xpath = "child::text()|child::span/text()"
+    down_xpath = "//div[@class='detailsright']/ol/li[1]/a/@href"
+    seperator = u'：'
+    label = u'下载'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.get_elemtree(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            info = item.xpath(self.info_xpath)
+            print info
+            content = info[0]
+            print content
+            #import chardet
+            #a = chardet.detect(content)
+            #print a 
+            #print content
+            #if 'M' in content:
+            #    content = content.strip()
+                #print content.split(self.seperator)
+                #label = label.strip()
+                #value = value.strip()
+                #print label, value
+                #result[label] = value
+
+        times = result.get(self.label)
+        #print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        #if down_link:
+        #   storage = self.download_app(down_link)
+        return result
+
+class BkillChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.bkill.com/download/23765.html
+    软件大小 7.1MB
+    软件语言 简体中文
+    软件授权 免费软件
+    更新日期 2014-07-05
+    软件人气 
+    """
+
+    domain = "www.bkill.com"
+    fuzzy_xpath = "//div[@class='soft_Abstract h305 w412 l top7 bd']/ul/li[@class='right']"
+    info_xpath = "child::text()|child::span/text()"
+    down_xpath = "//div[@class='down_link_main']/ul/li/a/@href"
+    seperator = u'：'
+    label = u'软件人气'    #js生成
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        #times = result.get(self.label)
+        #print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+
 if __name__ == '__main__':
     #url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     #hiapk = HiapkChannel()
@@ -855,3 +946,11 @@ if __name__ == '__main__':
     #url = "http://www.onlinedown.net/soft/110940.htm"
     #onlinedown = OnlineDownChannel()
     #print onlinedown.run(url)
+
+    #url = "http://www.eoemarket.com/soft/33223.html"
+    #eoemarket = EoemarketChannel()
+    #print eoemarket.run(url)
+
+    url = "http://www.bkill.com/download/23765.html"
+    bkill = BkillChannel()
+    print bkill.run(url)

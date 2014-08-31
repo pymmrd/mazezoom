@@ -1062,6 +1062,78 @@ class OnlineDownPosition(PositionSpider):
             print pagedown_link
             downdetail = self.get_elemtree(pagedown_link)
             down_link = downdetail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
+        return results
+
+#error 汉字显示乱码
+class EoemarketPosition(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    """
+    domain = "www.eoemarket.com"
+    search_url = "http://www.eoemarket.com/search_.html?keyword=%s&pageNum=1"
+    xpath = "//ol[@class='RlistName']/li[1]/span/a"
+    down_xpath = "//div[@class='detailsright']/ol/li[1]/a/@href"
+
+    def run(self, appname, chksum=None, is_accurate=True):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
+        return results
+
+#网站巨慢，detail无法打开
+class ApkolPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    安装次数
+    搜索：    信息页打开慢
+    """
+    domain = "www.apkol.com"
+    search_url = "http://www.apkol.com/search?keyword=%s"
+    xpath = "//div[@class='listbox ty']/div[@class='yl_pic']/a"
+    down_xpath = "//div[@content]/div[@class='cn_btn']/a/@href"
+
+    def run(self, appname, chksum=None, is_accurate=True):
+        results = []
+        etree = self.send_request(appname)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.attrib['title']
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
             print down_link
             if down_link:
                 down_link = down_link[0]
@@ -1077,47 +1149,6 @@ class OnlineDownPosition(PositionSpider):
                     results.append((link, title))
         return results
 
-class EoemarketPosition(PositionSpider):
-    """
-    下载次数：是
-    位置：    信息页
-    """
-    domain = "www.eoemarket.com"
-    search_url = "http://www.eoemarket.com/search_.html?keyword=%s&pageNum=1"
-    xpath = "//ol[@class='RlistName']/li[1]/span/a"
-
-    def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
-            print link, title
-        return results
-
-class ApkolPosition(PositionSpider):
-    """
-    下载次数：否
-    备选：    安装次数
-    搜索：    信息页打开慢
-    """
-    domain = "www.apkol.com"
-    search_url = "http://www.apkol.com/search?keyword=%s"
-    xpath = "//div[@class='listbox ty']/div[@class='yl_pic']/a"
-
-    def run(self, appname):
-        results = []
-        etree = self.send_request(appname)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.attrib['title']
-            results.append((link, title))
-            print link, title
-        return results
-
 class BkillPosition(PositionSpider):
     """
     下载次数：否
@@ -1129,8 +1160,9 @@ class BkillPosition(PositionSpider):
     charset = 'gb2312'
     search_url = "http://www.bkill.com/d/search.php?mod=do&n=1"
     xpath = "//div[@class='clsList']/dl/dt/a"
+    down_xpath = "//div[@class='down_link_main']/ul/li/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         data = {
             'keyword': appname.encode(self.charset),
@@ -1146,8 +1178,21 @@ class BkillPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[-1]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class AibalaPosition(PositionSpider):
@@ -1160,17 +1205,35 @@ class AibalaPosition(PositionSpider):
     domain = "www.aibala.com"
     search_url = "http://www.aibala.com/android-search-1-0-0-%s-1-1"
     xpath = "//ul[@class='block']/li//div[@class='tabRightTL']/a"
+    down_xpath = "//div[@class='listMainRightBottomL']/div[@class='RightB1']/a[1]/@onclick"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)[0]
+            r = re.compile("window.location.href='(.+)';return false;")
+            down_link = r.search(down_link)
+            down_link = down_link.group(1)
+            if down_link:
+                down_link = self.normalize_url(link, down_link)
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
+
 
 class VmallPosition(PositionSpider):
     """
@@ -1504,8 +1567,8 @@ if __name__ == "__main__":
     #mobile1 = Mobile1Position()
     #print mobile1.run(u'网易')
 
-    onlinedown = OnlineDownPosition()
-    print onlinedown.run(u'腾讯')
+    #onlinedown = OnlineDownPosition()
+    #print onlinedown.run(u'腾讯')
 
     #eoemarket = EoemarketPosition()
     #print eoemarket.run(u'腾讯')
@@ -1519,8 +1582,8 @@ if __name__ == "__main__":
     #bkill = BkillPosition()
     #print bkill.run(u'网易')
 
-    #aibala = AibalaPosition()
-    #print aibala.run(u'网易')
+    aibala = AibalaPosition()
+    print aibala.run(u'网易')
 
     #vmall = VmallPosition()
     #print vmall.run(u'有道')
