@@ -756,6 +756,7 @@ class CnmoPosition(PositionSpider):
             print link, title
         return results
 
+#下载速度特慢
 class CrskyPosition(PositionSpider):
     """
     下载次数：否
@@ -767,8 +768,9 @@ class CrskyPosition(PositionSpider):
     charset = 'gb2312'
     search_url = "http://sj.crsky.com/query.aspx?keyword=%s&type=android"
     xpath = "//div[@class='right']//a"
+    down_xpath = "//div[@class='btns']/ul/li/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
                    'Refererhttp': 'http://sj.crsky.com/query.aspx?keyword=%cd%f8%d2%d7&type=android'}
@@ -779,8 +781,23 @@ class CrskyPosition(PositionSpider):
             title = item.text_content()
             results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#下载页面js生成
 class DPosition(PositionSpider):
     """
     下载次数：是
@@ -811,8 +828,9 @@ class AndroidcnPosition(PositionSpider):
     search_url = "http://down.androidcn.com/search/q/%s"
     search_url1 = "http://game.androidcn.com/search/q/%s"
     xpath = "//h2/a"
+    down_xpath = "//p[@class='dl-add-3']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         etree2 = self.send_request(appname, url=self.search_url1)
@@ -824,8 +842,23 @@ class AndroidcnPosition(PositionSpider):
             title = item.text_content()
             results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#error 下载页面打不开
 class ApkcnPosition(PositionSpider):
     """
     下载次数：否
@@ -835,8 +868,9 @@ class ApkcnPosition(PositionSpider):
     domain = "www.apkcn.com"
     search_url = "http://www.apkcn.com/search/"
     xpath = "//div[@class='box']/div[@class='post indexpost']/h3/a"
+    down_xpath = "//div[@class='imginfo']/p[2]/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         data = {'keyword': appname.encode(self.charset), 'select': 'phone'}
         etree = self.send_request(data=data)
@@ -844,9 +878,24 @@ class ApkcnPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                down_link = self.normalize_url(link, down_link)
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
+
 
 class SohoPosition(PositionSpider):
     """
@@ -857,18 +906,33 @@ class SohoPosition(PositionSpider):
     domain = "download.sohu.com"
     search_url = "http://download.sohu.com/search?words=%s"
     xpath = "//div[@class='yylb_box']/div[@class='yylb_main']/p[@class='yylb_title']/strong/a"
+    down_xpath = "//div[@class='gy_03 clear']/div[2]/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#下载需要Cookie信息
 class ShoujiPosition(PositionSpider):
     """
     下载次数：否
@@ -895,8 +959,9 @@ class ShoujiPosition(PositionSpider):
         "&thsubmit=搜索"
     )
     xpath = "//div[@id='bklist']//li[@class='bname']/a"
+    down_xpath = "//span[@class='bdown']/a[1]/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         etree2 = self.send_request(appname, url=self.search_url1)
@@ -905,15 +970,40 @@ class ShoujiPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
+                              'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
+                    match = self.download_app(down_link, headers=headers)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         for item in items2:
             link = self.normalize_url(self.search_url1, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
+                              'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
+                    match = self.download_app(down_link, headers=headers)
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#页面下载403
 class Mobile1Position(PositionSpider):
     """
     下载次数：是
@@ -954,17 +1044,37 @@ class OnlineDownPosition(PositionSpider):
         "&action=search"
         "&type=news"
     )
-    xpath = "//div[@class='title']/strong/a"
+    xpath = "//div[@class='title']/strong/a[1]"
+    pagedown_xpath = "//a[@class='btn_page']/@href"
+    down_xpath = "//div[@class='info']/div[@class='down-menu']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            pagedown_link = detail.xpath(self.pagedown_xpath)[0]
+            pagedown_link = self.normalize_url(link, pagedown_link)
+            print pagedown_link
+            downdetail = self.get_elemtree(pagedown_link)
+            down_link = downdetail.xpath(self.down_xpath)
+            print down_link
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class EoemarketPosition(PositionSpider):
@@ -1367,8 +1477,8 @@ if __name__ == "__main__":
     #shop985 = Shop985Position()
     #print shop985.run(u'网易')
 
-    liqucn = LiqucnPosition()
-    print liqucn.run(u'腾讯')
+    #liqucn = LiqucnPosition()
+    #print liqucn.run(u'腾讯')
 
     #cnmo = CnmoPosition()
     #print cnmo.run(u'腾讯')
@@ -1394,8 +1504,8 @@ if __name__ == "__main__":
     #mobile1 = Mobile1Position()
     #print mobile1.run(u'网易')
 
-    #onlinedown = OnlineDownPosition()
-    #print onlinedown.run(u'腾讯')
+    onlinedown = OnlineDownPosition()
+    print onlinedown.run(u'腾讯')
 
     #eoemarket = EoemarketPosition()
     #print eoemarket.run(u'腾讯')

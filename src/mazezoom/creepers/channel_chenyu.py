@@ -563,6 +563,225 @@ class LiqucnChannel(ChannelSpider):
            storage = self.download_app(down_link)
         return result
 
+class CrskyChannel(ChannelSpider):
+    """
+    url: http://android.crsky.com/soft/25385.html
+    软件名称：网易邮箱 v3.3.2 安卓版
+    开发厂商：网易邮箱手机版
+    软件大小：3.31 MB
+    支持语言：简体中文
+    所属分类：聊天通讯
+    访问次数：1457
+    上架时间：2014/8/22 16:34:14
+    系统要求：Android 2.3,Android 3.0,Android 4.0,Android 4.1,Android 4.2
+    """
+
+    domain = "android.crsky.com"
+    fuzzy_xpath = "//div[@class='left']/div[@class='s_line']/p"
+    info_xpath = "child::text()|child::*//text()"
+    down_xpath = "//div[@class='btns']/ul/li/a/@href"
+    seperator = u'：'
+    label = u'访问次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+        print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class AndroidcnChannel(ChannelSpider):
+    """
+    url: http://down.androidcn.com/detail/2025.html
+    软件编号：2025
+    更新日期：2012-09-12
+    文件大小：3.20M
+    下载次数：105
+    """
+
+    domain = "www.androidcn.com"
+    fuzzy_xpath = "//div[@id='app-info_2']/p[position()<5]/text()"
+    down_xpath = "//p[@class='dl-add-3']/a/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                content = item
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+        print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class SohoChannel(ChannelSpider):
+    """
+    url: http://download.sohu.com/app/info?app_id=21174
+    下载： 1455 次
+    资费： 免费
+    语言： 简体中文
+    固件： Android 2.2
+    开发商： 网之易信息技术（北京）有限公司
+    大小： 10 Mb
+    分类： 社交
+    版本： 2.4.0
+    时间： 2014-07-08
+    """
+
+    domain = "download.sohu.com"
+    fuzzy_xpath = "//div[@class='gy_02']/ul/li[position()<3]/text()"
+    down_xpath = "//div[@class='gy_03 clear']/div[2]/a/@href"
+    seperator = u'：'
+    label = u'下载'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                if u'：' in item:
+                    content = item
+                    #print content
+                    label, value = content.split(self.seperator)
+                    label = label.strip().replace(' ', '')
+                    value = value.strip().replace(' ', '')
+                    print label, value
+                    result[label] = value
+
+        times = result.get(self.label)
+        print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+#error 下载需要Cookie
+class ShoujiChannel(ChannelSpider):
+    """
+    url: http://soft.shouji.com.cn/down/20275.html
+    更新时间：2014-08-27
+    资费提示：免费版
+    当前版本：4.0.1
+    软件语言：中文
+    软件类别：新闻资讯
+    软件大小：18.62 MB
+    适用固件：1.6及更高固件
+    内置广告：没有广告
+    适用平台：Android
+    """
+
+    domain = "soft.shouji.com.cn"
+    domain1 = "game.shouji.com.cn"
+    fuzzy_xpath = "//ul[@class='des']/li[position()<10]"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//span[@class='bdown']/a[1]/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        #times = result.get(self.label)
+        #print times
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
+                              'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
+            storage = self.download_app(down_link, headers=headers)
+           #storage = self.download_app(down_link)
+        return result
+
+class OnlineDownChannel(ChannelSpider):
+    """
+    url: http://down.androidcn.com/detail/2025.html
+    软件编号：2025
+    更新日期：2012-09-12
+    文件大小：3.20M
+    下载次数：105
+    """
+
+    domain = "www.onlinedown.net"
+    fuzzy_xpath = "//div[@class='app_other']/ul[1]/li"
+    #info_xpath = "child::text()|child::span/text()|child::a/text()|child::strong/text()"
+    info_xpath = "child::text()|child::*//a/text()|child::span/text()|child::a/text()|child::strong/text()|child::div/text()"
+    pagedown_xpath = "//a[@class='btn_page']/@href"
+    down_xpath = "//div[@class='info']/div[@class='down-menu']/a/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info).strip()
+                #print content
+                label, value = content.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        #times = result.get(self.label)
+        #print times
+        pagedown_link = etree.xpath(self.pagedown_xpath)[0]
+        pagedown_link = self.normalize_url(url, pagedown_link)
+        print pagedown_link
+        downdetail = self.send_request(pagedown_link)
+        down_link = downdetail.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
 if __name__ == '__main__':
     #url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     #hiapk = HiapkChannel()
@@ -616,3 +835,23 @@ if __name__ == '__main__':
     #url = "http://os-android.liqucn.com/rj/12910.shtml"
     #liqucn = LiqucnChannel()
     #print liqucn.run(url)
+
+    #url = "http://android.crsky.com/soft/25385.html"
+    #crsky = CrskyChannel()
+    #print crsky.run(url)
+
+    #url = "http://down.androidcn.com/detail/2025.html"
+    #Androidcn = AndroidcnChannel()
+    #print Androidcn.run(url)
+
+    #url = "http://download.sohu.com/app/info?app_id=21174"
+    #soho = SohoChannel()
+    #print soho.run(url)
+
+    #url = "http://soft.shouji.com.cn/down/20275.html"
+    #shouji = ShoujiChannel()
+    #print shouji.run(url)
+
+    #url = "http://www.onlinedown.net/soft/110940.htm"
+    #onlinedown = OnlineDownChannel()
+    #print onlinedown.run(url)
