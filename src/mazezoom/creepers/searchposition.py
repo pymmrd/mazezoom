@@ -1244,16 +1244,32 @@ class VmallPosition(PositionSpider):
     domain = "app.vmall.com"
     search_url = "http://app.vmall.com/search/%s"
     xpath = "//div[@class='list-game-app dotline-btn nofloat']/div[@class='game-info  whole']/h4[@class='title']/a"
+    down_xpath = "//a[@class='mkapp-btn mab-download']/@onclick"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)[0]
+            r = re.compile("'(http://appdl\.hicloud\.com/[^']+)'")
+            down_link = r.search(down_link)
+            down_link = down_link.group(1)
+            print down_link
+            if down_link:
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class YruanPosition(PositionSpider):
@@ -1265,17 +1281,37 @@ class YruanPosition(PositionSpider):
     domain = "www.yruan.com"
     search_url = "http://www.yruan.com/search.php?keyword=%s"
     xpath = "//span[@class='item_name']/a"
+    token = 'Android'
+    down_xpath = "//li[@class='downimg']/div[@class='down_link']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            print link,title
-            results.append((link, title))
-        return results
+            if self.token in title:
+                print link, title
+                detail = self.get_elemtree(link)
+                pagedown_link = detail.xpath(self.down_xpath)[0]
+                if pagedown_link is not None:
+                    r = re.compile("id=([0-9]+)&")
+                    soft_id = r.search(pagedown_link)
+                    soft_id = soft_id.group(1)
+                    down_link = "http://www.yruan.com/down.php?id=%s" % soft_id
+                    print down_link
+                    if is_accurate:    #精确匹配
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                    else:
+                        results.append((link, title))
+        return results                    
+
 
 class AnzowPosition(PositionSpider):
     """
@@ -1582,14 +1618,14 @@ if __name__ == "__main__":
     #bkill = BkillPosition()
     #print bkill.run(u'网易')
 
-    aibala = AibalaPosition()
-    print aibala.run(u'网易')
+    #aibala = AibalaPosition()
+    #print aibala.run(u'网易')
 
     #vmall = VmallPosition()
     #print vmall.run(u'有道')
 
-    #yruan = YruanPosition()
-    #print yruan.run(u'网易')
+    yruan = YruanPosition()
+    print yruan.run(u'网易')
 
     #anzow = AnzowPosition()
     #print anzow.run(u'网易')

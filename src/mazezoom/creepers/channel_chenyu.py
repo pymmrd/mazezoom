@@ -872,6 +872,140 @@ class BkillChannel(ChannelSpider):
            storage = self.download_app(down_link)
         return result
 
+class AibalaChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.aibala.com/android-soft-16102.html
+    发布时间：2012-03-30
+    软件大小：3MB
+    版本：1.2.1
+    研发公司：网易（杭州）网络有限公司MAG安卓团队
+    运行环境：Android 1.6及以上
+
+    """
+
+    domain = "www.aibala.com"
+    fuzzy_xpath = "//div[@class='tabRightM']/div[contains(@class,'tabRightM')]/text()"
+    down_xpath = "//div[@class='listMainRightBottomL']/div[@class='RightB1']/a[1]/@onclick"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                label, value = item.split(self.seperator)
+                label = label.strip()
+                value = value.strip()
+                print label, value
+                result[label] = value
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        r = re.compile("window.location.href='(.+)';return false;")
+        down_link = r.search(down_link)
+        down_link = down_link.group(1)
+        print down_link
+        if down_link:
+           down_link = self.normalize_url(url, down_link)
+           storage = self.download_app(down_link)
+        return result
+
+class VmallChannel(ChannelSpider):
+    """
+    url: http://app.vmall.com/app/C9147
+    下载：18991665次
+    大小：18.62MB
+    日期：2014-08-26
+    开发者：网之易信息技术…
+    版本：4.0.1
+
+    """
+
+    domain = "app.vmall.com"
+    times_xpath = "//div[@class='app-info flt']/ul[1]/li[2]/p/span[2]/text()"
+    fuzzy_xpath = "//div[@class='app-info flt']/ul[2]/li[position()<5]"
+    info_xpath = "child::text()|child::span/text()"
+    down_xpath = "//a[@class='mkapp-btn mab-download']/@onclick"
+    seperator = u'：'
+    label = u'下载'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        times = etree.xpath(self.times_xpath)[0]
+        tlable, tvalue = [x.strip() for x in times.split(self.seperator)]
+        result[tlable] = tvalue
+        times = result.get(self.label)
+        print times
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        r = re.compile("'(http://appdl\.hicloud\.com/[^']+)'")
+        down_link = r.search(down_link)
+        down_link = down_link.group(1)
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class YruanChannel(ChannelSpider):
+    """
+    url: http://www.yruan.com/softdetail/584/
+    软件分类： 网络浏览
+    软件资费： 免费软件
+    更新时间： 2011-06-01
+    软件语言： 中文
+    软件大小： 2M
+    下载次数： 49 
+    """
+
+    domain = "www.yruan.com"
+    times_xpath = "//div[@class='app-info flt']/ul[1]/li[2]/p/span[2]/text()"
+    fuzzy_xpath = "//ul[@class='Download-m']//dl[@class='leftdl']/dt"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//li[@class='downimg']/div[@class='down_link']/a/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+        print times
+
+        pagedown_link = etree.xpath(self.down_xpath)[0]
+        if pagedown_link is not None:
+            r = re.compile("id=([0-9]+)&")
+            soft_id = r.search(pagedown_link)
+            soft_id = soft_id.group(1)
+            down_link = "http://www.yruan.com/down.php?id=%s" % soft_id
+            print down_link
+
+            if down_link:
+               storage = self.download_app(down_link)
+
+        return result
 
 if __name__ == '__main__':
     #url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
@@ -951,6 +1085,18 @@ if __name__ == '__main__':
     #eoemarket = EoemarketChannel()
     #print eoemarket.run(url)
 
-    url = "http://www.bkill.com/download/23765.html"
-    bkill = BkillChannel()
-    print bkill.run(url)
+    #url = "http://www.bkill.com/download/23765.html"
+    #bkill = BkillChannel()
+    #print bkill.run(url)
+
+    #url = "http://www.aibala.com/android-soft-16102.html"
+    #aibala = AibalaChannel()
+    #print aibala.run(url)
+
+    #url = "http://app.vmall.com/app/C9147"
+    #vmall = VmallChannel()
+    #print vmall.run(url)
+
+    url = "http://www.yruan.com/softdetail/584/"
+    yruan = YruanChannel()
+    print yruan.run(url)
