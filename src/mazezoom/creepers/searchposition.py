@@ -1464,6 +1464,7 @@ class WandoujiaPosition(PositionSpider):
                     results.append((link, title))
         return results
 
+#error js生成下载链接
 class Android159Position(PositionSpider):
     """
     下载次数：是
@@ -1500,8 +1501,9 @@ class Position3533(PositionSpider):
     search_url = "http://search.3533.com/software?keyword=%s"
     search_url1 = "http://search.3533.com/game?keyword=%s"
     xpath = "//div[@class='applist']/ul/li//div[@class='appinfo']/a[@class='apptit']"
+    down_xpath = "//div[@class='appdownbox']/dl[1]//div[@class='packdown']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         etree2 = self.send_request(appname, url=self.search_url1)
@@ -1511,10 +1513,24 @@ class Position3533(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            results.append((link, title))
             print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
+#error 下载页面乱码，无正常内容显示
 class MuzisoftPosition(PositionSpider):
     """
     网站做得很烂，页面经常有错误
@@ -1535,6 +1551,7 @@ class MuzisoftPosition(PositionSpider):
             print link, title
         return results
 
+#error 只能迅雷下载
 class Position7613(PositionSpider):
     """
     下载次数：否
@@ -1564,19 +1581,50 @@ class BaicentPosition(PositionSpider):
     """
     domain = "www.baicent.com"
     charset = 'gb2312'
-    search_url = "http://www.baicent.com/plus/search.php?kwtype=0&q=%s&searchtype=title"
+    #search_url = "http://www.baicent.com/plus/search.php?kwtype=0&q=%s&searchtype=title"
+    search_url = ("http://www.baicent.com/plus/search.php"
+                  "?typeid=304"
+                  "&q=%s"
+                  "&starttime=-1"
+                  "&channeltype=0"
+                  "&orderby=sortrank"
+                  "&pagesize=20"
+                  "&kwtype=1"
+                  "&searchtype=titlekeyword"
+                  "&搜索=搜索"
+                 )
     xpath = "//div[@class='resultlist']/ul/li/h3/a"
+    fuzzy_xpath = "//div[@class='viewbox']/div[@class='infolist']/span/text()"
+    down_xpath = "//ul[@class='downurllist']/li[1]/a/@href"
+    os_token = 'Android'
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            results.append((link, title))
-            print link, title
+            detail = self.get_elemtree(link)
+            info = detail.xpath(self.fuzzy_xpath)
+            if self.os_token in info:
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    print link, title
+                    down_link = down_link[0]
+                    down_link = self.normalize_url(link, down_link)
+                    print down_link
+                    if is_accurate:    #精确匹配
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                    else:
+                        results.append((link, title))
         return results
+
 
 
 if __name__ == "__main__":
@@ -1695,8 +1743,8 @@ if __name__ == "__main__":
     #xz7 = Xz7Position()
     #print xz7.run(u'腾讯')
 
-    wandoujia = WandoujiaPosition()
-    print wandoujia.run(u'网易')
+    #wandoujia = WandoujiaPosition()
+    #print wandoujia.run(u'网易')
 
     #android159 = Android159Position()
     #print android159.run(u'qq')
@@ -1710,5 +1758,5 @@ if __name__ == "__main__":
     #p7613 = Position7613()
     #print p7613.run(u'腾讯')
 
-    #baicent = BaicentPosition()
-    #print baicent.run(u'腾讯')
+    baicent = BaicentPosition()
+    print baicent.run(u'腾讯')

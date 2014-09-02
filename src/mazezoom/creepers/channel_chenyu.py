@@ -565,6 +565,7 @@ class LiqucnChannel(ChannelSpider):
 
 class CrskyChannel(ChannelSpider):
     """
+    ***无下载次数***
     url: http://android.crsky.com/soft/25385.html
     软件名称：网易邮箱 v3.3.2 安卓版
     开发厂商：网易邮箱手机版
@@ -690,6 +691,7 @@ class SohoChannel(ChannelSpider):
 #error 下载需要Cookie
 class ShoujiChannel(ChannelSpider):
     """
+    ***无下载次数***
     url: http://soft.shouji.com.cn/down/20275.html
     更新时间：2014-08-27
     资费提示：免费版
@@ -1128,13 +1130,67 @@ class Xz7Channel(ChannelSpider):
 class WandoujiaChannel(ChannelSpider):
     """
     url: http://www.wandoujia.com/apps/com.netease.newsreader.activity
-
+    大小 18.62M 
+    分类 新闻资讯 新闻 精品 网易 世界杯 
+    更新 8月26日
+    版本 4.0.1
+    要求 Android 2.3 以上
+    网站 网之易信息技术（北京）有限公司 
+    来自 官方提供 
     """
 
     domain = "www.7xz.com"
-    fuzzy_xpath = "//div[@class='values']/ul/li[@class='c1']"
-    info_xpath = "child::text()|child::*/text()"
-    down_xpath = "//div[@class='downloadWrap1']/div[@class='diannao']/a/@href"
+    label_xpath = "//div[@class='infos']/dl[@class='infos-list']/dt//text()"
+    fuzzy_xpath = "//div[@class='infos']/dl[@class='infos-list']/dd"
+    value_xpath = "child::text()|child::*/text()|child::a/span/text()"
+    down_xpath = "//div[@class='download-wp']/a/@href"
+    times_xpath = "//div[@class='num-list']/span[@class='item']/i/text()"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        value_list = []
+        stroage = None
+        etree = self.send_request(url)
+        labels = etree.xpath(self.label_xpath)
+        #for label in labels:
+            #print label
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                values = item.xpath(self.value_xpath)
+                value = ''.join(values).strip()
+                value = ','.join(value.split()) 
+                value_list.append(value)
+
+        info = zip(labels, value_list)
+        for content in info:
+            label, value = content
+            print label, value
+            result[label] = value
+
+        times = etree.xpath(self.times_xpath)[0]
+        print times
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        #if down_link:
+        #   storage = self.download_app(down_link)
+        return result
+
+class Channel3533Channel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://game.3533.com/ruanjian/974.htm
+    版本：V3.5 Build 19 
+    大小：4.0 MB 格式：APK 
+    系统要求：安卓2.2以上系统 
+    适用屏幕像素：通用 
+    """
+
+    domain = "www.3533.com"
+    fuzzy_xpath = "//div[@class='appdownbox']/dl[1]//div[@class='packinfo']/p[1]//span/text()"
+    down_xpath = "//div[@class='appdownbox']/dl[1]//div[@class='packdown']/a/@href"
     seperator = u'：'
 
     def run(self, url):
@@ -1142,11 +1198,10 @@ class WandoujiaChannel(ChannelSpider):
         stroage = None
         etree = self.send_request(url)
         items = etree.xpath(self.fuzzy_xpath)
+        print items
         for item in items:
-            if item is not None:
-                info = item.xpath(self.info_xpath)
-                content = ''.join(info)
-                print content
+            if self.seperator in item:
+                content = item.strip()
                 label, value = [x.strip() for x in content.split(self.seperator)]
                 print label, value
                 result[label] = value
@@ -1155,6 +1210,55 @@ class WandoujiaChannel(ChannelSpider):
         print down_link
         if down_link:
            storage = self.download_app(down_link)
+        return result
+
+class BaicentChannel(ChannelSpider):
+    """
+    url: http://www.baicent.com/plus/view-288996-1.html
+    软件类型：国产软件 
+    授权方式：共享软件 
+    界面语言：简体中文 
+    软件大小： 
+    文件类型： 
+    运行环境：Android 
+    软件等级：★★★☆☆ 
+    发布时间：2011-09-23 
+    官方网址： 
+    演示网址： 
+    下载次数：0 
+    """
+
+    domain = "www.baicent.com"
+    fuzzy_xpath = "//div[@class='viewbox']/div[@class='infolist']"
+    label_xpath = "child::small/text()"
+    value_xpath = "child::span/text()"
+    down_xpath = "//ul[@class='downurllist']/li[1]/a/@href"
+    label = u'下载次数'
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        item = etree.xpath(self.fuzzy_xpath)[0]
+        if item is not None:
+            labels = item.xpath(self.label_xpath)
+            print labels
+            values = item.xpath(self.value_xpath)
+            info = zip(labels, values)
+            for content in info:
+                label, value = content
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        down_link = self.normalize_url(url, down_link)
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+
         return result
 
 if __name__ == '__main__':
@@ -1255,6 +1359,18 @@ if __name__ == '__main__':
     #anzow = AnzowChannel()
     #print anzow.run(url)
 
-    url = "http://www.7xz.com/softs/view/10034884"
-    xz7 = Xz7Channel()
-    print xz7.run(url)
+    #url = "http://www.7xz.com/softs/view/10034884"
+    #xz7 = Xz7Channel()
+    #print xz7.run(url)
+
+    url = "http://www.wandoujia.com/apps/com.netease.newsreader.activity"
+    wandoujia = WandoujiaChannel()
+    print wandoujia.run(url)
+
+    #url = "http://game.3533.com/ruanjian/974.htm"
+    #channel3533 = Channel3533Channel()
+    #print channel3533.run(url)
+
+    #url = "http://www.baicent.com/plus/view-288996-1.html"
+    #baicent = BaicentChannel()
+    #print baicent.run(url)
