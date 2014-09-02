@@ -1312,7 +1312,6 @@ class YruanPosition(PositionSpider):
                         results.append((link, title))
         return results                    
 
-
 class AnzowPosition(PositionSpider):
     """
     下载次数：否
@@ -1320,17 +1319,32 @@ class AnzowPosition(PositionSpider):
     domain = "www.anzow.com"
     search_url = "http://www.anzow.com/Search.shtml?stype=anzow&q=%s"
     xpath = "//div[@class='box boxsbg']//dd[@class='down_title']/h2/a"
+    down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            print link,title
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
+
 
 class ZhuodownPosition(PositionSpider):
     """
@@ -1353,16 +1367,33 @@ class ZhuodownPosition(PositionSpider):
         "搜索=搜索"
     )
     xpath = "//div[@class='listbox']/ul[@class='e2']/li/a[2]"
+    pagedown_xpath = "//ul[@class='downurllist']/a/@href"
+    down_xpath = "//div[@class='advancedsearch']/table/tr[2]/td/li[1]/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            print link,title
-            results.append((link, title))
+            print link, title
+            detail = self.get_elemtree(link)
+            pagedown_link = detail.xpath(self.pagedown_xpath)[0]
+            downdetail = self.get_elemtree(pagedown_link)
+            down_link = downdetail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class Xz7Position(PositionSpider):
@@ -1372,8 +1403,9 @@ class Xz7Position(PositionSpider):
     domain = "www.7xz.com"
     search_url = "http://www.7xz.com/search?q=%s"
     xpath = "//a[@class='a2']"
+    down_xpath = "//div[@class='downloadWrap1']/div[@class='diannao']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
@@ -1381,7 +1413,20 @@ class Xz7Position(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             print link,title
-            results.append((link, title))
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class WandoujiaPosition(PositionSpider):
@@ -1393,8 +1438,9 @@ class WandoujiaPosition(PositionSpider):
     domain = "www.wandoujia.com"
     search_url = "http://www.wandoujia.com/search?key=%s"
     xpath = "//ul[@id='j-search-list']/li[@class='card']/div[@class='app-desc']/a"
+    down_xpath = "//div[@class='download-wp']/a/@href"
 
-    def run(self, appname):
+    def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
         items = etree.xpath(self.xpath)
@@ -1402,7 +1448,20 @@ class WandoujiaPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             print link,title
-            results.append((link, title))
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                print down_link
+                if is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 class Android159Position(PositionSpider):
@@ -1624,8 +1683,8 @@ if __name__ == "__main__":
     #vmall = VmallPosition()
     #print vmall.run(u'有道')
 
-    yruan = YruanPosition()
-    print yruan.run(u'网易')
+    #yruan = YruanPosition()
+    #print yruan.run(u'网易')
 
     #anzow = AnzowPosition()
     #print anzow.run(u'网易')
@@ -1636,8 +1695,8 @@ if __name__ == "__main__":
     #xz7 = Xz7Position()
     #print xz7.run(u'腾讯')
 
-    #wandoujia = WandoujiaPosition()
-    #print wandoujia.run(u'网易')
+    wandoujia = WandoujiaPosition()
+    print wandoujia.run(u'网易')
 
     #android159 = Android159Position()
     #print android159.run(u'qq')

@@ -1007,6 +1007,156 @@ class YruanChannel(ChannelSpider):
 
         return result
 
+class AnzowChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.anzow.com/download/Software/JQKRDPQQP8.shtml
+    所属分类：通讯辅助
+    授权方式：免费使用
+    软件大小：3.1MB
+    应用版本：1.0.1
+    软件语言：简体中文
+    适用平台：Android 2.3+
+    推荐指数：★★☆☆☆
+    作者：网易
+    更新时间：2014-7-16 11:33:26
+    """
+
+    domain = "www.anzow.com"
+    fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
+    info_xpath = "child::text()|child::*/text()|child::*/*/text()"
+    down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                print content
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class ZhuodownChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.anzow.com/download/Software/JQKRDPQQP8.shtml
+    所属分类：通讯辅助
+    授权方式：免费使用
+    软件大小：3.1MB
+    应用版本：1.0.1
+    软件语言：简体中文
+    适用平台：Android 2.3+
+    推荐指数：★★☆☆☆
+    作者：网易
+    更新时间：2014-7-16 11:33:26
+    """
+
+    domain = "www.zhuodown.com"
+    fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
+    info_xpath = "child::text()|child::*/text()|child::*/*/text()"
+    pagedown_xpath = "//ul[@class='downurllist']/a/@href"
+    down_xpath = "//div[@class='advancedsearch']/table/tr[2]/td/li[1]/a/@href"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                print content
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class Xz7Channel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.7xz.com/softs/view/10034884
+    大小：13.62MB
+    格式：apk
+    更新日
+    """
+
+    domain = "www.7xz.com"
+    fuzzy_xpath = "//div[@class='values']/ul/li[@class='c1']"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//div[@class='downloadWrap1']/div[@class='diannao']/a/@href"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                print content
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
+class WandoujiaChannel(ChannelSpider):
+    """
+    url: http://www.wandoujia.com/apps/com.netease.newsreader.activity
+
+    """
+
+    domain = "www.7xz.com"
+    fuzzy_xpath = "//div[@class='values']/ul/li[@class='c1']"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//div[@class='downloadWrap1']/div[@class='diannao']/a/@href"
+    seperator = u'：'
+
+    def run(self, url):
+        result = {}
+        stroage = None
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info)
+                print content
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        down_link = etree.xpath(self.down_xpath)[0]
+        print down_link
+        if down_link:
+           storage = self.download_app(down_link)
+        return result
+
 if __name__ == '__main__':
     #url = "http://apk.hiapk.com/appinfo/com.tencent.mm"
     #hiapk = HiapkChannel()
@@ -1097,6 +1247,14 @@ if __name__ == '__main__':
     #vmall = VmallChannel()
     #print vmall.run(url)
 
-    url = "http://www.yruan.com/softdetail/584/"
-    yruan = YruanChannel()
-    print yruan.run(url)
+    #url = "http://www.yruan.com/softdetail/584/"
+    #yruan = YruanChannel()
+    #print yruan.run(url)
+
+    #url = "http://www.anzow.com/download/Software/JQKRDPQQP8.shtml"
+    #anzow = AnzowChannel()
+    #print anzow.run(url)
+
+    url = "http://www.7xz.com/softs/view/10034884"
+    xz7 = Xz7Channel()
+    print xz7.run(url)
