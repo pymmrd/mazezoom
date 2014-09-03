@@ -420,6 +420,43 @@ class ZolChannel(ChannelSpider):
         print times
         return result
 
+#error js生成下载链接
+class PcOnlineChannel(ChannelSpider):
+    """
+    url: http://dl.pconline.com.cn/download/172907.html
+    提供商：百度无线 软件大小：7.59M
+    软件授权：免费 更新：2014-8-22
+    软件评级： 语言：简体中文
+    """
+    domain = "dl.pconline.com.cn"
+    fuzzy_xpath = "//div[@class='megR']//i[@class='item']"
+    info_xpath = "child::*/text()"
+    times_xpath = "//a[@id='linkPage']/em[@id='span_dl_count']/text()"
+    label = u'下载次数'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.send_request(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info).strip()
+                if self.seperator in content:
+                    label, value = [x.strip() for x in content.split(self.seperator)]
+                    print label, value
+                    result[label] = value
+
+        times = etree.xpath(self.times_xpath)[-1].strip()
+        print times
+        result[self.label] = times
+
+        return result
+
 class NduoaChannel(ChannelSpider):
     """
     url: http://www.nduoa.com/apk/detail/808577
@@ -1303,6 +1340,10 @@ if __name__ == '__main__':
     #zol = ZolChannel()
     #print zol.run(url)
 
+    url = "http://dl.pconline.com.cn/download/172907.html"
+    pconline = PcOnlineChannel()
+    print pconline.run(url)
+
     #url = "http://www.nduoa.com/apk/detail/11990"
     #nduoa = NduoaChannel()
     #print nduoa.run(url)
@@ -1363,9 +1404,9 @@ if __name__ == '__main__':
     #xz7 = Xz7Channel()
     #print xz7.run(url)
 
-    url = "http://www.wandoujia.com/apps/com.netease.newsreader.activity"
-    wandoujia = WandoujiaChannel()
-    print wandoujia.run(url)
+    #url = "http://www.wandoujia.com/apps/com.netease.newsreader.activity"
+    #wandoujia = WandoujiaChannel()
+    #print wandoujia.run(url)
 
     #url = "http://game.3533.com/ruanjian/974.htm"
     #channel3533 = Channel3533Channel()

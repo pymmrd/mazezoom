@@ -42,7 +42,6 @@ class HiapkPosition(PositionSpider):
                 results.append((link, title))
         return results
 
-#
 class GfanPosition(PositionSpider):
     """
     下载次数：否
@@ -105,9 +104,6 @@ class Apk91Position(PositionSpider):
             except:
                 pass
 
-            print link, title
-            print down_link
-
             if down_link is not None:
                 if is_accurate:    #精确匹配
                     match = self.verify_app(
@@ -115,7 +111,6 @@ class Apk91Position(PositionSpider):
                         chksum=chksum
                     )
                     if match:
-                        print "----------"
                         results.append((link, title))
                 else:
                     results.append((link, title))
@@ -221,13 +216,11 @@ class PcHomePosition(PositionSpider):
             values = detail.xpath(self.value_xpath)
             pagedown_link = detail.xpath(self.pagedown_xpath)[0]
             if self.os_token in values:
-                print link , title
                 downdetail = self.get_elemtree(pagedown_link)
                 onclick = downdetail.xpath(self.down_xpath)[0]
                 r = re.compile("windowOpen\('([^']+)'\);")
                 onclick_content = r.search(onclick)
                 down_link = onclick_content.group(1)
-                print down_link
 
                 if is_accurate:    #精确匹配
                     match = self.verify_app(
@@ -265,7 +258,6 @@ class QQPosition(PositionSpider):
             detail = self.get_elemtree(link)
             down_link = detail.xpath(self.down_xpath)[0]
             if down_link:
-                print link, title, down_link
                 if is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
@@ -298,10 +290,8 @@ class MumayiPosition(PositionSpider):
         times = None
         if item:
             item = item[0]
-            print item
             try:
                 times = item.split(seperator)[-1] 
-                print times
             except (TypeError, IndexError, ValueError):
                 pass
         return times
@@ -318,8 +308,6 @@ class MumayiPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
-                print link, title
-                print down_link
                 if is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
@@ -354,8 +342,6 @@ class SkycnPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
-                print link, title
-                print down_link
                 if is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
@@ -386,7 +372,6 @@ class ZolPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            print link, title
             results.append((link, title))
             detail = self.get_elemtree(link)
             onclick = detail.xpath(self.down_xpath)[0]
@@ -394,7 +379,6 @@ class ZolPosition(PositionSpider):
             onclick_content = r.search(onclick)
             down_link = onclick_content.group(1)
             down_link = self.normalize_url(link, down_link)
-            print down_link
 
             if self.token in link:
                 if is_accurate:    #精确匹配
@@ -1631,8 +1615,8 @@ if __name__ == "__main__":
     #hiapk = HiapkPosition()
     #print hiapk.run(u'微信')
 
-    #gfan = GfanPosition()
-    #print gfan.run(u'微信')
+    gfan = GfanPosition()
+    print gfan.run(u'微信')
 
     #apk91 = Apk91Position()
     #print apk91.run(u'微信')
@@ -1758,5 +1742,5 @@ if __name__ == "__main__":
     #p7613 = Position7613()
     #print p7613.run(u'腾讯')
 
-    baicent = BaicentPosition()
-    print baicent.run(u'腾讯')
+    #baicent = BaicentPosition()
+    #print baicent.run(u'腾讯')
