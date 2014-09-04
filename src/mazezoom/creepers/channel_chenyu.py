@@ -457,6 +457,76 @@ class PcOnlineChannel(ChannelSpider):
 
         return result
 
+#error onclick动态生成下载链接 获得不了etree
+class SinaChannel(ChannelSpider):
+    """
+    url: http://down.tech.sina.com.cn/3gsoft/download.php?id=296
+    """
+    domain = "dl.pconline.com.cn"
+    fuzzy_xpath = "//li/span"
+    info_xpath = "child::text()|child::p/text()"
+    label = u'下载次数'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.get_elemtree(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        print items
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                print info
+                #content = ''.join(info).strip()
+                #if self.seperator in content:
+                #    label, value = [x.strip() for x in content.split(self.seperator)]
+                #    print label, value
+                #    result[label] = value
+
+        #times = etree.xpath(self.times_xpath)[-1].strip()
+        #print times
+        #result[self.label] = times
+
+        return result
+
+class DuoteChannel(ChannelSpider):
+    """
+    url: 
+
+    """
+    domain = "www.duote.com"
+    fuzzy_xpath = "//li/span"
+    info_xpath = "child::text()|child::p/text()"
+    label = u'下载次数'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.get_elemtree(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        print items
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                print info
+                #content = ''.join(info).strip()
+                #if self.seperator in content:
+                #    label, value = [x.strip() for x in content.split(self.seperator)]
+                #    print label, value
+                #    result[label] = value
+
+        #times = etree.xpath(self.times_xpath)[-1].strip()
+        #print times
+        #result[self.label] = times
+
+        return result
+
 class NduoaChannel(ChannelSpider):
     """
     url: http://www.nduoa.com/apk/detail/808577
@@ -1340,9 +1410,13 @@ if __name__ == '__main__':
     #zol = ZolChannel()
     #print zol.run(url)
 
-    url = "http://dl.pconline.com.cn/download/172907.html"
-    pconline = PcOnlineChannel()
-    print pconline.run(url)
+    #url = "http://dl.pconline.com.cn/download/172907.html"
+    #pconline = PcOnlineChannel()
+    #print pconline.run(url)
+
+    url = "http://down.tech.sina.com.cn/3gsoft/download.php?id=296"
+    sina = SinaChannel()
+    print sina.run(url)
 
     #url = "http://www.nduoa.com/apk/detail/11990"
     #nduoa = NduoaChannel()
