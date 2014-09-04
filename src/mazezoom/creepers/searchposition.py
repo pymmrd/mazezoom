@@ -9,6 +9,7 @@ import json
 import time
 from base import PositionSpider
 
+
 class HiapkPosition(PositionSpider):
     """
     下载次数：否
@@ -31,7 +32,7 @@ class HiapkPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)[0]
             down_link = self.normalize_url(link, down_link)
 
-            if is_accurate:    #精确匹配
+            if is_accurate:  # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=chksum
@@ -41,6 +42,7 @@ class HiapkPosition(PositionSpider):
             else:
                 results.append((link, title))
         return results
+
 
 class GfanPosition(PositionSpider):
     """
@@ -52,6 +54,7 @@ class GfanPosition(PositionSpider):
     search_url = "http://apk.gfan.com/search?q=%s"
     xpath = "//span[@class='apphot-tit']/a"
     down_xpath = "//a[@id='computerLoad']/@href"
+
     def run(self, appname, chksum=None, is_accurate=True):
         results = []
         etree = self.send_request(appname)
@@ -62,7 +65,7 @@ class GfanPosition(PositionSpider):
             detail = self.get_elemtree(link)
             down_link = detail.xpath(self.down_xpath)[0]
 
-            if is_accurate:    #精确匹配
+            if is_accurate:    # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=chksum
@@ -72,6 +75,7 @@ class GfanPosition(PositionSpider):
             else:
                 results.append((link, title))
         return results
+
 
 class Apk91Position(PositionSpider):
     """
@@ -105,7 +109,7 @@ class Apk91Position(PositionSpider):
                 pass
 
             if down_link is not None:
-                if is_accurate:    #精确匹配
+                if is_accurate:    # 精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=chksum
@@ -115,6 +119,7 @@ class Apk91Position(PositionSpider):
                 else:
                     results.append((link, title))
         return results
+
 
 class AngeeksPosition(PositionSpider):
     """

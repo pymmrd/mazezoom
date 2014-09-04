@@ -965,6 +965,7 @@ class Ruan8Channel(ChannelSpider):
         storage = None
         etree = self.send_request(url)
         items = etree.xpath(self.fuzzy_xpath)
+        down_link = None
         for item in items:
             cls = item.attrib.get('class', '')
             if cls == 'app_green' :
@@ -1027,6 +1028,7 @@ class PcHomeChannel(ChannelSpider):
                     match = regx.search(item)
                     if match is not None:
                         down_link = match.group('link')
+        return down_link
 
     def run(self, url):
         result = {}
@@ -1100,6 +1102,7 @@ if __name__ == '__main__':
     #url = "http://www.pc6.com/azyx/82254.html"
     #pc6 = PC6Channel()
     #pc6.run(url)
+
     #url = "http://www.apk8.com/game/game_14104.html"
     #apk8 = Apk8Channel()
     #apk8.run(url)

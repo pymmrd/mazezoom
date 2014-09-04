@@ -17,6 +17,7 @@
 import re
 from base import ChannelSpider
 
+
 class HiapkChannel(ChannelSpider):
     """
     ***无下载次数***
@@ -28,7 +29,7 @@ class HiapkChannel(ChannelSpider):
     语言： 中文
     固件： 2.2及以上固件版本
     支持屏幕： 适用分辨率
-    上架时间： 2014-07-17 
+    上架时间： 2014-07-17
     """
 
     domain = "apk.hiapk.com"
