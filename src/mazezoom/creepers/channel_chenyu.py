@@ -495,12 +495,54 @@ class SinaChannel(ChannelSpider):
 
 class DuoteChannel(ChannelSpider):
     """
-    url: 
-
+    ***无下载次数***
+    url: http://www.duote.com/soft/32673.html
+    版本：3.8.2
+    人气：2776
+    更新：2014-05-04
+    大小：9.5MB
+    授权：免费软件
+    语言：简体中文
+    系统要求：Android 2.2 以上
     """
     domain = "www.duote.com"
-    fuzzy_xpath = "//li/span"
-    info_xpath = "child::text()|child::p/text()"
+    fuzzy_xpath = "//ul[@class='prop_area']/li/text()"
+    label = u'人气'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.get_elemtree(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        print items
+        for item in items:
+            if item is not None:
+                content = item.strip()
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
+
+        times = result.get(self.label)
+        print times
+
+        return result
+
+class ImobileChannel(ChannelSpider):
+    """
+    url: http://app.imobile.com.cn/android/app/8025.html
+    版 本 号：3.5.0
+    所属类型：软件 / 新闻阅读
+    更新时间：2013-07-01
+    文件大小：6.39 MB
+    下载次数：648万
+    支持固件：Android 2.0以上
+    开 发 者：网易
+    """
+    domain = "www.imobile.com.cn"
+    fuzzy_xpath = "//ul[@class='app_params']/li/text()"
     label = u'下载次数'
     seperator = u'：'
 
@@ -514,17 +556,49 @@ class DuoteChannel(ChannelSpider):
         print items
         for item in items:
             if item is not None:
-                info = item.xpath(self.info_xpath)
-                print info
-                #content = ''.join(info).strip()
-                #if self.seperator in content:
-                #    label, value = [x.strip() for x in content.split(self.seperator)]
-                #    print label, value
-                #    result[label] = value
+                content = item.strip()
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
 
-        #times = etree.xpath(self.times_xpath)[-1].strip()
-        #print times
-        #result[self.label] = times
+        times = result.get(self.label)
+        print times
+
+        return result
+
+class ApkzuChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.apkzu.com/soft/5206.shtml
+    类别：新闻资讯
+    时间：2014-1-3 14:46:45
+    大小：9 M
+    系统：Android 2.1及以上
+    授权：免费
+    评分：7 分
+    语言：简体中文
+    人气：1326
+    """
+    domain = "www.apkzu.com"
+    fuzzy_xpath = "//div[@class='appInfo']/li"
+    info_xpath = "child::text()|child::*/text()"
+    label = u'人气'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.get_elemtree(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                content = ''.join(info).strip()
+                label, value = [x.strip() for x in content.split(self.seperator)]
+                print label, value
+                result[label] = value
 
         return result
 
@@ -630,6 +704,44 @@ class Android115Channel(ChannelSpider):
         #times = result.get(self.label)
         times = etree.xpath(self.time_xpath)[0].strip()
         print times
+        return result
+
+#error 汉字乱码
+class Shop958Channel(ChannelSpider):
+    """
+    url: http://d.958shop.com/soft/196F4351-CCB4-46B3-9A6F-DB705CB88A75.html
+    分类：实用工具
+    格式：apk
+    大小：27168KB
+    运行平台：Android
+    软件性质：免费软件
+    TAG：电子词典 
+    上传时间：2014-08-11
+    浏览/下载次数：149224/120863次
+    """
+    domain = "d.958shop.com"
+    fuzzy_xpath = "//table[@class='m_word']/tr[position()>2 and position()<11]/td"
+    info_xpath = "child::text()|child::*/text()"
+    label = u'人气'
+    seperator = u'：'
+
+
+    def run(self, url):
+        result = {}
+        storage = None
+        etree = self.get_elemtree(url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                info = item.xpath(self.info_xpath)
+                print info
+                content = ''.join(info).strip()
+                print content
+                #label, value = [x.strip() for x in content.split(self.seperator)]
+                #print label, value
+                #result[label] = value
+
         return result
 
 class LiqucnChannel(ChannelSpider):
@@ -1415,9 +1527,21 @@ if __name__ == '__main__':
     #pconline = PcOnlineChannel()
     #print pconline.run(url)
 
-    url = "http://down.tech.sina.com.cn/3gsoft/download.php?id=296"
-    sina = SinaChannel()
-    print sina.run(url)
+    #url = "http://down.tech.sina.com.cn/3gsoft/download.php?id=296"
+    #sina = SinaChannel()
+    #print sina.run(url)
+
+    #url = "http://www.duote.com/soft/32673.html"
+    #duote = DuoteChannel()
+    #print duote.run(url)
+
+    #url = "http://app.imobile.com.cn/android/app/8025.html"
+    #imobile = ImobileChannel()
+    #print imobile.run(url)
+
+    #url = "http://www.apkzu.com/soft/5206.shtml"
+    #apkzu = ApkzuChannel()
+    #print apkzu.run(url)
 
     #url = "http://www.nduoa.com/apk/detail/11990"
     #nduoa = NduoaChannel()
@@ -1426,6 +1550,10 @@ if __name__ == '__main__':
     #url = "http://android.155.cn/soft/10198.html"
     #android115 = Android115Channel()
     #print android115.run(url)
+
+    url = "http://d.958shop.com/soft/196F4351-CCB4-46B3-9A6F-DB705CB88A75.html"
+    shop958 = Shop958Channel()
+    print shop958.run(url)
 
     #url = "http://os-android.liqucn.com/rj/12910.shtml"
     #liqucn = LiqucnChannel()

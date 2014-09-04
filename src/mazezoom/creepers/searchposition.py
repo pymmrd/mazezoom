@@ -626,7 +626,7 @@ class Android115Position(PositionSpider):
         return results
 
 #error 下载页面跳转过多
-class Shop985Position(PositionSpider):
+class Shop958Position(PositionSpider):
     """
     下载次数：是
     位置：    信息页
@@ -1669,8 +1669,8 @@ if __name__ == "__main__":
     #android115 = Android115Position()
     #print android115.run(u'网易')
 
-    #shop985 = Shop985Position()
-    #print shop985.run(u'网易')
+    #shop958 = Shop958Position()
+    #print shop958.run(u'网易')
 
     #liqucn = LiqucnPosition()
     #print liqucn.run(u'腾讯')
