@@ -1,10 +1,8 @@
 # -*- coding:utf-8 -*-
 from django.db import models
-from django.contrib.auth.models import User
+
 
 # Create your models here.
-
-
 class Company(models.Model):
     name = models.CharField(
         max_length=255,
@@ -196,19 +194,46 @@ class Category(models.Model):
         return self.path()
 
 
+class Channel(models.Model):
+    """
+    渠道
+    """
+    name = models.CharField(max_length=80)
+    domain = models.CharField(max_length=200)
+    created_date = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return '%s--%s' % (self.name, self.domain)
+
+
 class Application(models.Model):
     """
     应用
+    DROP TABLE IF EXISTS `app_info`;
+    CREATE TABLE `app_info` (
+  `APP_UUID` varchar(36) NOT NULL DEFAULT '',
+  `APP_MD5` varchar(32) NOT NULL,
+  `APP_NAME` varchar(50) DEFAULT NULL,
+  `APP_VERSION` varchar(50) DEFAULT NULL,
+  `APP_USER` varchar(25) DEFAULT NULL,
+  `FILE_NAME` varchar(100) NOT NULL,
+  `APP_STATE` int(3) NOT NULL,
+  `TASK_ID` varchar(36) DEFAULT NULL,
+  `creat_time` date DEFAULT NULL,
+  PRIMARY KEY (`APP_UUID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
     """
-    name = models.CharField(
-        max_length=255,
-        verbose_name=u'App名字'
-    )
-    
-    user = models.ForeignKey(
-        User,
-        verbose_name='用户'
-    )
+    app_uuid = models.CharField(max_length=36, primary_key=True)
+    app_md5 = models.CharField(max_length=32)
+    app_name = models.CharField(max_length=50, null=True)
+    app_version = models.CharField(max_length=50)
+    app_user = models.CharField(max_length=25)
+    file_name = models.CharField(max_length=100)
+    app_state = models.IntegerField()
+    task_id = models.CharField(max_length=36)
+    creat_time = models.DateField()
     company = models.ForeignKey(
         Company,
         blank=True,
@@ -223,21 +248,11 @@ class Application(models.Model):
         verbose_name=u'类别',
     )
 
-    created_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=u'创建日期',
-    )
-
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name=u'是否激活',
-    )
-
     class Meta:
-        db_table = 'application'
+        db_table = 'app_info'
 
     def __unicode__(self):
-        return self.name
+        return self.app_name
 
 
 class AppVersion(models.Model):
@@ -269,6 +284,11 @@ class AppVersion(models.Model):
         verbose_name=u'md5值'
     )
 
+    download_times = models.IntegerField(
+        verbose_name=u'下载次数',
+        default=0
+    )
+
     created_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name=u'创建日期'
@@ -283,33 +303,52 @@ class AppVersion(models.Model):
     class Meta:
         db_table = 'appversion'
 
-
     def __unicode__(self):
         return '%s---%s' % (self.app, self.version)
 
 
-class Channel(models.Model):
+class ChannelLink(models.Model):
     """
-    渠道
+    App所在渠道地址
     """
-    VALID = 1
-    INVALID = 2
-    UNCERTAIN = 3
+
+    UNCERTAIN = NOBODY = 0
+    VALID = ADMIN = 1
+    INVALID = SPIDER = 2
+
+    AUDITOR = (
+        (ADMIN, u'管理员'),
+        (SPIDER, u'爬虫'),
+        (NOBODY, u'没有审核'),
+    )
 
     AUDIT_CHOICES = (
-        (VALID, u'有效的'),
-        (INVALID, u'无效的'),
         (UNCERTAIN, u'不确定'),
+        (VALID, u'有效'),
+        (INVALID, u'无效'),
     )
 
     app = models.ForeignKey(
         Application,
         verbose_name=u'App'
     )
+
+    version = models.ForeignKey(
+        AppVersion,
+        verbose_name=u'版本',
+        blank=True,
+        null=True
+    )
+
     title = models.CharField(
         max_length=255,
         blank=True,
-        verbose_name=u'标题')
+        verbose_name=u'标题',
+        help_text=(
+            u'app所在渠道链接上的标题，'
+            u'保存以供在搜索结果页面获得下载次数'
+        )
+    )
 
     url = models.CharField(
         max_length=255,
@@ -322,11 +361,10 @@ class Channel(models.Model):
         help_text=u'通过binascii的b2a_hex生成的校验值'
     )
 
-    version = models.ForeignKey(
-        AppVersion,
-        verbose_name=u'版本'
-        blank=True,
-        null=True
+    auditor = models.IntegerField(
+        choices=AUDITOR,
+        default=SPIDER,
+        verbose_name=u'审核者',
     )
 
     created_date = models.DateTimeField(
@@ -340,10 +378,13 @@ class Channel(models.Model):
         verbose_name=u'状态',
     )
 
+    is_accurate = models.BooleanField(
+        default=True,
+        verbose_name=u'是否精确匹配',
+        help_text=u'当爬虫精确匹配时设置此属性为True')
 
     class Meta:
         db_table = 'channel'
-
 
     def __unicode__(self):
         return '%s--->%s' % (self.app.name, self.url)
