@@ -8,12 +8,12 @@ from mongoengine import *
 
 
 class AppDetail(Document):
-    app_uuid = StringField(
-        verbose_name=u'APP uuid'
-    )
-
     app_version = IntField(
         verbose_name=u'App 版本主键唯一ID'
+    )
+
+    app_uuid = StringField(
+        verbose_name=u'APP uuid'
     )
 
     human_version = StringField(

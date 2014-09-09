@@ -16,9 +16,9 @@ DEFAULT_CHARSET = 'utf-8'
 
 APP_DIR = os.path.abspath(os.path.dirname(__file__)) 
 
-POSITION_APP_DIR = os.path.join(APP_DIR, 'position')
+POSITION_APP_DIR = os.path.join(APP_DIR, 'positionapp')
 
-CHANNAL_APP_DIR = os.path.join(APP_DIR, 'channel')
+CHANNAL_APP_DIR = os.path.join(APP_DIR, 'channelapp')
 
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = 6379

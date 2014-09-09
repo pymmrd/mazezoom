@@ -6,6 +6,7 @@ import sys
 import time
 import random
 import urllib
+import urllib2
 import requests
 import shortuuid
 import urlparse
@@ -13,7 +14,6 @@ from datetime import datetime
 from lxml.html import fromstring
 
 #From Projects
-import multi_code
 from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
                        POSITION_APP_DIR, CHANNAL_APP_DIR)
 
@@ -21,6 +21,9 @@ current_path = os.path.abspath(os.path.dirname(__file__))
 project_path = os.path.abspath(os.path.dirname(current_path))
 project_settings = 'mazezoom.settings'
 os.environ['DJANGO_SETTINGS_MODULE'] = project_settings
+
+from orm import ORMManager
+
 
 class RegisterSubClass(type):
     def __init__(cls, name, bases, attrs):
@@ -45,6 +48,7 @@ class CreeperBase(object):
 
     def __init__(self):
         self.session = requests.session()
+        self.objects = ORMManager()
         self.session.headers['User-Agent'] = random.choice(USER_AGENTS)
 
     def tryAgain(self, req, retries=0):
@@ -90,7 +94,7 @@ class CreeperBase(object):
         """
         etree = None
         content = self.get_content(url, data, headers)
-        if ignore: #针对页面存在错误编码和多编码现象处理
+        if ignore:  # 针对页面存在错误编码和多编码现象处理
             content = content.decode(self.charset, 'ignore')
         if content:
             try:
@@ -124,7 +128,6 @@ class CreeperBase(object):
         添加HTTP请求头
         """
         self.session.headers.update(headers)
-
 
     def delete_request_headers(self, keys):
         """
