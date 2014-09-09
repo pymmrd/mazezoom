@@ -279,6 +279,11 @@ class AppVersion(models.Model):
         verbose_name=u'版本'
     )
 
+    channel = models.ManyToManyField('Channel',
+        blank=True,
+        null=True
+    )
+
     md5sum = models.CharField(
         max_length=64,
         verbose_name=u'md5值'
