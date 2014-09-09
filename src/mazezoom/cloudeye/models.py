@@ -198,10 +198,10 @@ class Channel(models.Model):
     """
     渠道
     """
-    name = models.CharField(max_length=80)
-    domain = models.CharField(max_length=200)
-    created_date = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
+    name = models.CharField(max_length=80, verbose_name=u'渠道名字')
+    domain = models.CharField(max_length=200, verbose_name=u'渠道域名')
+    created_date = models.DateTimeField(auto_now=True, verbose_name=u'创建日期')
+    is_active = models.BooleanField(default=True, verbose_name=u'是否激活')
 
     def __unicode__(self):
         return '%s--%s' % (self.name, self.domain)
