@@ -2,6 +2,7 @@
 
 #StdLib imports
 import os
+import sys
 import time
 import random
 import urllib
@@ -16,6 +17,10 @@ import multi_code
 from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
                        POSITION_APP_DIR, CHANNAL_APP_DIR)
 
+current_path = os.path.abspath(os.path.dirname(__file__))
+project_path = os.path.abspath(os.path.dirname(current_path))
+project_settings = 'mazezoom.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = project_settings
 
 class RegisterSubClass(type):
     def __init__(cls, name, bases, attrs):

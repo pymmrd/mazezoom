@@ -18,6 +18,14 @@ import re
 import json
 import base64
 import urlparse
+
+if __name__ == "__main__":
+    import os
+    import sys
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    creepers_path = os.path.abspath(os.path.dirname(current_path))
+    sys.path.append(creepers_path)
+
 from base import ChannelSpider
 
 

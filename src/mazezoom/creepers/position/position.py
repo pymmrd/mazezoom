@@ -14,7 +14,15 @@
         2014/08/23 增加verify_app渠道通过md5验证功能
 """
 import re
+
+if __name__ != '__main__':
+    import os
+    import sys
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    creepers_path = os.path.abspath(os.path.dirname(current_path))
+    sys.path.append(creepers_path)
 from base import PositionSpider
+from django.conf import settings
 
 
 class OyksoftPosition(PositionSpider):
@@ -1285,6 +1293,12 @@ class MaoRen8Position(PositionSpider):
         return results
 
 if __name__ == "__main__":
+    import os
+    import sys
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    creepers_path = os.path.abspath(os.path.dirname(current_path))
+    sys.path.append(creepers_path)
+
     oyk = OyksoftPosition()
     print oyk.run(u'腾讯手机管家')
 

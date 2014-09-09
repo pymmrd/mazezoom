@@ -7,7 +7,15 @@
 import re
 import json
 import time
+
+if __name__ != '__main__':
+    import os
+    import sys
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    creepers_path = os.path.abspath(os.path.dirname(current_path))
+    sys.path.append(creepers_path)
 from base import PositionSpider
+from django.conf import settings
 
 
 class HiapkPosition(PositionSpider):
