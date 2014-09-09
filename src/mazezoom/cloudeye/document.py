@@ -83,6 +83,10 @@ class AppDailyDownload(Document):
         verbose_name=u'当日下载次数'
     )
 
+    delta_times = IntField(
+        verbose_name=u'增量下载次数'
+    )
+
     created_date = DateTimeField(
         verbose_name=u'抓取时间'
     )
