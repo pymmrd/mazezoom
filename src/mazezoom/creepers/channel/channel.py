@@ -1009,7 +1009,7 @@ class PcHomeChannel(ChannelSpider):
     """
 
     domain = "www.pchome.com"
-    seperator = "："
+    seperator = u"："
     fuzzy_xpath = "//div[@class='dl-info-con']/ul/li"
     down_xpath = "//div[@class='dl-download-links mg-btm20']/dl/dd/a/@onclick"
 
@@ -1048,9 +1048,8 @@ class PcHomeChannel(ChannelSpider):
             label, value = content.split(self.seperator)
             result[label.strip()] = value.strip()
         times = self.download_times()
-        down_link = etree.xpath(self.down_xpath)
+        down_link = self.download_link(etree)
         if down_link:
-            down_link = down_link[0]
             storage = self.download_app(down_link)
         return result
 

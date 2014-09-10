@@ -9,7 +9,8 @@ class ORMManager(object):
     def get_or_create_channel(self, name, domain, *args, **kwargs):
         channel, is_created = Channel.objects.get_or_create(
             name=name,
-            domain=domain
+            domain=domain,
+            defaults=kwargs
         )
         return channel, is_created
 
@@ -18,9 +19,25 @@ class ORMManager(object):
             app=app,
             version=version,
             md5sum=md5sum,
-            data=kwargs,
+            defaults=kwargs,
         )
         return appversion, is_created
+
+    def create_debug_app(self, app_uuid, md5sum, app_name,
+                         app_version, app_user='1', filename='1',
+                         app_state=1, task_id='1'):
+        app = Application(
+            app_uuid=app_uuid,
+            app_md5=md5sum,
+            app_name=app_name,
+            app_version=app_version,
+            app_user=app_user,
+            filename=filename,
+            app_state=app_state,
+            task_id=task_id,
+        )
+        app.save()
+        return app
 
     def get_app(self, app_uuid):
         try:
@@ -29,11 +46,13 @@ class ORMManager(object):
             app = None
         return app
 
-    def get_or_create_channellink(self, app, checksum, *args, **kwargs):
+    def get_or_create_channellink(self, app, app_version,
+                                  checksum, *args, **kwargs):
         link, is_created = ChannelLink.objects.get_or_create(
             app=app,
+            app_version=app_version,
             checksum=checksum,
-            data=kwargs
+            defaults=kwargs
         )
         return link, is_created
 

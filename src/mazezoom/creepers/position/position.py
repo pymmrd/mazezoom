@@ -46,7 +46,7 @@ class OyksoftPosition(PositionSpider):
         """
         总下载次数：2444
         """
-        seperator = "："
+        seperator = u"："
         etree = self.send_request(title)
         item = etree.xpath(self.times_xpath)
         times = None
@@ -57,10 +57,10 @@ class OyksoftPosition(PositionSpider):
             except (TypeError, IndexError, ValueError):
                 pass
         return times
-
-    def run(self, appname, chksum=None, is_accurate=True):
+    
+    def position(self):
         results = []
-        etree = self.send_request(appname)
+        etree = self.send_request(self.appname)
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         for item in items:
@@ -77,7 +77,7 @@ class OyksoftPosition(PositionSpider):
                 if is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
-                        chksum=chksum
+                        chksum=self.chksum
                     )
                     if match:
                         results.append((link, title))
@@ -86,6 +86,9 @@ class OyksoftPosition(PositionSpider):
                     results.append((link, title))
         return results
 
+    def run(self):
+        result = self.position()
+        self.record_channellink(result)
 
 class GameDogPosition(PositionSpider):
     """
@@ -790,8 +793,9 @@ class PcHomePosition(PositionSpider):
     """
     charset = 'gbk'
     domain = "www.pchome.net"
-    search_url = ("http://search.pchome.net/download.php"
-                  "?wd=%s&submit=%CB%D1+%CB%F7")
+    #search_url = ("http://search.pchome.net/download.php"
+    #              "?wd=%s&submit=%CB%D1+%CB%F7")
+    search_url = "http://download.pchome.net/android/"
     #xpath = "//div[@class='tit']/a"
     base_xpath = "//dd[@class='clearfix']"
     seperator = "："

@@ -2,12 +2,13 @@
 
 #StdLib imports
 import os
-import sys
 import time
 import random
 import urllib
 import urllib2
+import fchksum
 import requests
+import binascii
 import shortuuid
 import urlparse
 from datetime import datetime
@@ -22,6 +23,7 @@ project_path = os.path.abspath(os.path.dirname(current_path))
 project_settings = 'mazezoom.settings'
 os.environ['DJANGO_SETTINGS_MODULE'] = project_settings
 
+from django.conf import settings
 from orm import ORMManager
 
 
@@ -114,7 +116,10 @@ class CreeperBase(object):
 
     def download_app(self, url, headers=None, session=None):
         downloader = DownloadAppSpider(session)
-        storage = downloader.run(url, headers=headers)
+        if isinstance(self, PositionSpider):
+            storage = downloader.run(url, headers=headers, is_position=True)
+        else:
+            storage = downloader.run(url, headers=headers)
         return storage
 
     def run(self):
@@ -144,7 +149,32 @@ class CreeperBase(object):
 
 
 class PositionSpider(CreeperBase):
+
     charset = DEFAULT_CHARSET
+
+    def __init__(self, app_name, app_uuid=None,
+                 version=None, chksum=None,
+                 is_accurate=True, has_orm=True):
+        """
+        app_uuid: app唯一主键ID
+        version: app版本， 如：3.5
+        chksum: app md5校验和
+        is_accurate: 标识爬虫精确抓取或者模糊抓取
+        has_orm: 是否加载orm操作，设置为False不进行存数据库操作
+        """
+        self.app_uuid = app_uuid
+        self.version = version
+        self.chksum = chksum
+        self.app_name = app_name
+        self.has_orm = has_orm
+        self.is_accurate = is_accurate
+        if settings.DEBUG and has_orm:
+            self.objects.create_debug_app(
+                app_uuid,
+                chksum,
+                app_name,
+                version,
+            )
 
     def send_request(self, appname=None, url=None,
                      data=None, headers=None, tree=True):
@@ -167,12 +197,42 @@ class PositionSpider(CreeperBase):
         down_link: 下载链接
         chsksum: 校验和
         """
+        is_right = False
         #如果没有传入down_link,就需要向detail页面发送请求
         if not down_link and url:
             etree = self.send_request(url=url)
             down_link = etree.xpath(self.down_xpath)[0]
         storage = self.download_app(down_link)
-        return storage
+        md5sum = fchksum.fmd5t(storage)
+        if md5sum == chksum:
+            is_right = True
+            os.unlink(storage)
+        return is_right
+
+    def record_channellink(self, result):
+        """
+        result: [(link, title)]
+        """
+        app = self.objects.get_app(self.app_uuid)
+        app_version = self.objects.get_or_create_appversion(
+            app,
+            self.version,
+            self.chksum
+        )
+        for item in result:
+            link = item[0]
+            title = item[1]
+            checksum = binascii.crc32(link)
+            self.objects.get_or_create_channellink(
+                app,
+                app_version,
+                checksum,
+                title=title,
+                url=url
+            )
+
+    def position(self):
+        pass
 
 
 class DownloadAppSpider(CreeperBase):
@@ -209,8 +269,8 @@ class DownloadAppSpider(CreeperBase):
     def unique_name(self):
         return shortuuid.uuid()
 
-    def run(self, url, headers=None):
-        storage = self.get_storage()
+    def run(self, url, headers=None, is_position=False):
+        storage = self.get_storage(is_position)
         content = self.get_content(url, headers=headers)
         with open(storage, 'a') as f:
             f.write(content)
