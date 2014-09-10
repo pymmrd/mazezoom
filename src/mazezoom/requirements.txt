@@ -3,3 +3,4 @@ requests
 Django==1.5.4
 pymongo==2.6.3
 pygeoip==0.2.7
+python-fchksum==1.7.1

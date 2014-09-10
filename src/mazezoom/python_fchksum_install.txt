@@ -1,0 +1,7 @@
+        fchksum安装步骤
+
+$ wget  http://down1.chinaunix.net/distfiles/python-fchksum-1.7.1.tar.gz
+$ tar -xvzf python-fchksum-1.7.1.tar.gz
+$ cd  python-fchksum-1.7.1
+$ python setup.py build
+$ sudo python setup.py install
