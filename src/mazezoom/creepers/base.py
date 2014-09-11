@@ -2,6 +2,7 @@
 
 #StdLib imports
 import os
+import sys
 import time
 import random
 import urllib
@@ -20,7 +21,8 @@ from constants import (USER_AGENTS, MAX_RETRY_TIMES, DEFAULT_CHARSET,
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 project_path = os.path.abspath(os.path.dirname(current_path))
-project_settings = 'mazezoom.settings'
+sys.path.append(project_path)
+project_settings = 'settings'
 os.environ['DJANGO_SETTINGS_MODULE'] = project_settings
 
 from django.conf import settings
@@ -162,6 +164,7 @@ class PositionSpider(CreeperBase):
         is_accurate: 标识爬虫精确抓取或者模糊抓取
         has_orm: 是否加载orm操作，设置为False不进行存数据库操作
         """
+        super(PositionSpider, self).__init__();
         self.app_uuid = app_uuid
         self.version = version
         self.chksum = chksum

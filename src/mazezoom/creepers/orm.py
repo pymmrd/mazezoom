@@ -24,7 +24,7 @@ class ORMManager(object):
         return appversion, is_created
 
     def create_debug_app(self, app_uuid, md5sum, app_name,
-                         app_version, app_user='1', filename='1',
+                         app_version, app_user='3', filename='1',
                          app_state=1, task_id='1'):
         app = Application(
             app_uuid=app_uuid,
@@ -32,7 +32,7 @@ class ORMManager(object):
             app_name=app_name,
             app_version=app_version,
             app_user=app_user,
-            filename=filename,
+            file_name=filename,
             app_state=app_state,
             task_id=task_id,
         )

@@ -233,7 +233,7 @@ class Application(models.Model):
     file_name = models.CharField(max_length=100)
     app_state = models.IntegerField()
     task_id = models.CharField(max_length=36)
-    creat_time = models.DateField(auto_now_add=True)
+    creat_time = models.DateField(auto_now=True)
     company = models.ForeignKey(
         Company,
         blank=True,

@@ -15,7 +15,7 @@
 """
 import re
 
-if __name__ != '__main__':
+if __name__ == '__main__':
     import os
     import sys
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -1297,14 +1297,8 @@ class MaoRen8Position(PositionSpider):
         return results
 
 if __name__ == "__main__":
-    import os
-    import sys
-    current_path = os.path.abspath(os.path.dirname(__file__))
-    creepers_path = os.path.abspath(os.path.dirname(current_path))
-    sys.path.append(creepers_path)
-
-    oyk = OyksoftPosition()
-    print oyk.run(u'腾讯手机管家')
+    #oyk = OyksoftPosition()
+    #print oyk.run(u'腾讯手机管家')
 
     #p7xz = Position7xz()
     #print p7xz.run(u'极品飞车13')
@@ -1383,5 +1377,5 @@ if __name__ == "__main__":
     #p7xz = Position7xz()
     #print p7xz.run(u'刀塔传奇')
 
-    pchome = PcHomePosition()
-    prchome.run(u'微信 for Android')
+    pchome = PcHomePosition(app_name=u'微信 for Android', app_uuid=1, version='1.1', chksum='123')
+    pchome.run()
