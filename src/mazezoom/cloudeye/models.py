@@ -206,6 +206,9 @@ class Channel(models.Model):
     def __unicode__(self):
         return '%s--%s' % (self.name, self.domain)
 
+    class Meta:
+        db_table = 'channel'
+
 
 class Application(models.Model):
     """
@@ -389,7 +392,7 @@ class ChannelLink(models.Model):
         help_text=u'当爬虫精确匹配时设置此属性为True')
 
     class Meta:
-        db_table = 'channel'
+        db_table = 'channellink'
 
     def __unicode__(self):
         return '%s--->%s' % (self.app.name, self.url)

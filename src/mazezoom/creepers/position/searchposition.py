@@ -40,7 +40,7 @@ class HiapkPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)[0]
             down_link = self.normalize_url(link, down_link)
 
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=self.chksum
@@ -73,7 +73,7 @@ class GfanPosition(PositionSpider):
             detail = self.get_elemtree(link)
             down_link = detail.xpath(self.down_xpath)[0]
 
-            if is_accurate:    # 精确匹配
+            if self.is_accurate:    # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=self.chksum
@@ -117,7 +117,7 @@ class Apk91Position(PositionSpider):
                 pass
 
             if down_link is not None:
-                if is_accurate:    # 精确匹配
+                if self.is_accurate:    # 精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -156,7 +156,7 @@ class AngeeksPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 down_link = self.normalize_url(self.search_url, down_link)
-            if is_accurate:    # 精确匹配
+            if self.is_accurate:    # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=self.chksum
@@ -191,7 +191,7 @@ class It168Position(PositionSpider):
             down_link = detail.xpath(self.down_xpath)[0]
             if down_link.endswith(self.suffix):
                 print title, down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -235,7 +235,7 @@ class PcHomePosition(PositionSpider):
                 onclick_content = r.search(onclick)
                 down_link = onclick_content.group(1)
 
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -271,7 +271,7 @@ class QQPosition(PositionSpider):
             detail = self.get_elemtree(link)
             down_link = detail.xpath(self.down_xpath)[0]
             if down_link:
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -321,7 +321,7 @@ class MumayiPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -355,7 +355,7 @@ class SkycnPosition(PositionSpider):
             down_link = detail.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -394,7 +394,7 @@ class ZolPosition(PositionSpider):
             down_link = self.normalize_url(link, down_link)
 
             if self.token in link:
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0'}
                     match = self.download_app(down_link, headers=headers)
                     if match:
@@ -432,7 +432,7 @@ class PcOnlinePosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -489,7 +489,7 @@ class DuotePosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -524,7 +524,7 @@ class ImobilePosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -586,7 +586,7 @@ class NduoaPosition(PositionSpider):
                 down_link = down_link[0]
                 down_link = self.normalize_url(self.search_url, down_link)
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -622,7 +622,7 @@ class Android115Position(PositionSpider):
                 down_link = down_link[0]
                 down_link = self.normalize_url(self.search_url, down_link)
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -678,7 +678,7 @@ class Shop958Position(PositionSpider):
                         down_link = down_link
                     print down_link
 
-                    if is_accurate:    #精确匹配
+                    if self.is_accurate:    #精确匹配
                         match = self.verify_app(
                             down_link=down_link,
                             chksum=self.chksum
@@ -719,7 +719,7 @@ class LiqucnPosition(PositionSpider):
                 if down_link:
                     down_link = down_link[0]
                     print down_link
-                    if is_accurate:    #精确匹配
+                    if self.is_accurate:    #精确匹配
                         match = self.verify_app(
                             down_link=down_link,
                             chksum=self.chksum
@@ -783,7 +783,7 @@ class CrskyPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -844,7 +844,7 @@ class AndroidcnPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -882,7 +882,7 @@ class ApkcnPosition(PositionSpider):
                 down_link = down_link[0]
                 down_link = self.normalize_url(link, down_link)
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -918,7 +918,7 @@ class SohoPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -973,7 +973,7 @@ class ShoujiPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
                               'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
                     match = self.download_app(down_link, headers=headers)
@@ -990,7 +990,7 @@ class ShoujiPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
                               'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
                     match = self.download_app(down_link, headers=headers)
@@ -1062,7 +1062,7 @@ class OnlineDownPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1098,7 +1098,7 @@ class EoemarketPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1135,7 +1135,7 @@ class ApkolPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1181,7 +1181,7 @@ class BkillPosition(PositionSpider):
             if down_link:
                 down_link = down_link[-1]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1220,7 +1220,7 @@ class AibalaPosition(PositionSpider):
             if down_link:
                 down_link = self.normalize_url(link, down_link)
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1258,7 +1258,7 @@ class VmallPosition(PositionSpider):
             down_link = down_link.group(1)
             print down_link
             if down_link:
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1298,7 +1298,7 @@ class YruanPosition(PositionSpider):
                     soft_id = soft_id.group(1)
                     down_link = "http://www.yruan.com/down.php?id=%s" % soft_id
                     print down_link
-                    if is_accurate:    #精确匹配
+                    if self.is_accurate:    #精确匹配
                         match = self.verify_app(
                             down_link=down_link,
                             chksum=self.chksum
@@ -1331,7 +1331,7 @@ class AnzowPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1382,7 +1382,7 @@ class ZhuodownPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1415,7 +1415,7 @@ class Xz7Position(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1450,7 +1450,7 @@ class WandoujiaPosition(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1516,7 +1516,7 @@ class Position3533(PositionSpider):
             if down_link:
                 down_link = down_link[0]
                 print down_link
-                if is_accurate:    #精确匹配
+                if self.is_accurate:    #精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -1607,11 +1607,9 @@ class BaicentPosition(PositionSpider):
             if self.os_token in info:
                 down_link = detail.xpath(self.down_xpath)
                 if down_link:
-                    print link, title
                     down_link = down_link[0]
                     down_link = self.normalize_url(link, down_link)
-                    print down_link
-                    if is_accurate:    #精确匹配
+                    if self.is_accurate:    #精确匹配
                         match = self.verify_app(
                             down_link=down_link,
                             chksum=self.chksum

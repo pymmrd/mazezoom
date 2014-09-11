@@ -204,12 +204,15 @@ class PositionSpider(CreeperBase):
         #如果没有传入down_link,就需要向detail页面发送请求
         if not down_link and url:
             etree = self.send_request(url=url)
-            down_link = etree.xpath(self.down_xpath)[0]
-        storage = self.download_app(down_link)
-        md5sum = fchksum.fmd5t(storage)
-        if md5sum == chksum:
-            is_right = True
-            os.unlink(storage)
+            down_link = etree.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+        if down_link:
+            storage = self.download_app(down_link)
+            md5sum = fchksum.fmd5t(storage)
+            if md5sum == chksum:
+                is_right = True
+                os.unlink(storage)
         return is_right
 
     def record_channellink(self, result):
@@ -237,6 +240,9 @@ class PositionSpider(CreeperBase):
     def position(self):
         pass
 
+    def run(self):
+        result = self.position()
+        self.record_channellink(result)
 
 class DownloadAppSpider(CreeperBase):
     def __init__(self, session=None):

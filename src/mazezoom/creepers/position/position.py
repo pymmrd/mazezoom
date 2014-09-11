@@ -60,7 +60,7 @@ class OyksoftPosition(PositionSpider):
     
     def position(self):
         results = []
-        etree = self.send_request(self.appname)
+        etree = self.send_request(self.app_name)
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         for item in items:
@@ -160,26 +160,28 @@ class Mm10086Position(PositionSpider):
         items = etree.xpath(self.base_xpath)
         for item in items:
             dom = item.xpath(self.xpath)
-            link = self.normalize_url(
-                self.search_url,
-                dom.attrib['href']
-            )
-            title = dom.text_content()
-            if self.app_name in title:
-                down_link = item.xpath(self.down_xpath)[0]
-                down_link = self.normalize_url(
+            if dom:
+                dom = dom[0]
+                link = self.normalize_url(
                     self.search_url,
-                    down_link
+                    dom.attrib['href']
                 )
-                if is_accurate:
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
+                title = dom.text_content()
+                if self.app_name in title:
+                    down_link = item.xpath(self.down_xpath)[0]
+                    down_link = self.normalize_url(
+                        self.search_url,
+                        down_link
                     )
-                    if match:
+                    if self.is_accurate:
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=self.chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                    else:
                         results.append((link, title))
-                else:
-                    results.append((link, title))
         return results
 
 
@@ -205,9 +207,9 @@ class Position520Apk(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.appname in title:
+            if self.app_name in title:
                 if self.url_token in link:
-                    if is_accurate:
+                    if self.is_accurate:
                         match = self.verify_app(link, chksum=self.chksum)
                         if match:
                             results.append((link, title))
@@ -243,7 +245,7 @@ class Apk3Position(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
             if self.app_name in title:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(link, chksum)
                     if match:
                         results.append((link, title))
@@ -282,7 +284,7 @@ class DownzaPosition(PositionSpider):
                 if down_link:
                     down_link = down_link[0]
 
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         down_link=down_link,
                         chksum=self.chksum
@@ -338,7 +340,7 @@ class AnZhiPosition(PositionSpider):
             )
             title = item.xpath(self.title_xpath)[0]
             down_link = self.download_lin(item)
-            if is_accurate:
+            if self.is_accurate:
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=self.chksum
@@ -378,7 +380,7 @@ class AngeeksPosition(PositionSpider):
             down_link = item.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
                     chksum=self.chksum
@@ -411,7 +413,7 @@ class JiQiMaoPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:
+            if self.is_accurate:
                 match = self.verify_app(link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
@@ -440,7 +442,7 @@ class SjapkPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:
+            if self.is_accurate:
                 match = self.verify_app(url=link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
@@ -468,7 +470,7 @@ class CoolApkPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:
+            if self.is_accurate:
                 match = self.verify_app(url=link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
@@ -530,7 +532,7 @@ class CrossmoPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             if self.app_name in title:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
                         chksum=self.chksum
@@ -565,7 +567,7 @@ class ShoujiBaiduSpider(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             if self.app_name in title:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
                         chksum=self.chksum
@@ -596,7 +598,7 @@ class Position7xz(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -628,7 +630,7 @@ class PC6Position(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -662,7 +664,7 @@ class Position3533(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -694,7 +696,7 @@ class Apk8Position(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -728,7 +730,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if is_accurate:  # 精确匹配
+            if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -788,7 +790,7 @@ class Ruan8Position(PositionSpider):
             title = elem.text_content().strip()
             down_link = elem.xpath(self.down_xpath)  
             if self.app_name in title:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         down_link = down_link[0],
                         chksum=self.chksum
@@ -849,7 +851,7 @@ class PcHomePosition(PositionSpider):
             link = elem.attrib['href']
             title = elem.text_content()
             if self.android_token in link:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
                         chksum=self.chksum
@@ -1328,7 +1330,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    print gd.run()
+    #print gd.run()
 
     mm10086 = Mm10086Position(
         u'水果忍者',
@@ -1336,10 +1338,16 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    print mm10086.run()
+    #print mm10086.run()
 
-    #p520apk = Position520Apk()
-    #print p520apk.run(u'QQ部落')
+    p520apk = Position520Apk(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    print p520apk.run(
+    )
 
     #apk3 = Apk3Position()
     #print apk3.run(u'刷机精灵')
