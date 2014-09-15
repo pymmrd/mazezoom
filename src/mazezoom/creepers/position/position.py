@@ -14,6 +14,7 @@
         2014/08/23 增加verify_app渠道通过md5验证功能
 """
 import re
+import fchksum
 
 if __name__ == '__main__':
     import os
@@ -57,9 +58,45 @@ class OyksoftPosition(PositionSpider):
             except (TypeError, IndexError, ValueError):
                 pass
         return times
+
+    def download_token(self):
+        token = ''
+        url = "http://bd.oyksoft.com/a.aspx"
+        content = self.send_request(url=url, tree=False)
+        print content
+        regx = re.compile("for_download='(?P<token>.+)';")
+        match = regx.search(content)
+        if match is not None:
+            token = match.group('token')
+        return  token
+
+    def verify_app(self, url=None, down_link=None, chksum=None):
+        """
+        url: detail页面链接
+        down_link: 下载链接
+        chsksum: 校验和
+        """
+        is_right = False
+        #如果没有传入down_link,就需要向detail页面发送请求
+        if not down_link and url:
+            etree = self.send_request(url=url)
+            down_link = etree.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                if down_link.find('.oyksoft.com') > 0:
+                    token = self.download_token()
+                    down_link = '%s?oyksoft=%s' % (down_link, token)
+        if down_link:
+            storage = self.download_app(down_link, session=self.session)
+            md5sum = fchksum.fmd5t(storage)
+            if md5sum == chksum:
+                is_right = True
+                os.unlink(storage)
+        return is_right
     
     def position(self):
         results = []
+        suffix_domain = ".oyksoft.com"
         etree = self.send_request(self.app_name)
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
@@ -74,7 +111,7 @@ class OyksoftPosition(PositionSpider):
             )
             title = item.text_content()
             if self.android_token in title:
-                if is_accurate:  # 精确匹配
+                if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
                         chksum=self.chksum
@@ -1322,7 +1359,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print oyk.run()
+    print oyk.run()
 
     gd = GameDogPosition(
         u'水果忍者',
@@ -1346,8 +1383,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    print p520apk.run(
-    )
+    #print p520apk.run()
 
     #apk3 = Apk3Position()
     #print apk3.run(u'刷机精灵')
