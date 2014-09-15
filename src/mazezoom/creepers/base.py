@@ -208,7 +208,7 @@ class PositionSpider(CreeperBase):
             if down_link:
                 down_link = down_link[0]
         if down_link:
-            storage = self.download_app(down_link)
+            storage = self.download_app(down_link, session=self.session)
             md5sum = fchksum.fmd5t(storage)
             if md5sum == chksum:
                 is_right = True
