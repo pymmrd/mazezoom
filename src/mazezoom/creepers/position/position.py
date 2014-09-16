@@ -298,7 +298,7 @@ class DownzaPosition(PositionSpider):
     >>>dza = DownzaPosition()
     >>>dza.run(u'快投')
     """
-    name = u''
+    name = u'下载之家'
     quanlity = 10
     charset = 'gb2312'
     domain = "www.downza.cn"
@@ -315,7 +315,7 @@ class DownzaPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            detail = self.send_request(link)
+            detail = self.send_request(url=link)
             android = detail.xpath(self.andorid_xpath)
             if android and android[0].strip() == self.android_token:
 
@@ -341,6 +341,7 @@ class AnZhiPosition(PositionSpider):
     >>>anzhi = AnZhiPosition()
     >>>anzhi.run(u'去哪儿')
     """
+    name = u'安智'
     quanlity = 10
     domain = "www.anzhi.com"
     search_url = "http://www.anzhi.com/search.php?keyword=%s&x=0&y=0"
@@ -372,14 +373,14 @@ class AnZhiPosition(PositionSpider):
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
             link = self.normalize_url(
                 self.search_url,
                 item.xpath(self.link_xpath)[0]
             )
             title = item.xpath(self.title_xpath)[0]
-            down_link = self.download_lin(item)
+            down_link = self.download_link(item)
             if self.is_accurate:
                 match = self.verify_app(
                     down_link=down_link,
@@ -399,6 +400,7 @@ class AngeeksPosition(PositionSpider):
     >>>angeek.run(u'飞机')
     """
     #验证下载个数
+    name = u'安极网'
     charset = 'gbk'
     quanlity = 10
     domain = "www.angeeks.com"
@@ -421,6 +423,10 @@ class AngeeksPosition(PositionSpider):
             down_link = item.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
+                down_link = self.normalize_url(
+                    self.search_url,
+                    down_link
+                )
             if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     down_link=down_link,
@@ -439,11 +445,13 @@ class JiQiMaoPosition(PositionSpider):
     >>>jiqimao = JiQiMaoPosition()
     >>>jiqimao.run(u'金银岛')
     """
+    name = u'机器猫'
     quanlity = 10
     domain = "jiqimao.com"
     search_url = "http://jiqimao.com/search/index?a=game&w=%s"
     search_url2 = "http://jiqimao.com/search/index?a=soft&w=%s"
     xpath = "//div[@class='applist']/ul/li/a"
+    down_xpath = "//img[@src='/Templates/foreapps/images/downloadbtn.jpg']/parent::a/@href"
 
     def position(self):
         results = []
@@ -470,6 +478,7 @@ class SjapkPosition(PositionSpider):
     >>>sjapk = SjapkPosition()
     >>>sjapk.run(u'喜羊羊之灰太狼闯关')
     """
+    name = u'卓乐网'
     quanlity = 10
     charset = 'gb2312'
     domain = "www.sjapk.com"
@@ -500,12 +509,43 @@ class CoolApkPosition(PositionSpider):
     >>>coolapk = CoolApkPosition()
     >>>coolapk.run(u'刀塔传奇')
     """
+    name = u'酷安网'
     quanlity = 10
     domain = "www.coolapk.com"
     search_url = "http://www.coolapk.com/search?q=%s"
     xpath = ("//ul[@class='media-list ex-card-app-list']"
              "/li[@class='media']/div[@class='media-body']/h4/a")
     down_xpath = "//div[@class='ex-page-header']/following::script[1]/text()"
+
+    def download_link(self, url):
+        etree = self.send_request(url=url) 
+
+        def extra_param():
+            extra = ''
+            extra_regx = re.compile('.+\((?P<extra>\d+)\).+')
+            extra_xpath = "//div[@class='media-btns ex-apk-view-btns']/a/@onclick"
+            extra_raw = etree.xpath(extra_xpath)
+            #onDownloadApk(0);
+            if extra_raw:
+                extra_raw = extra_raw[0]
+                match = extra_regx.match(extra_raw)
+                if match is not None:
+                    token = match.group('extra')
+                    if token != '0':
+                        extra = "&extra=%s" % token
+            return extra
+
+        down_link = None
+        down_regx = re.compile(r'.+apkDownloadUrl\s=\s"(?P<url>.+)";')
+        item = etree.xpath(self.down_xpath) 
+        if item:
+            item = item[0]
+            content = item.strip().split('\n')[0]
+            down_match = down_regx.match(content)
+            if down_match is not None:
+                extra = extra_param() 
+                down_link = 'http://%s%s%s' % (self.domain, down_match.group('url'), extra)
+        return down_link
 
     def position(self):
         results = []
@@ -515,10 +555,12 @@ class CoolApkPosition(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
             if self.is_accurate:
-                match = self.verify_app(url=link, chksum=self.chksum)
-                if match:
-                    results.append((link, title))
-                    break
+                down_link = self.download_link(link)
+                if down_link:
+                    match = self.verify_app(down_link, chksum=self.chksum)
+                    if match:
+                        results.append((link, title))
+                        break
             else:
                 results.append((link, title))
         return results
@@ -1403,7 +1445,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    p520apk.run()
+    #p520apk.run()
 
     apk3 = Apk3Position(
         u'水果忍者',
@@ -1413,23 +1455,53 @@ if __name__ == "__main__":
     )
     #apk3.run()
 
-    #dza = DownzaPosition()
-    #print dza.run(u'快投')
+    dza = DownzaPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    
+    )
+    #dza.run()
 
-    #anzhi = AnZhiPosition()
+    anzhi = AnZhiPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     #print anzhi.run(u'去哪儿')
+    #anzhi.run()
 
-    #angeek = AngeeksPosition()
+    angeek = AngeeksPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     #print angeek.run(u'飞机')
+    #angeek.run()
 
-    #jiqimao = JiQiMaoPosition()
-    #print jiqimao.run(u'金银岛')
+    jiqimao = JiQiMaoPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #jiqimao.run(u'金银岛')
+    #jiqimao.run()
 
     #p365 = Position365()
     #print p365.run(u'金蝶KIS')
 
-    #sjapk = SjapkPosition()
+    sjapk = SjapkPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     #print sjapk.run(u'喜羊羊')
+    #sjapk.run()
 
     #nokia365 = Position365Nokia()
     #nokia365.run(u'水果忍者')
@@ -1437,8 +1509,14 @@ if __name__ == "__main__":
     #myfiles = MyFilesPosition()
     #myfiles.run(u'驱动精灵')
 
-    #coolapk = CoolApkPosition()
+    coolapk = CoolApkPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     #print coolapk.run(u'刀塔传奇')
+    coolapk.run()
 
     #downbank = DownBankPosition()
     #print downbank.run(u'金山毒霸')
