@@ -23,6 +23,9 @@ class ORMManager(object):
         )
         return appversion, is_created
 
+    def populate_channel_for_app(self, appversion, channel):
+        appversion.channel.add(channel)
+
     def create_debug_app(self, app_uuid, md5sum, app_name,
                          app_version, app_user='3', filename='1',
                          app_state=1, task_id='1'):
@@ -50,7 +53,7 @@ class ORMManager(object):
                                   checksum, *args, **kwargs):
         link, is_created = ChannelLink.objects.get_or_create(
             app=app,
-            app_version=app_version,
+            version=app_version,
             checksum=checksum,
             defaults=kwargs
         )

@@ -23,7 +23,6 @@ if __name__ == '__main__':
     creepers_path = os.path.abspath(os.path.dirname(current_path))
     sys.path.append(creepers_path)
 from base import PositionSpider
-from django.conf import settings
 
 
 class OyksoftPosition(PositionSpider):
@@ -31,6 +30,7 @@ class OyksoftPosition(PositionSpider):
     >>>oyk = OyksoftPosition()
     >>>oyk.run(u'腾讯手机管家')
     """
+    name = u'快乐无极'
     android_token = 'Android'
     domain = "www.oyksoft.com"
     charset = 'gbk'  # 对传入的appname以此字符集进行编码
@@ -47,10 +47,10 @@ class OyksoftPosition(PositionSpider):
         """
         总下载次数：2444
         """
+        times = None
         seperator = u"："
         etree = self.send_request(title)
         item = etree.xpath(self.times_xpath)
-        times = None
         if item:
             item = item[0]
             try:
@@ -63,12 +63,11 @@ class OyksoftPosition(PositionSpider):
         token = ''
         url = "http://bd.oyksoft.com/a.aspx"
         content = self.send_request(url=url, tree=False)
-        print content
         regx = re.compile("for_download='(?P<token>.+)';")
         match = regx.search(content)
         if match is not None:
             token = match.group('token')
-        return  token
+        return token
 
     def verify_app(self, url=None, down_link=None, chksum=None):
         """
@@ -87,16 +86,15 @@ class OyksoftPosition(PositionSpider):
                     token = self.download_token()
                     down_link = '%s?oyksoft=%s' % (down_link, token)
         if down_link:
-            storage = self.download_app(down_link, session=self.session)
+            storage = self.download_app(down_link)
             md5sum = fchksum.fmd5t(storage)
             if md5sum == chksum:
                 is_right = True
                 os.unlink(storage)
         return is_right
-    
+
     def position(self):
         results = []
-        suffix_domain = ".oyksoft.com"
         etree = self.send_request(self.app_name)
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
@@ -118,6 +116,7 @@ class OyksoftPosition(PositionSpider):
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -130,6 +129,7 @@ class GameDogPosition(PositionSpider):
     >>>gd.run(u'刀塔传奇')
     """
 
+    name = u'游戏狗'
     quanlity = 10
     iphone = u'iphone'
     ipad = u'ipad'
@@ -141,7 +141,6 @@ class GameDogPosition(PositionSpider):
     detail_links = "//ul[@id='div_android']/li/h3/a"
 
     def mixin(self, link, title):
-        
         results = []
         detail = '/detail/'
         if detail in link:
@@ -156,6 +155,7 @@ class GameDogPosition(PositionSpider):
                 )
                 if match:
                     results.append((dlink, dtitle))
+                    break  # 匹配一个就可以
         else:
             match = self.verify_app(
                 url=link,
@@ -173,7 +173,7 @@ class GameDogPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             low_title = title.lower()
-            if self.iphone not in low_title or self.ipad not in now_title:
+            if self.iphone not in low_title or self.ipad not in low_title:
                 if self.is_accurate:  # 精确匹配
                     links = self.mixin(link, title)
                     if links:
@@ -185,6 +185,7 @@ class GameDogPosition(PositionSpider):
 
 class Mm10086Position(PositionSpider):
     quanlity = 10
+    name = u'移动应用商店'
     domain = "mm.10086.cn"
     search_url = "http://mm.10086.cn/searchapp?dt=android&advanced=0&st=3&q=%s"
     base_xpath = "//dd[@class='sr_searchListConTt']"
@@ -216,7 +217,9 @@ class Mm10086Position(PositionSpider):
                             chksum=self.chksum
                         )
                         if match:
-                            results.append((link, title))
+                            results.extend((link, title))
+                            print results
+                            break
                     else:
                         results.append((link, title))
         return results
@@ -228,12 +231,13 @@ class Position520Apk(PositionSpider):
     >>>p520apk.run(u'QQ部落')
     """
     quanlity = 7
+    name = u'安卓乐园'
     domain = "www.520apk.com"
     search_url = ("http://search.520apk.com/cse/search"
                   "?s=17910776473296434043&q=%s")
     xpath = "//h3[@class='c-title']/a"
     url_token = '/android/'  # 通过url token进一步准确定位
-    down_xpath = "//a[@class='icon_downbd']/@href"
+    down_xpath = "//a[@class='icon downbd']/@href"
         #"//a[@class='icon_downdx']/@href",
         #"//a[@class='icon_downlt']/@href",
 
@@ -247,9 +251,11 @@ class Position520Apk(PositionSpider):
             if self.app_name in title:
                 if self.url_token in link:
                     if self.is_accurate:
-                        match = self.verify_app(link, chksum=self.chksum)
+                        print link
+                        match = self.verify_app(url=link, chksum=self.chksum)
                         if match:
                             results.append((link, title))
+                            break
                     else:
                         results.append((link, title))
         return results
@@ -260,19 +266,13 @@ class Apk3Position(PositionSpider):
     >>>apk3 = Apk3Position()
     >>>apk3.run(u'刷机精灵')
     """
+    name = u'Apk3安卓网'
     quanlity = 10
     charset = 'gb2312'
     domain = "www.apk3.com"
     search_url = "http://www.apk3.com/search.asp?m=2&s=0&word=%s&x=0&y=0"
     xpath = "//div[@class='searchTopic']/a"
     down_xpath = "//ul[@class='downlistbox']/li/a/@href"  # Detail
-
-    def verify_app(self, url, chksum):
-        etree = self.send_request(url)
-        down_link = etree.xpath(self.down_xpath)[0]
-        down_link = self.normalize_url(url, down_link)
-        storage = self.download_app(down_link)
-        return storage
 
     def position(self):
         results = []
@@ -283,9 +283,10 @@ class Apk3Position(PositionSpider):
             title = item.text_content().strip()
             if self.app_name in title:
                 if self.is_accurate:  # 精确匹配
-                    match = self.verify_app(link, chksum)
+                    match = self.verify_app(url=link, chksum=self.chksum)
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -297,6 +298,7 @@ class DownzaPosition(PositionSpider):
     >>>dza = DownzaPosition()
     >>>dza.run(u'快投')
     """
+    name = u''
     quanlity = 10
     charset = 'gb2312'
     domain = "www.downza.cn"
@@ -328,6 +330,7 @@ class DownzaPosition(PositionSpider):
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     results.append((link, title))
         return results
@@ -384,6 +387,7 @@ class AnZhiPosition(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 results.append((link, title))
         return results
@@ -424,6 +428,7 @@ class AngeeksPosition(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 results.append((link, title))
         return results
@@ -454,6 +459,7 @@ class JiQiMaoPosition(PositionSpider):
                 match = self.verify_app(link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
+                    break
             else:
                 results.append((link, title))
         return results
@@ -483,6 +489,7 @@ class SjapkPosition(PositionSpider):
                 match = self.verify_app(url=link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
+                    break
             else:
                 results.append((link, title))
         return results
@@ -511,6 +518,7 @@ class CoolApkPosition(PositionSpider):
                 match = self.verify_app(url=link, chksum=self.chksum)
                 if match:
                     results.append((link, title))
+                    break
             else:
                 results.append((link, title))
         return results
@@ -555,9 +563,9 @@ class CrossmoPosition(PositionSpider):
         etree = cross.send_request(url)
         appkey = cross.get_appkey(etree)
         appid = cross.get_appid(url)
-        donw_link = cross.download_link(appkey, appid)
+        down_link = cross.download_link(appkey, appid)
         if down_link:
-            storage = cross.download_app(donwlink,session=self.sesion)
+            storage = cross.download_app(down_link)
         return storage
 
     def position(self):
@@ -576,6 +584,7 @@ class CrossmoPosition(PositionSpider):
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -611,6 +620,7 @@ class ShoujiBaiduSpider(PositionSpider):
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -642,6 +652,7 @@ class Position7xz(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 #模糊匹配
                 results.append((link, title))
@@ -656,7 +667,10 @@ class PC6Position(PositionSpider):
     quanlity = 10
     charset = "gb2312"
     domain = "www.pc6.com"
-    search_url = "http://www.pc6.com/search2.asp?keyword=%s&searchType=down&rootID=465%2C466"
+    search_url = (
+        "http://www.pc6.com/search2.asp?"
+        "keyword=%s&searchType=down&rootID=465%2C466"
+    )
     xpath = "//div[@class='baseinfo']/h3/a"
     down_xpath = "//div[@class='left2']/a[@class='wdj']/@href"
 
@@ -674,6 +688,7 @@ class PC6Position(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 #模糊匹配
                 results.append((link, title))
@@ -708,6 +723,7 @@ class Position3533(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 #模糊匹配
                 results.append((link, title))
@@ -724,6 +740,7 @@ class Apk8Position(PositionSpider):
     search_url = "http://www.apk8.com/search.php"
     xpath = "//div[@class='main_search_pic']/ul/li/strong/a"
     down_xpath = "//div[@class='downnew']/a[@class='bt_bd']/@href"
+
     def position(self):
         results = []
         data = {'key': self.app_name.encode(self.charset)}
@@ -740,6 +757,7 @@ class Apk8Position(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 #模糊匹配
                 results.append((link, title))
@@ -774,6 +792,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
                 )
                 if match:
                     results.append((link, title))
+                    break
             else:
                 #模糊匹配
                 results.append((link, title))
@@ -785,7 +804,7 @@ class CngbaPosition(PositionSpider):
     >>>cngba = CngbaPosition()
     >>>cngba.run(u'名将决')
     """
-    quanlity = 5 #无下载资源
+    quanlity = 5  # 无下载资源
     charset = "gb2312"
     domain = "www.cngba.com"
     search_url = "http://down.cngba.com/script/search.php?keyword=%s"
@@ -814,7 +833,7 @@ class Ruan8Position(PositionSpider):
     domain = "soft.anruan.com"
     search_url = "http://www.anruan.com/search.php?t=all&keyword=%s"
     base_xpath = "//div[@class='li']"
-    link_xpath = "child::ul/li/a[@class='tit']" 
+    link_xpath = "child::ul/li/a[@class='tit']"
     down_xpath = "child::div[@class='dl']/a[class='down']/@href"
 
     def position(self):
@@ -822,18 +841,19 @@ class Ruan8Position(PositionSpider):
         etree = self.send_request(self.app_name)
         items = etree.xpath(self.base_xpath)
         for item in items:
-            elem = item.xpath(link_xpath)
+            elem = item.xpath(self.link_xpath)
             link = elem.attrib['href']
             title = elem.text_content().strip()
-            down_link = elem.xpath(self.down_xpath)  
+            down_link = elem.xpath(self.down_xpath)
             if self.app_name in title:
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
-                        down_link = down_link[0],
+                        down_link=down_link[0],
                         chksum=self.chksum
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -866,7 +886,6 @@ class PcHomePosition(PositionSpider):
         times = 0
         for item in items:
             elem = item.xpath(self.link_xpath)
-            link = elem.attrib['href']
             title = elem.text_content()
             if title == self.app_name:
                 times_dom = item.xpath(self.times_xpath)
@@ -895,6 +914,7 @@ class PcHomePosition(PositionSpider):
                     )
                     if match:
                         results.append((link, title))
+                        break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -1359,7 +1379,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    print oyk.run()
+    #print oyk.run()
 
     gd = GameDogPosition(
         u'水果忍者',
@@ -1367,7 +1387,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print gd.run()
+    #gd.run()
 
     mm10086 = Mm10086Position(
         u'水果忍者',
@@ -1375,7 +1395,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print mm10086.run()
+    #mm10086.run()
 
     p520apk = Position520Apk(
         u'水果忍者',
@@ -1383,10 +1403,15 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print p520apk.run()
+    p520apk.run()
 
-    #apk3 = Apk3Position()
-    #print apk3.run(u'刷机精灵')
+    apk3 = Apk3Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #apk3.run()
 
     #dza = DownzaPosition()
     #print dza.run(u'快投')
@@ -1427,7 +1452,12 @@ if __name__ == "__main__":
     #p7xz = Position7xz()
     #print p7xz.run(u'刀塔传奇')
 
-    #pchome = PcHomePosition(app_name=u'微信 for Android', app_uuid=1, version='1.1', chksum='123')
+    pchome = PcHomePosition(
+        app_name=u'微信 for Android',
+        app_uuid=1,
+        version='1.1',
+        chksum='123'
+    )
     #pchome.run()
 
     #p7xz = Position7xz()
@@ -1455,5 +1485,3 @@ if __name__ == "__main__":
 
     #ruan8 = Ruan8Position()
     #print ruan8.run(u'360')
-
-

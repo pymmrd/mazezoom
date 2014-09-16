@@ -116,8 +116,8 @@ class CreeperBase(object):
     def unquote(self, v):
         return urllib.unquote(v)
 
-    def download_app(self, url, headers=None, session=None):
-        downloader = DownloadAppSpider(session)
+    def download_app(self, url, headers=None):
+        downloader = DownloadAppSpider(self.session)
         if isinstance(self, PositionSpider):
             storage = downloader.run(url, headers=headers, is_position=True)
         else:
@@ -207,9 +207,11 @@ class PositionSpider(CreeperBase):
             down_link = etree.xpath(self.down_xpath)
             if down_link:
                 down_link = down_link[0]
+                down_link = self.normalize_url(url, down_link)
         if down_link:
-            storage = self.download_app(down_link, session=self.session)
-            md5sum = fchksum.fmd5t(storage)
+            print 'down_link-->', down_link
+            storage = self.download_app(down_link)
+            md5sum = fchksum.fmd5t(storage)[0]
             if md5sum == chksum:
                 is_right = True
                 os.unlink(storage)
@@ -220,11 +222,15 @@ class PositionSpider(CreeperBase):
         result: [(link, title)]
         """
         app = self.objects.get_app(self.app_uuid)
-        app_version = self.objects.get_or_create_appversion(
+        app_version,is_created = self.objects.get_or_create_appversion(
             app,
             self.version,
             self.chksum
         )
+        if result:
+            channel, is_created = self.objects.get_or_create_channel(self.name, self.domain)
+            self.objects.populate_channel_for_app(app_version, channel)
+        
         for item in result:
             link = item[0]
             title = item[1]
@@ -234,7 +240,7 @@ class PositionSpider(CreeperBase):
                 app_version,
                 checksum,
                 title=title,
-                url=url
+                url=link
             )
 
     def position(self):

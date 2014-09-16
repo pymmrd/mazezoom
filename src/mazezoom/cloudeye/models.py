@@ -209,6 +209,9 @@ class Channel(models.Model):
     class Meta:
         db_table = 'channel'
 
+    def __unicode__(self):
+        return self.name
+
 
 class Application(models.Model):
     """
@@ -395,4 +398,4 @@ class ChannelLink(models.Model):
         db_table = 'channellink'
 
     def __unicode__(self):
-        return '%s--->%s' % (self.app.name, self.url)
+        return '%s--->%s' % (self.app.app_name, self.url)
