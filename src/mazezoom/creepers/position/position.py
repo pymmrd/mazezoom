@@ -557,7 +557,10 @@ class CoolApkPosition(PositionSpider):
             if self.is_accurate:
                 down_link = self.download_link(link)
                 if down_link:
-                    match = self.verify_app(down_link, chksum=self.chksum)
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=self.chksum
+                    )
                     if match:
                         results.append((link, title))
                         break
