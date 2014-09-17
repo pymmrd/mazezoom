@@ -885,6 +885,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
                   "?kwtype=0&keyword=%s&channel=0")
     xpath = "//div[@class='th-name']/a[@class='green-ico']"
     down_xpath = "//a[@class='AMIC_downStylea']/@href"
+    andorid_token = 'andorid'
 
     def position(self):
         results = []
@@ -893,17 +894,18 @@ class XiaZaiZhiJiaPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:  # 精确匹配
-                match = self.verify_app(
-                    url=link,
-                    chksum=self.chksum
-                )
-                if match:
+            if self.app_name in title and self.andorid_token in title.lower():
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        url=link,
+                        chksum=self.chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    #模糊匹配
                     results.append((link, title))
-                    break
-            else:
-                #模糊匹配
-                results.append((link, title))
         return results
 
 
@@ -912,11 +914,13 @@ class CngbaPosition(PositionSpider):
     >>>cngba = CngbaPosition()
     >>>cngba.run(u'名将决')
     """
+    name = u'玩家网'
     quanlity = 5  # 无下载资源
     charset = "gb2312"
     domain = "www.cngba.com"
     search_url = "http://down.cngba.com/script/search.php?keyword=%s"
     xpath = "//div[@class='game_Ljj']/strong/a"
+    abstract = True
 
     def download_times(self):
         pass
@@ -937,31 +941,34 @@ class Ruan8Position(PositionSpider):
     >>>ruan8 = Ruan8Position()
     >>>ruan8.run(u'360')
     """
+    name = u'安软市场'
     charset = 'gbk'
     domain = "soft.anruan.com"
     search_url = "http://www.anruan.com/search.php?t=all&keyword=%s"
     base_xpath = "//div[@class='li']"
     link_xpath = "child::ul/li/a[@class='tit']"
-    down_xpath = "child::div[@class='dl']/a[class='down']/@href"
+    down_xpath = "child::div[@class='dl']/a[@class='down']/@href"
 
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
         items = etree.xpath(self.base_xpath)
         for item in items:
-            elem = item.xpath(self.link_xpath)
+            elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text_content().strip()
-            down_link = elem.xpath(self.down_xpath)
+            down_link = item.xpath(self.down_xpath)
             if self.app_name in title:
                 if self.is_accurate:  # 精确匹配
-                    match = self.verify_app(
-                        down_link=down_link[0],
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
-                        break
+                    if down_link:
+                        down_link = down_link[0]
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=self.chksum
+                        )
+                        if match:
+                            results.append((link, title))
+                            break
                 else:
                     #模糊匹配
                     results.append((link, title))
@@ -982,16 +989,16 @@ class PcHomePosition(PositionSpider):
     search_url = "http://download.pchome.net/android/"
     #xpath = "//div[@class='tit']/a"
     base_xpath = "//dd[@class='clearfix']"
-    seperator = "："
+    seperator = u"："
     times_xpath = "child::div[@class='dw']/span/text()"
     link_xpath = "child::div[@class='tit']/a"
     down_xpath = "//div[@class='dl-download-links mg-btm20']/dl/dd/a/@onclick"
     andorid_token = 'mobile-Internet-im'
 
     def download_times(self, appname):
+        times = 0
         etree = self.send_request(appname)
         items = etree.xpath(self.base_xpath)
-        times = 0
         for item in items:
             elem = item.xpath(self.link_xpath)
             title = elem.text_content()
@@ -1613,13 +1620,6 @@ if __name__ == "__main__":
     #p7xz.run()
     #print p7xz.run(u'刀塔传奇')
 
-    pchome = PcHomePosition(
-        u'水果忍者',
-        app_uuid=1,
-        version='1.9.5',
-        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    )
-    #pchome.run()
 
     pc6 = PC6Position(
         u'水果忍者',
@@ -1654,8 +1654,25 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    xzzj.run()
+    #xzzj.run()
     #print xzzj.run(u'微信')
+
+    ruan8 = Ruan8Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #print ruan8.run(u'360')
+    #ruan8.run()
+
+    pchome = PcHomePosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    pchome.run()
 
     #cngba = CngbaPosition()
     #print cngba.run(u'名将决')
@@ -1664,6 +1681,3 @@ if __name__ == "__main__":
 
     #maoren8 = MaoRen8Position()
     #print maoren8.run(u'全民水浒')
-
-    #ruan8 = Ruan8Position()
-    #print ruan8.run(u'360')
