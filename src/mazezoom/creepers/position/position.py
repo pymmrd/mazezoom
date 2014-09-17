@@ -251,7 +251,6 @@ class Position520Apk(PositionSpider):
             if self.app_name in title:
                 if self.url_token in link:
                     if self.is_accurate:
-                        print link
                         match = self.verify_app(url=link, chksum=self.chksum)
                         if match:
                             results.append((link, title))
@@ -451,7 +450,10 @@ class JiQiMaoPosition(PositionSpider):
     search_url = "http://jiqimao.com/search/index?a=game&w=%s"
     search_url2 = "http://jiqimao.com/search/index?a=soft&w=%s"
     xpath = "//div[@class='applist']/ul/li/a"
-    down_xpath = "//img[@src='/Templates/foreapps/images/downloadbtn.jpg']/parent::a/@href"
+    down_xpath = (
+        "//img[@src='/Templates/foreapps/images/downloadbtn.jpg']"
+        "/parent::a/@href"
+    )
 
     def position(self):
         results = []
@@ -518,12 +520,15 @@ class CoolApkPosition(PositionSpider):
     down_xpath = "//div[@class='ex-page-header']/following::script[1]/text()"
 
     def download_link(self, url):
-        etree = self.send_request(url=url) 
+        etree = self.send_request(url=url)
 
         def extra_param():
             extra = ''
             extra_regx = re.compile('.+\((?P<extra>\d+)\).+')
-            extra_xpath = "//div[@class='media-btns ex-apk-view-btns']/a/@onclick"
+            extra_xpath = (
+                "//div[@class='media-btns"
+                " ex-apk-view-btns']/a/@onclick"
+            )
             extra_raw = etree.xpath(extra_xpath)
             #onDownloadApk(0);
             if extra_raw:
@@ -537,14 +542,18 @@ class CoolApkPosition(PositionSpider):
 
         down_link = None
         down_regx = re.compile(r'.+apkDownloadUrl\s=\s"(?P<url>.+)";')
-        item = etree.xpath(self.down_xpath) 
+        item = etree.xpath(self.down_xpath)
         if item:
             item = item[0]
             content = item.strip().split('\n')[0]
             down_match = down_regx.match(content)
             if down_match is not None:
-                extra = extra_param() 
-                down_link = 'http://%s%s%s' % (self.domain, down_match.group('url'), extra)
+                extra = extra_param()
+                down_link = 'http://%s%s%s' % (
+                    self.domain,
+                    down_match.group('url'),
+                    extra
+                )
         return down_link
 
     def position(self):
@@ -596,37 +605,68 @@ class CrossmoPosition(PositionSpider):
     >>>cs = CrossmoPosition()
     >>>cs.run(u'LT来电报号')
     """
+    name = u'十字猫'
     quanlity = 10
     domain = "www.crossmo.com"
     search_url = ("http://soft.crossmo.com/soft_default.php"
                   "?act=search&searchkey=%s")
     xpath = "//div[@class='infor_centerb1']/div/dl/dt/a"
+    head_xpath = "//head"
 
-    def verify_app(self, url):
-        from channel import CrossmoChannel
-        cross = CrossmoChannel(url)
-        etree = cross.send_request(url)
-        appkey = cross.get_appkey(etree)
-        appid = cross.get_appid(url)
-        down_link = cross.download_link(appkey, appid)
-        if down_link:
-            storage = cross.download_app(down_link)
-        return storage
+    def get_appkey(self, etree):
+        appkey = None
+        head = etree.xpath(self.head_xpath)[0].text_content()
+        regx = re.compile("var\sone_Key='(?P<key>.+)';")
+        match = regx.search(head)
+        if match is not None:
+            appkey = match.group('key')
+        return appkey
+
+    def get_appid(self, url):
+        """
+        url: http://soft.crossmo.com/softinfo_505012.html
+        """
+        return url.split('_')[-1].split('.')[0]
+
+    def _download_link(self, url, appkey, appid):
+        check_app = (
+            "http://soft.crossmo.com/softdown_topc_v5.php?"
+            "crossmo=%s&downloadtype=checkapks&appid=%s"
+        ) % (appkey, appid)
+        down_app = (
+            "http://soft.crossmo.com/softdown_topc_v5.php?"
+            "crossmo=%s&downloadtype=local&appid=%s"
+        ) % (appkey, appid)
+        self.set_header(url)
+        self.send_request(url=check_app, tree=False)
+        return down_app
+
+    def download_link(self, url):
+        etree = self.send_request(url=url)
+        appkey = self.get_appkey(etree)
+        appid = self.get_appid(url)
+        dlink = self._download_link(url, appkey, appid)
+        down_link = dlink
+        return down_link
 
     def position(self):
         results = []
         headers = {'Host': 'soft.crossmo.com', 'Referer': 'soft.crossmo.com'}
-        etree = self.send_request(self.app_name, headers=headers)
+        self.update_request_headers(headers)
+        etree = self.send_request(self.app_name)
+        self.flush_header(('Host', 'Referer'))
         items = etree.xpath(self.xpath)
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
             if self.app_name in title:
                 if self.is_accurate:  # 精确匹配
+                    down_link = self.download_link(link)
                     match = self.verify_app(
-                        url=link,
+                        down_link=down_link,
                         chksum=self.chksum
                     )
+                    self.flush_header(('X-Requested-With', 'Referer'))
                     if match:
                         results.append((link, title))
                         break
@@ -635,12 +675,25 @@ class CrossmoPosition(PositionSpider):
                     results.append((link, title))
         return results
 
+    def set_header(self, url):
+        headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Referer': url
+        }
+        self.update_request_headers(headers)
+
+    def flush_header(self, fields=None):
+        if fields:
+            for field in fields:
+                del self.session.headers[field]
+
 
 class ShoujiBaiduSpider(PositionSpider):
     """
     >>>shouji = ShoujiBaiduSpider()
     >>>shouji.run(u'HOT市场')
     """
+    name = u'百度手机助手'
     quanlity = 10
     domain = "shouji.baidu.com"
     search_url = ("http://shouji.baidu.com/s"
@@ -677,6 +730,7 @@ class Position7xz(PositionSpider):
     >>>p7xz = Position7xz()
     >>>p7xz.run(u'极品飞车13')
     """
+    name = u'七匣子'
     quanlity = 10
     domain = "www.7xz.com"
     search_url = "http://www.7xz.com/search?q=%s"
@@ -709,12 +763,13 @@ class PC6Position(PositionSpider):
     >>>pc6 = PC6Position()
     >>>pc6.run(u'弹跳忍者')
     """
+    name = u'PC6'
     quanlity = 10
     charset = "gb2312"
     domain = "www.pc6.com"
     search_url = (
         "http://www.pc6.com/search2.asp?"
-        "keyword=%s&searchType=down&rootID=465%2C466"
+        "keyword=%s&searchType=down&rootID=465,466"
     )
     xpath = "//div[@class='baseinfo']/h3/a"
     down_xpath = "//div[@class='left2']/a[@class='wdj']/@href"
@@ -727,6 +782,7 @@ class PC6Position(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             if self.is_accurate:  # 精确匹配
+                link = self.normalize_url(self.search_url, link)
                 match = self.verify_app(
                     url=link,
                     chksum=self.chksum
@@ -745,11 +801,13 @@ class Position3533(PositionSpider):
     >>>p3533 = Position3533()
     >>>p3533.run(u'功夫西游')
     """
+    name = u'手机世界'
     quanlity = 10
     domain = "www.3533.com"
     search_url = "http://search.3533.com/software?keyword=%s"
     search_url1 = "http://search.3533.com/game?keyword=%s"
     xpath = "//div[@class='appinfo']/a[@class='apptit']"
+    down_xpath = "//div[@class='andorid']/dl/dt/a/@href"
 
     def position(self):
         results = []
@@ -777,9 +835,11 @@ class Position3533(PositionSpider):
 
 class Apk8Position(PositionSpider):
     """
+    ajax
     >>>apk8 = Apk8Position()
     >>>apk8.run(u'天天跑酷')
     """
+    name = u'APK8安卓网'
     quanlity = 10
     domain = "www.apk8.com"
     search_url = "http://www.apk8.com/search.php"
@@ -790,11 +850,13 @@ class Apk8Position(PositionSpider):
         results = []
         data = {'key': self.app_name.encode(self.charset)}
         headers = {'Host': self.domain, 'Referer': self.search_url}
-        etree = self.send_request(data=data, headers=headers)
+        self.update_request_headers(headers)
+        etree = self.send_request(data=data)
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
+            print title
             if self.is_accurate:  # 精确匹配
                 match = self.verify_app(
                     url=link,
@@ -816,6 +878,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
     """
 
     quanlity = 10
+    name = u'下载之家'
     charset = 'gb2312'
     domain = "www.xiazaizhijia.com"
     search_url = ("http://www.xiazaizhijia.com/search.php"
@@ -1463,7 +1526,6 @@ if __name__ == "__main__":
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    
     )
     #dza.run()
 
@@ -1519,41 +1581,80 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #print coolapk.run(u'刀塔传奇')
-    coolapk.run()
+    #coolapk.run()
 
     #downbank = DownBankPosition()
     #print downbank.run(u'金山毒霸')
 
-    #cs = CrossmoPosition()
+    cs = CrossmoPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     #print cs.run(u'LT来电报号')
+    #cs.run()
 
-    #shouji = ShoujiBaiduSpider()
+    shouji = ShoujiBaiduSpider(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #shouji.run()
     #print shouji.run(u'HOT市场')
 
-    #p7xz = Position7xz()
+    p7xz = Position7xz(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #p7xz.run()
     #print p7xz.run(u'刀塔传奇')
 
     pchome = PcHomePosition(
-        app_name=u'微信 for Android',
+        u'水果忍者',
         app_uuid=1,
-        version='1.1',
-        chksum='123'
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #pchome.run()
 
-    #p7xz = Position7xz()
-    #print p7xz.run(u'极品飞车13')
-
-    #pc6 = PC6Position()
+    pc6 = PC6Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #pc6.run()
     #print pc6.run(u'弹跳忍者')
 
-    #p3533 = Position3533()
+    p3533 = Position3533(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #p3533.run()
     #print p3533.run(u'功夫西游')
 
-    #apk8 = Apk8Position()
+    apk8 = Apk8Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    #apk8.run()
     #print apk8.run(u'天天跑酷')
 
-    #xzzj = XiaZaiZhiJiaPosition()
+    xzzj = XiaZaiZhiJiaPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    xzzj.run()
     #print xzzj.run(u'微信')
 
     #cngba = CngbaPosition()

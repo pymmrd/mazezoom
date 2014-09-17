@@ -590,7 +590,6 @@ class CrossmoChannel(ChannelSpider):
         self.send_request(url=check_app, tree=False)
         return down_app
 
-
     def run(self, url):
         result = {}
         storage = None
@@ -747,6 +746,7 @@ class Channel3533(ChannelSpider):
     >>>p3533.run(u'功夫西游')
     """
     domain = "www.3533.com"
+    down_xpath = "//div[@class='andorid']/dl/dt/a/@href"
 
     def run(self, url):
         result = {}
@@ -1122,8 +1122,7 @@ if __name__ == '__main__':
     #sjwyx = SjwyxChannel()
     #sjwyx.run(url)
 
-    #url = "http://soft.anruan.com/7295/"
-    #ruan8 = Ruan8Channel() 
-    #ruan8.run(ur)
+    url = "http://soft.anruan.com/7295/"
+    ruan8 = Ruan8Channel() 
+    ruan8.run(url)
 
-    url = ""
