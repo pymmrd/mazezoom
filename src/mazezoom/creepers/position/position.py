@@ -972,7 +972,6 @@ class Ruan8Position(PositionSpider):
                 else:
                     #模糊匹配
                     results.append((link, title))
-            results.append((link, title))
         return results
 
 
@@ -982,18 +981,20 @@ class PcHomePosition(PositionSpider):
     >>>pchome.run(u'微信')
     下载次数：9604
     """
-    charset = 'gbk'
+    #charset = 'gbk'
     domain = "www.pchome.net"
     #search_url = ("http://search.pchome.net/download.php"
     #              "?wd=%s&submit=%CB%D1+%CB%F7")
-    search_url = "http://download.pchome.net/android/"
+    search_url = "http://download.pchome.net/search-%s---0-1.html"
     #xpath = "//div[@class='tit']/a"
     base_xpath = "//dd[@class='clearfix']"
     seperator = u"："
     times_xpath = "child::div[@class='dw']/span/text()"
     link_xpath = "child::div[@class='tit']/a"
     down_xpath = "//div[@class='dl-download-links mg-btm20']/dl/dd/a/@onclick"
-    andorid_token = 'mobile-Internet-im'
+    android_title_token = 'android'
+    android_url_token = '/mobile/'
+    fuzzy_xpath = "//div[@class='dl-info-con']/ul/li"
 
     def download_times(self, appname):
         times = 0
@@ -1013,18 +1014,65 @@ class PcHomePosition(PositionSpider):
                     break
         return times
 
+    def download_link(self, etree):
+        down_link = None
+        href = None
+        down_label = u'下载地址'
+        regx = re.compile(".+\('(?P<link>.+)'\).+")
+        xpath = "//ul[@class='dl-tab-6 clearfix']/li/a"
+        links = etree.xpath(xpath)
+        for link in links:
+            text = link.text.strip()
+            if text == down_label:
+                href = link.attrib.get('href', '')
+                etree = self.send_request(url=href)
+                items = etree.xpath(self.down_xpath)
+                if items:
+                    item = items[0]
+                    match = regx.search(item)
+                    if match is not None:
+                        down_link = match.group('link')
+        return down_link, href
+
+    def tell_android(self, title, link):
+        etree = None
+        referer = None
+        down_link = None
+        is_android = False
+        if self.android_title_token in title.lower():
+            is_android = True
+        elif self.android_url_token in link and 'iphone' not in title.lower():
+            etree = self.send_request(url=link)
+            items = etree.xpath(self.fuzzy_xpath)
+            for item in items:
+                content = item.text_content().strip()
+                label, value = content.split(self.seperator)
+                if label == u'支持系统' and value == 'Android':
+                    is_android = True
+                    break
+        if etree is None:
+            etree = self.send_request(url=link)
+            down_link, referer = self.download_link(etree)
+        return is_android, down_link, referer
+
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
         items = etree.xpath(self.base_xpath)
         for item in items:
-            elem = item.xpath(self.link_xpath)
+            elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text_content()
-            if self.android_token in link:
+            is_android, down_link, referer = self.tell_android(title, link)
+            if is_android:
                 if self.is_accurate:  # 精确匹配
+                    headers = {
+                        'Host': 'dl-sh-ctc-2.pchome.net',
+                        'Referer': referer 
+                    }
+                    self.update_request_headers(headers)
                     match = self.verify_app(
-                        url=link,
+                        down_link=down_link,
                         chksum=self.chksum
                     )
                     if match:
