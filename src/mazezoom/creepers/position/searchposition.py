@@ -305,42 +305,9 @@ class MumayiPosition(PositionSpider):
         return results
 
 
-#安卓频道跳转到百度手机助手
-class SkycnPosition(PositionSpider):
-    """
-    下载次数：是
-    位置：    信息页
-    """
-    name = u'百度手机助手'
-    domain = "shouji.baidu.com"
-    search_url = "http://shouji.baidu.com/s?wd=%s&data_type=app&from=as"
-    xpath = "//a[@class='app-name']"
-    down_xpath = "//div[@class='area-download']/a[@class='apk']/@href"
-
-    def position(self):
-        results = []
-        etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[0]
-                if self.is_accurate:    #精确匹配
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
-                else:
-                    results.append((link, title))
-        return results
-
 class ZolPosition(PositionSpider):
     """
+    多版本现象
     下载次数：是
     位置：    信息页
     """
@@ -348,9 +315,16 @@ class ZolPosition(PositionSpider):
     domain = "sj.zol.com.cn"
     charset = 'gbk'
     search_url = "http://xiazai.zol.com.cn/search?wd=%s&type=1"
-    xpath = "//ul[@class='results-text']/li[@class='item']/div[@class='item-header clearfix']/a"
-    down_xpath = "//ul[@class='download-items']/li[@class='item'][1]/a[@class='downLoad-button androidDown-button']/@onclick"
-    token = 'sj'
+    xpath = (
+        "//ul[@class='results-text']/li[@class='item']/"
+        "div[@class='item-header clearfix']/a"
+    )
+    down_xpath = (
+        #"//ul[@class='download-items']/li[@class='item'][1]"
+        "//a[@class='downLoad-button androidDown-button']/@href"
+    )
+    token = 'sj.zol.com.cn'
+    iphone_token = ['iphone', 'ipad']
 
     def position(self):
         results = []
@@ -359,43 +333,39 @@ class ZolPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.token in link:
-                print link
-                try:
+            low_title = title.lower()
+            if self.token in link and self.app_name in title:
+                is_continue = False
+                for itoken in self.iphone_token:
+                    if itoken in low_title:
+                        is_countinue = True
+                        break
+                if is_continue:
+                    continue
+                if self.is_accurate:
                     detail = self.get_elemtree(link)
-                    onclick = detail.xpath(self.down_xpath)[0]
-                    print onclick
-                    r = re.compile("corpsoft\('([^']+)','\d+'\)")
-                    onclick_content = r.search(onclick)
-                    down_link = onclick_content.group(1)
-                    down_link = self.normalize_url(link, down_link)
-                    print down_link
-                except:
-                    pass
-
-                if down_link:
-                    if self.is_accurate:    #精确匹配
+                    #onclick = detail.xpath(self.down_xpath)[0]
+                    #r = re.compile("corpsoft\('([^']+)','\d+'\)")
+                    #onclick_content = r.search(onclick)
+                    #down_link = onclick_content.group(1)
+                    down_link = detail.xpath(self.down_xpath)
+                    if down_link:
+                        down_link = down_link[0]
+                        down_link = self.normalize_url(link, down_link)
                         match = self.verify_app(
                             down_link=down_link,
                             chksum=self.chksum
                         )
                         if match:
                             results.append((link, title))
-                    else:
-                        results.append((link, title))
-                    #headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0'}
-                    #match = self.download_app(down_link, headers=headers)
-                    #if match:
-                    #    results.append((link, title))
-                #else:
-                    #results.append((link, title))
-
+                else:
+                    results.append((link, title))
         return results
 
-#error js生成下载链接，token未取到
+
 class PcOnlinePosition(PositionSpider):
     """
-    下载次数：是
+    下载次数：是(s,d)
     位置：    信息页
     """
     name = u'太平洋电脑网'
@@ -407,6 +377,36 @@ class PcOnlinePosition(PositionSpider):
     xpath = "//a[@class='aTitle']"
     down_xpath = "//a[@class='btn sbDownload']/@tempurl"
 
+    def get_pid(self, url):
+        pid_url = url.rsplit('/', 1)
+        pid = pid_url[-1].split('.')[0]
+        return pid
+
+    def get_token(self, url):
+        token = None
+        token_url = "http://dlc2.pconline.com.cn/dltoken/%s_genLink.js"
+        pid = self.get_pid(url)
+        token_url = token_url % pid
+        content = self.send_request(url=token_url, tree=False)
+        regx = re.compile('\((?P<token>.+)\)')
+        match = regx.search(content.strip())
+        if match is not None:
+            token = match.group('token')
+        return token
+
+    def download_link(self, url):
+        down_link = None
+        token = self.get_token(url)
+        if token is not None:
+            detail = self.get_elemtree(url)
+            dlink = detail.xpath(self.down_xpath)
+            if dlink:
+                dlink = dlink[0]
+                print dlink
+                items = dlink.rsplit('/', 1)
+                down_link = '%s/%s/%s' % (items[0], token, items[1]) 
+        return down_link
+
     def position(self):
         results = []
         data = {}
@@ -415,19 +415,18 @@ class PcOnlinePosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            print link, title
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath) #js根据token计算真实的下载地址
-            if down_link:
-                down_link = down_link[0]
-                print down_link
+            if self.app_name in title: 
                 if self.is_accurate:    #精确匹配
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
+                    headers = {'Host': self.domain, 'Referer': link}
+                    self.update_request_headers(headers)
+                    down_link = self.download_link(link)
+                    if down_link:
+                        match = self.verify_app(
+                            down_link=down_link,
+                            chksum=self.chksum
+                        )
+                        if match:
+                            results.append((link, title))
                 else:
                     results.append((link, title))
         return results
@@ -1616,62 +1615,54 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #mumayi.run()
-    '''
-    #print mumayi.download_times(u'网易新闻 V4.0.1')
-    skycn = SkycnPosition(
-        u'水果忍者',
-        app_uuid=1,
-        version='1.9.5',
-        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    )
-    skycn.run()
     zol = ZolPosition(
         u'水果忍者',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    zol.run()
-    ###
-    #pconline = PcOnlinePosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #pconline.run()
+    #zol.run()
 
-    #sina = SinaPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #sina.run()
+    pconline = PcOnlinePosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    pconline.run()
 
-    #duote = DuotePosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #duote.run()
+    '''
+    sina = SinaPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    sina.run()
 
-    #mobile = ImobilePosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #imobile.run()
+    duote = DuotePosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    duote.run()
 
-    #apkzu = ApkzuPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #apkzu.run()
+    mobile = ImobilePosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    imobile.run()
+
+    apkzu = ApkzuPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    apkzu.run()
     nduoa = NduoaPosition(
         u'水果忍者',
         app_uuid=1,
@@ -1686,45 +1677,45 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     android115.run()
-    #shop958 = Shop958Position(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #shop958.run()
+    shop958 = Shop958Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    shop958.run()
 
-    #liqucn = LiqucnPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #liqucn.run()
+    liqucn = LiqucnPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    liqucn.run()
 
-    #cnmo = CnmoPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #cnmo.run()
+    cnmo = CnmoPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    cnmo.run()
 
-    #crsky = CrskyPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #crsky.run()
+    crsky = CrskyPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    crsky.run()
  
-    #d = DPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #d.run()
+    d = DPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    d.run()
     androidcn = AndroidcnPosition(
         u'水果忍者',
         app_uuid=1,
@@ -1732,13 +1723,13 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     androidcn.run()
-    #apkcn = ApkcnPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #apkcn.run()
+    apkcn = ApkcnPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    apkcn.run()
     soho = SohoPosition(
         u'水果忍者',
         app_uuid=1,
@@ -1746,21 +1737,21 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     soho.run()
-    #下载需要cookie
-    #shouji = ShoujiPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
+    下载需要cookie
+    shouji = ShoujiPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
     shouji.run()
-    #mobile1 = Mobile1Position(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #mobile1.run()
+    mobile1 = Mobile1Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    mobile1.run()
     onlinedown = OnlineDownPosition(
         u'水果忍者',
         app_uuid=1,
@@ -1775,7 +1766,7 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     eoemarket.run()
-    #网站巨慢，detail无法打开
+    网站巨慢，detail无法打开
     apkol = ApkolPosition(
         u'水果忍者',
         app_uuid=1,
@@ -1845,13 +1836,13 @@ if __name__ == "__main__":
     )
     wandoujia.run()
 
-    #android159 = Android159Position(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #android159.run()
+    android159 = Android159Position(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    android159.run()
 
     p3533 = Position3533(
         u'水果忍者',
@@ -1861,21 +1852,21 @@ if __name__ == "__main__":
     )
     p3533.run()
 
-    #muzisoft = MuzisoftPosition(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #muzisoft.run()
+    muzisoft = MuzisoftPosition(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    muzisoft.run()
 
-    #p7613 = Position7613(
-    #    u'水果忍者',
-    #    app_uuid=1,
-    #    version='1.9.5',
-    #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #p7613.run()
+    p7613 = Position7613(
+        u'水果忍者',
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    p7613.run()
 
     baicent = BaicentPosition(
         u'水果忍者',
