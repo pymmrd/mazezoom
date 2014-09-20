@@ -92,12 +92,14 @@ class CreeperBase(object):
         """
         return urlparse.urljoin(source, url)
 
-    def get_elemtree(self, url, data=None, headers=None, ignore=False):
+    def get_elemtree(self, url, data=None, headers=None, ignore=False, charset=False):
         """
         生成dom树方便xpath分析
         """
         etree = None
         content = self.get_content(url, data, headers)
+        if charset:
+            content = content.decode(self.charset)
         if ignore:  # 针对页面存在错误编码和多编码现象处理
             content = content.decode(self.charset, 'ignore')
         if content:
@@ -180,7 +182,8 @@ class PositionSpider(CreeperBase):
             )
 
     def send_request(self, appname=None, url=None,
-                     data=None, headers=None, tree=True):
+                     data=None, headers=None, tree=True,
+                     charset=False):
         url = self.search_url if url is None else url
         if data is None and appname:
             quote_app = self.quote_args(appname)
@@ -188,7 +191,7 @@ class PositionSpider(CreeperBase):
 
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, data, headers)
+            etree = self.get_elemtree(url, data, headers, charset)
         else:
             #获取response的 raw string
             etree = self.get_content(url, data, headers)
@@ -209,7 +212,6 @@ class PositionSpider(CreeperBase):
                 down_link = down_link[0]
                 down_link = self.normalize_url(url, down_link)
         if down_link:
-            print 'down_link-->', down_link
             storage = self.download_app(down_link)
             md5sum = fchksum.fmd5t(storage)[0]
             if md5sum == chksum:

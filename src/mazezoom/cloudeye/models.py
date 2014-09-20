@@ -22,7 +22,7 @@ class Company(models.Model):
     contact_user = models.CharField(
         max_length=100,
         verbose_name='联系人'
-    )
+   )
 
     remark = models.TextField(
         blank=True,
@@ -315,7 +315,7 @@ class AppVersion(models.Model):
         db_table = 'appversion'
 
     def __unicode__(self):
-        return '%s---%s' % (self.app, self.version)
+        return '%s---%s' % (self.app.app_name, self.version)
 
 
 class ChannelLink(models.Model):
