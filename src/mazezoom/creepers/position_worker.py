@@ -20,10 +20,15 @@ def worker():
     while 1:
         task = backend.accept(POSITION_TASK_KEY)
         if task is not None:
-            appname, appid, clsname = task
+            app_uuid, appname, version, chksum, clsname = task
             cls = PositionSpider.get(clsname, None)
             if cls is not None:
-                instance = cls()
+                instance = cls(
+                    appname,
+                    app_uuid=app_uuid,
+                    version=version,
+                    chskum=chksum
+                )
                 instance.run()
         time.sleep(INTERUPT)
 

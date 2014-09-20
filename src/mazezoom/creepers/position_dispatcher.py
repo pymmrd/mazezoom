@@ -20,7 +20,7 @@ INTERUPT = 2
 
 def dispatcher():
     """
-    task:[id, appname, name]
+    task:[app_uuid, appname, version, chksum]
     """
     backend = RedisBackend()
     while 1:
@@ -28,9 +28,10 @@ def dispatcher():
         task = backend.accept(POSITION_DISPATCH_KEY)
         if task is not None:
             #装饰并分发扫描任务到worker队列
+            #[app_uuid, appname, version, chksum, clsname]
             for item in PositionSpider.subclass.iterkeys():
                 task.append(item)
-                backend.send(POSITION_TASK_KEY, task)
+            backend.send(POSITION_TASK_KEY, task)
         #添加CPU中端时间
         time.sleep(INTERUPT)
 
