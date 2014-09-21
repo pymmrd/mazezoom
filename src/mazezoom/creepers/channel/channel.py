@@ -66,6 +66,18 @@ class OykSoftChannel(ChannelSpider):
                 value = item.xpath(self.value_xpath)[0].strip()
             except IndexError:
                 pass
+            if label == u'软件大小'：
+                label = 'size'
+            elif label == u'软件语言':
+                label = 'language'
+            elif label == u'授权类型':
+                label = 'authorize'
+            elif label == u'运行环境':
+                label = 'env'
+            elif label == u'软件类别':
+                label = 'category'
+            elif label == u'更新时间':
+                label = 'modify_time'
             result[label] = value
         return result
 
