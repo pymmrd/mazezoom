@@ -5,6 +5,7 @@
 
 #StdLib imports
 import time
+import json
 
 #Project imports
 from position import *
@@ -20,17 +21,20 @@ def worker():
     while 1:
         task = backend.accept(POSITION_TASK_KEY)
         if task is not None:
-            app_uuid, appname, version, chksum, clsname = task
-            cls = PositionSpider.get(clsname, None)
+            loadtask = json.loads(task)
+            print loadtask
+            app_uuid, appname, version, chksum, clsname = loadtask
+            cls = PositionSpider.subclass.get(clsname, None)
             if cls is not None:
                 instance = cls(
                     appname,
                     app_uuid=app_uuid,
                     version=version,
-                    chskum=chksum
+                    chksum=chksum
                 )
                 instance.run()
-        time.sleep(INTERUPT)
+        else:
+            time.sleep(INTERUPT)
 
 if __name__ == "__main__":
     worker()

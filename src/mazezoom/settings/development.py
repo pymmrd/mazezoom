@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from base import *
+from mongoengine import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -16,3 +17,8 @@ DATABASES = {
         'STORAGE_ENGINE': 'INNODB',
     }
 }
+
+MONGO_HOST = '192.168.1.102'
+MONGO_PORT = 27017
+MONGO_DB = 'mazezoom'
+connect(MONGO_DB, host=MONGO_HOST, port=MONGO_PORT)

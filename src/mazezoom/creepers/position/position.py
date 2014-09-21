@@ -1221,14 +1221,16 @@ class SjwyxPosition(PositionSpider):
     title_xpath = "child::a[@class='n']/text()"
     other_link = "child::a"
     down_link_token = u'下载'
+    abstract = True
 
     def download_times(self):
         pass
 
     def position(self):
         results = []
-        data = {'searchtext': self.quote_args(self.app_name)}
-        etree = self.send_request(data=data)
+        #data = {'searchtext': self.quote_args(self.app_name)}
+        #etree = self.send_request(data=data)
+        etree = self.send_request(self.app_name)
         items = etree.xpath(self.base_xpath)
         for item in items:
             title = item.xpath(self.title_xpath)

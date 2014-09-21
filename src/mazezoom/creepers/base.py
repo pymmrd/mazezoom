@@ -188,7 +188,7 @@ class PositionSpider(CreeperBase):
         if data is None and appname:
             quote_app = self.quote_args(appname)
             url = url % quote_app
-
+        print 'url--->', url
         if tree:
             #获取页面dom树
             etree = self.get_elemtree(url, data, headers, charset)

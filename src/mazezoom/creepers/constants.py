@@ -29,7 +29,6 @@ REDIS_CONF = {
     'port': REDIS_PORT,
     'db': 0,
 }
-
 CHANNEL_TASK_KEY = 'channel_task'
 POSITION_TASK_KEY = 'position_task'
 POSITION_DISPATCH_KEY = 'position_dispatch'

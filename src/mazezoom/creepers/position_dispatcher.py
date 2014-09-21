@@ -7,10 +7,12 @@
 
 #StdLib imports
 import time
+import json
 
 #Project imports
 from position import *
 from base import PositionSpider
+from django.conf import settings
 from backend import RedisBackend
 from constants import POSITION_DISPATCH_KEY, POSITION_TASK_KEY
 
@@ -23,17 +25,22 @@ def dispatcher():
     task:[app_uuid, appname, version, chksum]
     """
     backend = RedisBackend()
-    import pdb
-    pdb.set_trace()
     while 1:
         #接受扫描任务
-        task = backend.accept(POSITION_DISPATCH_KEY)
-        if task is not None:
-            #装饰并分发扫描任务到worker队列
-            #[app_uuid, appname, version, chksum, clsname]
-            for item in PositionSpider.subclass.iterkeys():
-                task.append(item)
-            backend.send(POSITION_TASK_KEY, task)
+        rawtask = backend.accept(POSITION_DISPATCH_KEY)
+        if rawtask:
+            print 'rawtask-->', rawtask
+            task = rawtask.split(',')
+            appname = task[1].decode(settings.DEFAULT_CHARSET)
+            task[1] = appname
+            if task is not None:
+                #装饰并分发扫描任务到worker队列
+                #[app_uuid, appname, version, chksum, clsname]
+                for item in PositionSpider.subclass.iterkeys():
+                    real_task = task[:]
+                    real_task.append(item)
+                    dumptask = json.dumps(real_task)
+                    backend.send(POSITION_TASK_KEY, dumptask)
         #添加CPU中端时间
         time.sleep(INTERUPT)
 
