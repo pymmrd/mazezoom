@@ -361,6 +361,11 @@ class ChannelLink(models.Model):
         )
     )
 
+    channel = models.ForeignKey(
+      Channel,
+      verbose_name=u'渠道',
+    )
+
     url = models.CharField(
         max_length=255,
         verbose_name=u'地址'

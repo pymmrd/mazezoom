@@ -89,4 +89,5 @@ class AppDailyDownload(Document):
 
     created_date = DateTimeField(
         verbose_name=u'抓取时间'
+	auto_now=True
     )
