@@ -23,6 +23,8 @@ def dispatcher():
     task:[app_uuid, appname, version, chksum]
     """
     backend = RedisBackend()
+    import pdb
+    pdb.set_trace()
     while 1:
         #接受扫描任务
         task = backend.accept(POSITION_DISPATCH_KEY)
