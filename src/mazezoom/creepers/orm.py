@@ -81,7 +81,7 @@ class ORMManager(object):
         )
         return daily.download_times
 
-    def create_or_update_dailydownload(self, channellink, *args, **kwargs):
+    def create_or_update_dailydownload(self, channellink, download_tiems, *args, **kwargs):
         start_date, end_date = datetime_range()
         yesterday_times = self.get_yesterday_dtimes(channellink)
         try:
@@ -93,11 +93,9 @@ class ORMManager(object):
         except AppDailyDownload.DoesNotExist:
             daily = AppDailyDownload()
             daily.channel_link = clink
-            download_times = kwargs.get('download_times', 0)
             daily.delta = download_times - yesterday_times
             for key, value in kwargs.iteritems():
                 setattr(daily, key, value)
         else:
-            download_times = kwargs.get('download_times', 0)
             daily.delta = download_times - yesterday_times
         daily.save()

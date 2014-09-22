@@ -166,7 +166,7 @@ class PositionSpider(CreeperBase):
         is_accurate: 标识爬虫精确抓取或者模糊抓取
         has_orm: 是否加载orm操作，设置为False不进行存数据库操作
         """
-        super(PositionSpider, self).__init__();
+        super(PositionSpider, self).__init__()
         self.app_uuid = app_uuid
         self.version = version
         self.chksum = chksum
@@ -224,15 +224,17 @@ class PositionSpider(CreeperBase):
         result: [(link, title)]
         """
         app = self.objects.get_app(self.app_uuid)
-        app_version,is_created = self.objects.get_or_create_appversion(
+        app_version, is_created = self.objects.get_or_create_appversion(
             app,
             self.version,
             self.chksum
         )
-        channel, is_created = self.objects.get_or_create_channel(self.name, self.domain)
+        channel, is_created = self.objects.get_or_create_channel(
+            self.name,
+            self.domain
+        )
         if result:
             self.objects.populate_channel_for_app(app_version, channel)
-        
         for item in result:
             link = item[0]
             title = item[1]
@@ -252,6 +254,7 @@ class PositionSpider(CreeperBase):
     def run(self):
         result = self.position()
         self.record_channellink(result)
+
 
 class DownloadAppSpider(CreeperBase):
     def __init__(self, session=None):
@@ -297,11 +300,28 @@ class DownloadAppSpider(CreeperBase):
 
 
 class ChannelSpider(CreeperBase):
+    def __init__(self, channellink, app_uuid,
+                 app_version, channel, url, title):
+        self.channellink = channellink
+        self.app_uuid = app_uuid
+        self.app_version = app_version
+        self.channel = channel
+        self.url = url
+        self.title = title
 
-    def record_appdetail(self, app_uuid, app_version):
-        pass
+    def record_appdetail(self, result):
+        detail, is_created = self.objects.get_or_create_appdetail(
+            self.app_uuid,
+            self.app_version,
+            result
+        )
+        return detail, is_created
 
-    def record_dailydownload(self):
+    def record_dailydownload(self, download_times):
+        self.objects.create_or_update_dailydownload(
+            self.channellink,
+            download_times
+        )
 
     def send_request(self, url, headers=None, tree=True, ignore=False):
         if tree:
@@ -312,11 +332,11 @@ class ChannelSpider(CreeperBase):
             etree = self.get_content(url, headers)
         return etree
 
+    def parse(self):
+        pass
 
-if __name__ == "__main__":
-    #url = "http://apps.wandoujia.com/apps/net.myvst.v2/download"
-    url = "http://pc1.gamedog.cn/big/online/juese/233490/tiantianaixiyouyxdog_an.apk"
-    domain = "apps.wandoujia.com"
-    referer = "www.oyksoft.com/soft/32456.html"
-    downloader = DownloadAppSpider()
-    print downloader.run(url)
+    def run(self):
+        result, download_times = self.parser()
+        detail, is_created = self.record_app_detail(result)
+        if download_times:
+            self.record_dailydownload(download_times)
