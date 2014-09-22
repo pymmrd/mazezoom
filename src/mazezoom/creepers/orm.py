@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+from creepers.utils import datetime_range, get_yesterday
 from cloudeye.document import AppDetail, AppDailyDownload
 from cloudeye.models import (Channel, ChannelLink, Application, AppVersion)
 
@@ -59,26 +60,44 @@ class ORMManager(object):
         )
         return link, is_created
 
-    def create_appdetail(self, app_uuid, version, *args, **kwargs):
-        try:
-            detail = AppDetail.objects.get(app_uuid, app_version=version)
-        except AppDetail.DoesNotExist:
-            detail = AppDetail()
-            detail.app_uuid = app_uuid
-            detail.app_version = version
+    def get_or_create_appdetail(self, app_uuid, version, *args, **kwargs):
+        detail, is_created = AppDetail.objects.get_or_create(
+            app_uuid=app_uuid,
+            app_version=version,
+            defaults=kwargs
+        )
+        #for key, value in kwargs.iteritems():
+        #    setattr(detail, key, value)
+        #detail.save()
+        return detail, is_created
 
-        for key, value in kwargs.iteritems():
-            setattr(detail, key, value)
-        detail.save()
+    def get_yesterday_dtimes(self, clink):
+        yesterday = get_yesterday()
+        start_date, end_date = datetime_range(yesterday)
+        daily = AppDailyDownload.objects.get(
+            channel_link=clink,
+            created_date__gte=start_date,
+            created_date__lt=end_date
+        )
+        return daily.download_times
 
-    def create_dailydownload(self, app_uuid, app_version, *args, **kwargs):
+    def create_or_update_dailydownload(self, clink, *args, **kwargs):
+        start_date, end_date = datetime_range()
+        yesterday_times = self.get_yesterday_dtimes(clink)
         try:
-            dailydownload = AppDailyDownload.objects.get(app_uuid, app_version)
+            daily = AppDailyDownload.objects.get(
+                channel_link=clink,
+                created_date__gte=start_date,
+                created_date__lt=end_date
+            )
         except AppDailyDownload.DoesNotExist:
-            dailydownload = AppDailyDownload()
-            dailydownload.app_uuid = app_uuid
-            dailydownload.app_version = app_version
-
-        for key, value in kwargs.iteritems():
-            setattr(dailydownload, key, value)
-        dailydownload.save()
+            daily = AppDailyDownload()
+            daily.channel_link = clink
+            download_times = kwargs.get('download_times', 0)
+            daily.delta = download_times - yesterday_times
+            for key, value in kwargs.iteritems():
+                setattr(daily, key, value)
+        else:
+            download_times = kwargs.get('download_times', 0)
+            daily.delta = download_times - yesterday_times
+        daily.save()

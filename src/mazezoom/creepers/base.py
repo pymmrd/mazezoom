@@ -229,8 +229,8 @@ class PositionSpider(CreeperBase):
             self.version,
             self.chksum
         )
+        channel, is_created = self.objects.get_or_create_channel(self.name, self.domain)
         if result:
-            channel, is_created = self.objects.get_or_create_channel(self.name, self.domain)
             self.objects.populate_channel_for_app(app_version, channel)
         
         for item in result:
@@ -242,7 +242,8 @@ class PositionSpider(CreeperBase):
                 app_version,
                 checksum,
                 title=title,
-                url=link
+                url=link,
+                channel=channel
             )
 
     def position(self):
@@ -296,6 +297,11 @@ class DownloadAppSpider(CreeperBase):
 
 
 class ChannelSpider(CreeperBase):
+
+    def record_appdetail(self, app_uuid, app_version):
+        pass
+
+    def record_dailydownload(self):
 
     def send_request(self, url, headers=None, tree=True, ignore=False):
         if tree:
