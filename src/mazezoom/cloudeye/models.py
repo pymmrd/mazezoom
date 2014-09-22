@@ -295,7 +295,7 @@ class AppVersion(models.Model):
         verbose_name=u'md5值'
     )
 
-    download_times = models.IntegerField(
+    download_times = models.BigIntegerField(
         verbose_name=u'下载次数',
         default=0
     )
@@ -397,7 +397,13 @@ class ChannelLink(models.Model):
     is_accurate = models.BooleanField(
         default=True,
         verbose_name=u'是否精确匹配',
-        help_text=u'当爬虫精确匹配时设置此属性为True')
+        help_text=u'当爬虫精确匹配时设置此属性为True'
+    )
+
+    download_times = models.BigIntegerField(
+        blank=True,
+        null=True
+    )
 
     class Meta:
         db_table = 'channellink'
