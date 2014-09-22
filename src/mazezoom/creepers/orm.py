@@ -64,7 +64,7 @@ class ORMManager(object):
         detail, is_created = AppDetail.objects.get_or_create(
             app_uuid=app_uuid,
             app_version=version,
-            defaults=kwargs
+            **kwargs
         )
         #for key, value in kwargs.iteritems():
         #    setattr(detail, key, value)
@@ -74,14 +74,19 @@ class ORMManager(object):
     def get_yesterday_dtimes(self, clink):
         yesterday = get_yesterday()
         start_date, end_date = datetime_range(yesterday)
-        daily = AppDailyDownload.objects.get(
-            channel_link=clink,
-            created_date__gte=start_date,
-            created_date__lt=end_date
-        )
-        return daily.download_times
+        try:
+            daily = AppDailyDownload.objects.get(
+                channel_link=clink,
+                created_date__gte=start_date,
+                created_date__lt=end_date
+            )
+        except AppDailyDownload.DoesNotExist:
+            download_times = 0
+        else:
+            download_times = daily.download_times
+        return download_times
 
-    def create_or_update_dailydownload(self, channellink, download_tiems, *args, **kwargs):
+    def create_or_update_dailydownload(self, channellink, download_times, *args, **kwargs):
         start_date, end_date = datetime_range()
         yesterday_times = self.get_yesterday_dtimes(channellink)
         try:
@@ -92,10 +97,9 @@ class ORMManager(object):
             )
         except AppDailyDownload.DoesNotExist:
             daily = AppDailyDownload()
-            daily.channel_link = clink
-            daily.delta = download_times - yesterday_times
-            for key, value in kwargs.iteritems():
-                setattr(daily, key, value)
-        else:
-            daily.delta = download_times - yesterday_times
+        daily.channel_link = channellink
+        daily.download_times = download_times
+        daily.delta_times = download_times - yesterday_times
+        for key, value in kwargs.iteritems():
+            setattr(daily, key, value)
         daily.save()

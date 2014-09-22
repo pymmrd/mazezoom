@@ -75,10 +75,6 @@ class AppDailyDownload(Document):
         help_text=u'渠道站点的主键ID'
     )
 
-    channel_name = StringField(
-        verbose_name=u'渠道名字'
-    )
-
     download_times = IntField(
         verbose_name=u'当日下载次数'
     )
@@ -88,6 +84,6 @@ class AppDailyDownload(Document):
     )
 
     created_date = DateTimeField(
-        verbose_name=u'抓取时间'
-        auto_now=True
+        verbose_name=u'抓取时间',
+        default=datetime.now
     )

@@ -3,9 +3,9 @@
 from datetime import datetime, timedelta
 
 def get_yesterday(d=None):
-    if d is not None:
+    if d is None:
         d = datetime.now()
-    yesterday = d - timdelta(days=1)
+    yesterday = d - timedelta(days=1)
     return yesterday
 
 def datetime_range(d=None):

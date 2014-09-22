@@ -302,6 +302,7 @@ class DownloadAppSpider(CreeperBase):
 class ChannelSpider(CreeperBase):
     def __init__(self, channellink, app_uuid,
                  app_version, channel, url, title):
+        super(ChannelSpider, self).__init__()
         self.channellink = channellink
         self.app_uuid = app_uuid
         self.app_version = app_version
@@ -313,14 +314,17 @@ class ChannelSpider(CreeperBase):
         detail, is_created = self.objects.get_or_create_appdetail(
             self.app_uuid,
             self.app_version,
-            result
+            **result
         )
         return detail, is_created
 
     def record_dailydownload(self, download_times):
         self.objects.create_or_update_dailydownload(
             self.channellink,
-            download_times
+            download_times,
+            app_uuid=self.app_uuid,
+            app_version=self.app_version,
+            channel = self.channel
         )
 
     def send_request(self, url, headers=None, tree=True, ignore=False):
@@ -332,11 +336,12 @@ class ChannelSpider(CreeperBase):
             etree = self.get_content(url, headers)
         return etree
 
-    def parse(self):
+    def parser(self):
         pass
 
     def run(self):
-        result, download_times = self.parser()
-        detail, is_created = self.record_app_detail(result)
+        result= self.parser()
+        detail, is_created = self.record_appdetail(result)
+        download_times = result.pop('download_times', 0)
         if download_times:
             self.record_dailydownload(download_times)
