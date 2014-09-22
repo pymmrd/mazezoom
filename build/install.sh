@@ -1,103 +1,55 @@
 #! /bin/sh
 
 CURRENT_DIR=`pwd`
-SOFT_DOWN_ADDR="10.2.252.0:89"
-SYSTEM_NGINX_DIR="/etc/nginx"
-SYSTEM_UWSGI_DIR="/etc/conf.d"
 ROOT_DIR=`dirname $CURRENT_DIR`
-PROJECT_INSTALL_DIR="/opt/webtrack"
-PROJECT_DATA_DIR="/opt/webtrack/data"
-NGINX_CONFIG_FILE="${SYSTEM_NGINX_DIR}/nginx.conf"
-CLOUDEYE_UWSGI_CONFIG_FILE="${CURRENT_DIR}/cloudeye.ini" 
-CLOUDEYE_NGINX_CONFIG_FILE="${CURRENT_DIR}/nginx.conf"
-CLOUDEYE_NGINX_REAL_CONFIG_FILE="${CURRENT_DIR}/nginx_cloudeye.conf"
 
 MONGODB_INSTALL_PATH="/usr/local/mongo"
 MONGODB_CONFIG_FILE="${CURRENT_DIR}/mongodb.conf"
 MONGODB_UPSTART_CONFIG="${CURRENT_DIR}/upstart/mongodb.conf"
 
 REDIS_CONFIG_FILE="${CURRENT_DIR}/redis.conf"
-SOURCE_CODE_SRC="${ROOT_DIR}/src/server"
-REQUIRMENTS_PYLIB="${ROOT_DIR}/src/server/requirements.txt"
+SOURCE_CODE_SRC="${ROOT_DIR}/src/mazezoom"
+REQUIRMENTS_PYLIB="${ROOT_DIR}/src/mazezoom/requirements.txt"
 
 if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root" 1>&2
     exit 1
 fi
 
-backup_nginx_config(){
-    if [ -f "${NGINX_CONFIG_FILE}"]; then
-        mv ${NGINX_CONFIG_FILE} "${NGINX_CONFIG_FILE}.bak" 
-    fi
-}
-
 
 install_libdev(){
-  sudo apt-get install -y python-dev gcc libsqlite3-dev libqtwebkit-dev make g++ libfreetype6-dev  libfontconfig-dev libyaml-dev 
+    echo "sudo apt-get update"
+    sudo apt-get update
+
+    echo "sudo apt-get install -y python-dev gcc libsqlite3-dev make g++ libfreetype6-dev"
+    sudo apt-get install -y python-dev gcc libsqlite3-dev make g++ libfreetype6-dev
+
+    echo "sudo apt-get install -y libfontconfig-dev libyaml-dev git-core redis-server mongodb"
+    sudo apt-get install -y libfontconfig-dev libyaml-dev git-core redis-server mongodb
+
+    echo "sudo apt-get install -y libmysqlclient-dev python-pip zlib1g-dev" 
+    sudo apt-get install -y libmysqlclient-dev python-pip zlib1g-dev 
+
+    echo "sudo apt-get install -y mysql-server mysql-client" 
+    sudo apt-get install -y mysql-server mysql-client 
 
 }
 
-install_java(){
-    echo "安装Java"
-    sudo apt-get install -y openjdk-7-jdk
-    echo "Java安装成功"
+install_fchksum(){
+    echo "wget  http://down1.chinaunix.net/distfiles/python-fchksum-1.7.1.tar.gz"
+    wget  http://down1.chinaunix.net/distfiles/python-fchksum-1.7.1.tar.gz
+
+    echo "tar -xvzf python-fchksum-1.7.1.tar.gz"
+    tar -xvzf python-fchksum-1.7.1.tar.gz
+
+    echo "python ./python-fchksum-1.7.1/setup.py build"
+    python ./python-fchksum-1.7.1/setup.py build
+    
+    echo "python ./pyhton-fchksum-1.7.1/setup.py install"
+    python ./pyhton-fchksum-1.7.1/setup.py install
 
 }
 
-install_redis_server(){
-    echo "安装Redis"
-
-    echo "apt-get install -y redis-server"
-    apt-get install -y redis-server
-
-    echo "cp $REDIS_CONFIG_FILE /etc/redis/"
-    cp $REDIS_CONFIG_FILE /etc/redis/
-
-    echo "/etc/init.d/redis-server restart"
-    /etc/init.d/redis-server restart
-
-    echo "Redis安装成功"
-}
-
-install_nginx(){
-    echo "安装Nginx."
-    apt-get install -y nginx
-    echo "Nginx安装成功."
-
-}
-
-nginx_load(){
-    install_nginx
-
-    echo "cp -f ${CLOUDEYE_NGINX_CONFIG_FILE} /etc/nginx/"
-    cp -f ${CLOUDEYE_NGINX_CONFIG_FILE} /etc/nginx/
-
-    echo "cp -f ${CLOUDEYE_NGINX_REAL_CONFIG_FILE} /etc/nginx/conf.d/"
-    cp -f ${CLOUDEYE_NGINX_REAL_CONFIG_FILE} /etc/nginx/conf.d/
-
-    echo "/etc/init.d/nginx restart"
-    /etc/init.d/nginx restart
-
-}
-
-install_uwsgi(){
-    echo "安装uwsgi"
-    apt-get install -y uwsgi uwsgi-plugin-python
-    echo "安装uwsgi结束."
-}
-
-uwsgi_load(){
-    install_uwsgi
-    echo "cp -f ${CLOUDEYE_UWSGI_CONFIG_FILE} /etc/uwsgi/apps-enabled"
-    cp -f ${CLOUDEYE_UWSGI_CONFIG_FILE} /etc/uwsgi/apps-enabled
-    /etc/init.d/uwsgi restart
-}
-
-install_pip(){
-    echo "安装PIP"
-    apt-get install -y python-pip
-    echo "安装PIP成功"
-}
 
 install_pylib_with_pip(){
     echo "安装Python扩展包"
@@ -176,46 +128,17 @@ install_mongodb(){
 }
 
 install_src(){
-    echo "cp $SOURCE_CODE_SRC $PROJECT_INSTALL_DIR -R"
-    cp $SOURCE_CODE_SRC $PROJECT_INSTALL_DIR -R
-    echo "chown daemon:daemon $PROJECT_INSTALL_DIR -R"
-    chown daemon:daemon $PROJECT_INSTALL_DIR -R
-}
-
-init_user(){
-    python /opt/webtrack/server/manage.py create_default_user
-}
-
-download_geo(){
-   echo "wget -P $PROJECT_DATA_DIR http://$SOFT_DOWN_ADDR/GeoIPCity.dat" 
-   wget -P $PROJECT_DATA_DIR "http://$SOFT_DOWN_ADDR/GeoIPCity.dat" 
-   echo "wget -P $PROJECT_DATA_DIR http://$SOFT_DOWN_ADDR/cities.sqlite.dat" 
-   wget -P $PROJECT_DATA_DIR "http://$SOFT_DOWN_ADDR/cities.sqlite.dat" 
-   echo "wget -P $PROJECT_DATA_DIR http://$SOFT_DOWN_ADDR/tldextract.cache" 
-   wget -P $PROJECT_DATA_DIR "http://$SOFT_DOWN_ADDR/tldextract.cache" 
-
-  
+    echo "git clone https://github.com/pymmrd/mazezoom"
+    git clone https://github.com/pymmrd/mazezoom
 }
 
 
 setup(){
-    mkdir -p $PROJECT_INSTALL_DIR
-    mkdir -p $PROJECT_DATA_DIR
-    install_src
-    download_geo
-    addgroup daemon
-    adduser daemon daemon
     install_libdev
+    install_fchksum
+    install_src
     install_redis_server
-    install_phantomjs
-    install_mongodb
-    install_pip 
     install_pylib_with_pip 
-    nginx_load
-    init_mongodb
-    uwsgi_load
-    #TODO数据库的初始化
-    init_user
 }
 
 setup
