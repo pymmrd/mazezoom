@@ -81,12 +81,12 @@ class ORMManager(object):
         )
         return daily.download_times
 
-    def create_or_update_dailydownload(self, clink, *args, **kwargs):
+    def create_or_update_dailydownload(self, channellink, *args, **kwargs):
         start_date, end_date = datetime_range()
-        yesterday_times = self.get_yesterday_dtimes(clink)
+        yesterday_times = self.get_yesterday_dtimes(channellink)
         try:
             daily = AppDailyDownload.objects.get(
-                channel_link=clink,
+                channel_link=channellink,
                 created_date__gte=start_date,
                 created_date__lt=end_date
             )
