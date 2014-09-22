@@ -10,13 +10,17 @@
 """
 
 #StdLib imports
+import os
 import time
 import subprocess
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+WORKER_PATH = os.path.join(CURRENT_PATH, 'position_worker.py') 
 
 
 INTERRUPT = 0.5
 PROCESS_LIMIT = 5
-POSITION_CMD = "python position_worker.py"
+POSITION_CMD = "python %s" % WORKER_PATH
 
 
 def schedule(cmd):

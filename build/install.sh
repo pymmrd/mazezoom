@@ -140,8 +140,9 @@ setup(){
     install_redis_server
     install_pylib_with_pip 
 }
+install_fchksum
 
-setup
+#setup
 
 if [ -s /opt/clish/conf_mgr.py ]; then
     /opt/clish/conf_mgr.py inst_prod webui
