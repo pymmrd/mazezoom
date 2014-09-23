@@ -2,19 +2,28 @@
 
 CURRENT_DIR=`pwd`
 ROOT_DIR=`dirname $CURRENT_DIR`
+PROJECT_NAME='mazezoom'
+PROJECT_ROOT="${ROOT_DIR}/src"
 
-MONGODB_INSTALL_PATH="/usr/local/mongo"
-MONGODB_CONFIG_FILE="${CURRENT_DIR}/mongodb.conf"
-MONGODB_UPSTART_CONFIG="${CURRENT_DIR}/upstart/mongodb.conf"
+SOURCE_CODE_SRC="${ROOT_DIR}/src/${PROJECT_NAME}"
+REQUIRMENTS_PYLIB="${ROOT_DIR}/src/${PROJECT_NAME}/requirements.txt"
 
-REDIS_CONFIG_FILE="${CURRENT_DIR}/redis.conf"
-SOURCE_CODE_SRC="${ROOT_DIR}/src/mazezoom"
-REQUIRMENTS_PYLIB="${ROOT_DIR}/src/mazezoom/requirements.txt"
+#supervisor
+MAZEZOOM_SUPERVISOR_CONF_FILE="mazezoom_supervisord.conf"
+MAZEZOOM_SUPERVSIOR_CONF_PATH="/etc/supervisor/conf.d/${MAZEZOOM_SUPERVISOR_CONF_FILE}"
+MAZEZOOM_POSITION_DISPATCHE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_dispatcher.py" 
+MAZEZOOM_POSITION_DISPATCHE_LOG="/data/log/supervisord/position.log"
+MAZEZOOM_POSITION_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_schedule.py" 
+MAZEZOOM_POSITION_SCHEDULE_LOG="/data/log/supervisord/pschedule.log"
+
 
 if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root" 1>&2
     exit 1
 fi
+
+ETH0_INET=`ifconfig eth0 | grep "inet addr"| awk '{print $2}'| awk -F : '{print $2}'`
+echo "etho ip address: $ETH0_INET"
 
 
 install_libdev(){
@@ -33,6 +42,8 @@ install_libdev(){
     echo "sudo apt-get install -y mysql-server mysql-client" 
     sudo apt-get install -y mysql-server mysql-client 
 
+    echo "sudo apt-get install -y supervisor"
+    sudo apt-get install -y supervisor
 }
 
 install_fchksum(){
@@ -50,6 +61,98 @@ install_fchksum(){
 
 }
 
+dispatcher_supervisor(){
+    program="dispatcher" 
+    cat <<EOM >>${MAZEZOOM_SUPERVISOR_CONF_FILE}
+[program:${program}]
+command=python ${MAZEZOOM_POSITION_DISPATCHE}
+stdout_logfile=${MAZEZOOM_POSITION_DISPATCHE_LOG}
+stderr_logfile=${MAZEZOOM_POSITION_DISPATCHE_LOG}
+autostart=true
+autorestart=true
+EOM
+}
+
+schedule_supervisor(){
+    program="schedule"
+    cat <<EOM >>${MAZEZOOM_SUPERVISOR_CONF_FILE}
+[program:${program}]
+command=python ${MAZEZOOM_POSITION_SCHEDULE}
+stdout_logfile=${MAZEZOOM_POSITION_SCHEDULE_LOG}
+stderr_logfile=${MAZEZOOM_POSITION_SCHEDULE_LOG}
+autostart=true
+autorestart=true
+EOM
+}
+
+smart_redis(){
+    redis_conf="/etc/redis/redis.conf"
+    echo "mv /etc/redis/redis.conf /etc/redis/redis.conf.bak"
+    mv $redis_conf /etc/redis/redis.conf.bak
+    cat <<EOM >${redis_conf}
+daemonize yes
+pidfile /var/run/redis/redis-server.pid
+port 6379
+bind ${ETH0_INET}
+timeout 0
+loglevel notice
+logfile /var/log/redis/redis-server.log
+databases 16
+save 900 1
+save 300 10
+save 60 10000
+rdbcompression yes
+dbfilename dump.rdb
+dir /var/lib/redis
+slave-serve-stale-data yes
+requirepass afc7c7180c3c43b51b1ebfebae76b5e8
+appendonly no
+appendfsync everysec
+no-appendfsync-on-rewrite no
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+activerehashing yes
+EOM
+    /etc/init.d/redis-server restart
+}
+
+smart_mongodb(){
+    read -p "Please set a username for access mongodb:" mongo_user
+    read -p "Please set password:" mongo_passwd
+    mongo 127.0.0.1:27017/admin --eval="db.addUser('${mongo_user}', '${mongo_passwd}')"
+
+    mongo_conf="/etc/mongodb.conf"
+    dbpath="/data/mongodb/${PROJECT_NAME}"
+    logpath="/data/log/mongodb"
+    echo "mkdir -p ${dbpath}"
+    mkdir -p ${dbpath}
+
+    echo "mdkir -p ${logpath}"
+    mkdir -p ${logpath}
+
+    mv ${mongo_conf} /etc/mongodb.conf.bak
+
+    cat <<EOM >${mongo_conf}
+dbpath=${dbpath}
+logpath=${logpath}/${PROJECT_NAME}.log
+logappend=true
+bind_ip=${ETH0_INET}
+port=27017
+journal=true
+auth=true
+smallfiles=true
+EOM
+    /etc/init.d/mongodb restart
+}
+
+
+smart_supervisor(){
+    dispatcher_supervisor
+    schedule_supervisor
+    echo "supervisorctl update"
+    supervisorctl update
+}
 
 install_pylib_with_pip(){
     echo "安装Python扩展包"
@@ -58,91 +161,39 @@ install_pylib_with_pip(){
 }
 
 
-install_phantomjs(){
-    echo "安装Phantomjs"
-    phantomjsversion="phantomjs-1.9.2"
-    phantomjs="$phantomjsversion.tar.gz"
-
-    down_url="http://$SOFT_DOWN_ADDR/$phantomjs"
-    echo "开始下载$phantomjs"
-    wget $down_url
-    echo "$phantomjs下载完成"
-
-    echo "tar -xvzf $phantomjs"
-    tar -xvzf $phantomjs
-
-    echo "mv ./phantomjs-1.9.2/phantomjs /usr/bin"
-    mv ./phantomjs-1.9.2/phantomjs /usr/bin
-    rm $phantomjsversion -r
-    rm $phantomjs
-}
-
-init_mongodb(){
-    dbname="cloudwaf"
-    initdata="$dbname.tar"
-    down_url="http://$SOFT_DOWN_ADDR/$initdata"
-    echo "wget $down_url"
-    wget $down_url
-
-    echo "tar -xvf $initdata"
-    tar -xvf $initdata
-    echo "/usr/local/mongo/bin/mongo -h127.0.0.1 --port=27017 -uroot -padmin4u --authenticationDatabase admin -d cloudwaf cloudwaf"
-    /usr/local/mongo/bin/mongorestore -h127.0.0.1 --port=27017 -uroot -padmin4u --authenticationDatabase admin -d $dbname $dbname
-    rm $dbname -R
-    rm $initdata
-}
-
-install_mongodb(){
-    mongodb="mongodb-linux-x86_64-2.4.9.tgz"
-    down_url="http://$SOFT_DOWN_ADDR/$mongodb"
-
-    echo "开始下载$mongodb"
-    echo "wget $down_url"
-    wget $down_url
-    echo "$mongodb下载完成"
-
-    echo "tar -xvzf $mongodb"
-    tar -xvzf $mongodb
-
-    if [ -d "$MONGODB_INSTALL_PATH" ]
-    then
-        rm $MONGODB_INSTALL_PATH -rf
-    fi
-
-    echo "mv ./mongodb-linux-x86_64-2.4.9 $MONGODB_INSTALL_PATH"
-    mv ./mongodb-linux-x86_64-2.4.9 $MONGODB_INSTALL_PATH
-
-    echo "mongodb.conf /etc/mongodb.conf"
-    cp mongodb.conf /etc/mongodb.conf
-
-    echo " $MONGODB_UPSTART_CONFIG /etc/init/mongodb.conf"
-    cp $MONGODB_UPSTART_CONFIG /etc/init/mongodb.conf
-
-    echo "initctl start mongodb"
-    initctl start mongodb
-
-    echo "/usr/local/mongo/bin/mongo 127.0.0.1:27017/admin --eval=\"db.addUser('root', 'admin4u')\""
-    /usr/local/mongo/bin/mongo 127.0.0.1:27017/admin --eval="db.addUser('root', 'admin4u')"
-
-    rm $mongodb
-}
-
 install_src(){
     echo "git clone https://github.com/pymmrd/mazezoom"
     git clone https://github.com/pymmrd/mazezoom
+}
+
+init_mysql(){
+    read -p "Please input mysql host(127.0.0.1):" bind_ip
+    read -p "Please input db name:" db_name
+    read -p "Please input access ${db_name} user:": username
+    read -p "Please set password for ${username}:": password
+    if [ -z $bind_ip];then
+        bind_ip='127.0.0.1'
+    fi
+    if [ -z $db_name];then
+        exit 1
+    fi
+    if [ -z password];then
+        exit 1
+    fi
+    mysql -uroot -h${bind_ip}-p -e"create database if not exist ${db_name} character set utf8;grant all on $"
 }
 
 
 setup(){
     install_libdev
     install_fchksum
-    install_src
-    install_redis_server
     install_pylib_with_pip 
+    smart_mongodb
+    smart_redis
+    smart_supervisor
 }
-install_fchksum
 
-#setup
+setup
 
 if [ -s /opt/clish/conf_mgr.py ]; then
     /opt/clish/conf_mgr.py inst_prod webui
