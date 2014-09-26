@@ -21,4 +21,7 @@ DATABASES = {
 MONGO_HOST = '10.9.19.178'
 MONGO_PORT = 27017
 MONGO_DB = 'mazezoom'
-connect(MONGO_DB, host=MONGO_HOST, port=MONGO_PORT)
+MONGO_AUTH_POOL = {
+    'user': 'root',
+    'passwd': 'admin4u',
+}
