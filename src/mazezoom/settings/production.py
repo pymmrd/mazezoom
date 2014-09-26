@@ -21,7 +21,7 @@ DATABASES = {
 MONGO_HOST = '10.9.19.178'
 MONGO_PORT = 27017
 MONGO_DB = 'mazezoom'
-MONGO_AUTH_POOL = {
+MONGO_POOL_AUTH = {
     'user': 'root',
     'passwd': 'admin4u',
 }
