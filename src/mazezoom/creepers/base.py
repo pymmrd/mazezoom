@@ -48,6 +48,7 @@ class RegisterSubClass(type):
 
 class CreeperBase(object):
 
+    charset = DEFAULT_CHARSET
     __metaclass__ = RegisterSubClass
 
     def __init__(self):
@@ -69,13 +70,11 @@ class CreeperBase(object):
                 content = self.tryAgain(req, retries)
         return content
 
-    def get_content(self, url, data=None, headers=None):
+    def get_content(self, url, data=None):
         """
         给请求加载USER-AGENT, 获取页面内容，
         """
         content = ''
-        if headers:
-            self.session.headers.update(headers)
         try:
             if data is not None:
                 ack = self.session.post(url, data)
@@ -95,12 +94,12 @@ class CreeperBase(object):
         """
         return urlparse.urljoin(source, url)
 
-    def get_elemtree(self, url, data=None, headers=None, ignore=False, charset=False):
+    def get_elemtree(self, url, data=None, ignore=False, charset=False):
         """
         生成dom树方便xpath分析
         """
         etree = None
-        content = self.get_content(url, data, headers)
+        content = self.get_content(url, data)
         if charset:
             content = content.decode(self.charset)
         if ignore:  # 针对页面存在错误编码和多编码现象处理
@@ -121,12 +120,12 @@ class CreeperBase(object):
     def unquote(self, v):
         return urllib.unquote(v)
 
-    def download_app(self, url, headers=None):
+    def download_app(self, url):
         downloader = DownloadAppSpider(self.session)
         if isinstance(self, PositionSpider):
-            storage = downloader.run(url, headers=headers, is_position=True)
+            storage = downloader.run(url, is_position=True)
         else:
-            storage = downloader.run(url, headers=headers)
+            storage = downloader.run(url)
         return storage
 
     def run(self):
@@ -157,7 +156,6 @@ class CreeperBase(object):
 
 class PositionSpider(CreeperBase):
 
-    charset = DEFAULT_CHARSET
 
     def __init__(self, app_name, app_uuid=None,
                  version=None, chksum=None,
@@ -185,8 +183,8 @@ class PositionSpider(CreeperBase):
             )
 
     def send_request(self, appname=None, url=None,
-                     data=None, headers=None, tree=True,
-                     charset=False):
+                     data=None, tree=True,
+                     charset=False, ignore=False):
         url = self.search_url if url is None else url
         if data is None and appname:
             quote_app = self.quote_args(appname)
@@ -194,13 +192,13 @@ class PositionSpider(CreeperBase):
         print 'url--->', url
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, data, headers, charset)
+            etree = self.get_elemtree(url, data, ignore, charset)
         else:
             #获取response的 raw string
-            etree = self.get_content(url, data, headers)
+            etree = self.get_content(url, data)
         return etree
 
-    def verify_app(self, url=None, down_link=None, chksum=None):
+    def verify_app(self, url=None, down_link=None):
         """
         url: detail页面链接
         down_link: 下载链接
@@ -217,7 +215,7 @@ class PositionSpider(CreeperBase):
         if down_link:
             storage = self.download_app(down_link)
             md5sum = fchksum.fmd5t(storage)[0]
-            if md5sum == chksum:
+            if md5sum == self.chksum:
                 is_right = True
                 os.unlink(storage)
         return is_right
@@ -293,9 +291,9 @@ class DownloadAppSpider(CreeperBase):
     def unique_name(self):
         return shortuuid.uuid()
 
-    def run(self, url, headers=None, is_position=False):
+    def run(self, url, is_position=False):
         storage = self.get_storage(is_position)
-        content = self.get_content(url, headers=headers)
+        content = self.get_content(url)
         with open(storage, 'a') as f:
             f.write(content)
             f.flush()
@@ -330,13 +328,13 @@ class ChannelSpider(CreeperBase):
             channel = self.channel
         )
 
-    def send_request(self, url, headers=None, tree=True, ignore=False):
+    def send_request(self, url, tree=True, ignore=False):
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, headers, ignore=ignore)
+            etree = self.get_elemtree(url, ignore=ignore)
         else:
             #获取response的 raw string
-            etree = self.get_content(url, headers)
+            etree = self.get_content(url)
         return etree
 
     def parser(self):

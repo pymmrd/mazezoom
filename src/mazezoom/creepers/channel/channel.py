@@ -1374,6 +1374,70 @@ class NduoaChannel(ChannelSpider):
         return result
 
 
+class DChannel(ChannelSpider):
+    """
+    url: http://android.d.cn/software/12486.html
+    类别 阅读工具
+    下载 128.72万次
+    版本 4.6.1.680
+    时间 2014-07-24
+    大小 7.32MB
+    星级
+    资费 完全免费
+    热度 65℃
+    支持系统 1.6以上
+    开发商 Tencent Technology
+    语言英文, 中文
+    """
+    domain = "www.d.cn"
+    fuzzy_xpath = "//ul[@class='de-game-info clearfix']/li"
+    label_xpath = "child::span/text()"
+    value_xpath = "child::text()"
+
+    def download_times(self, rawstring):
+        times = 0
+        dot = '.'
+        regx = re.compile('(?P<times>[\d\.]+)')
+        match = regx.search(rawstring)
+        if match is not None:
+            raw_times = match.group('times')
+            if dot in raw_times:
+                times = int(float(raw_times) * 10000)
+            else:
+                times = int(raw_times)
+        return times
+
+    def position(self):
+        result = {}
+        etree = self.send_request(self.url, ignore=True)
+        mapping = {
+            u'类别': 'category',
+            u'下载': 'download_times',
+            u'版本': 'human_version',
+            u'大小': 'size',
+            u'时间': 'update_time',
+            u'开发商': 'company',
+            u'支持系统': 'env',
+            u'语言': 'language',
+            u'资费': 'authorize',
+        }
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            value = ''
+            label = item.xpath(self.label_xpath)[0].strip()
+            label = mapping.get(label, '')
+            if label:
+                vraw = item.xpath(self.value_xpath)
+                if vraw:
+                    value = ''.join(vraw).strip()
+                result[label] = value
+
+        dtimes = result.get('download_times', '')
+        if dtimes:
+            times = self.download_times(dtimes) 
+            result['download_times'] = times
+        return result
+            
 if __name__ == '__main__':
     #url = "http://www.oyksoft.com/soft/32456.html"
     #oyk = OykSoftChannel()
@@ -1471,4 +1535,13 @@ if __name__ == '__main__':
         title=u'工行短信银行'
     
     )
-    print nduoa.run()
+    #print nduoa.run()
+    dchannel = DChannel(
+        channellink=1,
+        app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
+        app_version=1,
+        channel=36,
+        url="http://android.d.cn/software/12486.html",
+        title=u'工行短信银行'
+    )
+    print dchannel.run()
