@@ -20,7 +20,7 @@ POSITION_APP_DIR = os.path.join(APP_DIR, 'positionapp')
 
 CHANNAL_APP_DIR = os.path.join(APP_DIR, 'channelapp')
 
-REDIS_HOST = '192.168.1.102'
+REDIS_HOST = '10.9.19.178'
 REDIS_PORT = 6379
 REDIS_PASSWORD = ''
 REDIS_CONF = {

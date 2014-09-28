@@ -1300,6 +1300,80 @@ class PcHomeChannel(ChannelSpider):
             storage = self.download_app(down_link)
         return result
 
+
+class NduoaChannel(ChannelSpider):
+    """
+    url: http://www.nduoa.com/apk/detail/808577
+    version: (4.0.1)
+    下载次数：8,740,875次下载
+    版本：5.0.1.11 
+    大小：18.62 MB 
+    作者：网易
+    更新：发布于4天前
+    """
+    domain = "www.nduoa.com"
+    seperator = u"："
+    version_xpath = "//span[@class='version']/text()"
+    times_xpath = "//div[@class='levelCount']/span[@class='count']/text()"
+    size_xpath = "//div[@class='size row']/text()"
+    env_xpath = "//div[@class='adapt row popup']/h4/text()"
+    update_time_xpath = "//div[@class='updateTime row']/em/text()"
+    author_xpath = "//div[@class='author row']/span/a/text()"
+    down_xpath = "//a[@id='BDTJDownload']/@href"
+    label = u'下载次数'
+
+    def download_times(self, etree):
+        down_times = 0
+        regx = re.compile(',')
+        dregx = re.compile('(?P<times>\d+)')
+        raw_string = etree.xpath(self.times_xpath)
+        if raw_string:
+            raw_string = raw_string[0]
+            raw_string = regx.sub('', raw_string)
+            match = dregx.search(raw_string)
+            if match is not None:
+                try:
+                    down_times = int(match.group('times'))
+                except:
+                    pass
+        return down_times
+
+    def parser(self):
+        result = {}
+        etree = self.send_request(self.url)
+        times = self.download_times(etree)
+        result['download_times'] = times
+        sizeraw = etree.xpath(self.size_xpath)
+        if sizeraw:
+            size = sizeraw[0].strip()
+            size = size.split(self.seperator)[-1]
+            result['size'] = size
+
+        envraw = etree.xpath(self.env_xpath)
+        if envraw:
+            env = envraw[0]
+            env = env.split(self.seperator)[-1]
+            result['env'] = env
+
+        author = etree.xpath(self.author_xpath)
+        if author:
+            company = author[0]
+            result['company'] = company
+
+        update_time_raw = etree.xpath(self.update_time_xpath)
+        if update_time_raw:
+            update_time = update_time_raw[0]
+            result['update_time'] = update_time
+
+        version_raw = etree.xpath(self.version_xpath)
+        if version_raw:
+            version = version_raw[0].strip()
+            if version.startswith('('):
+                version = version[1:-1]
+            result['human_version'] = version
+        return result
+
+
 if __name__ == '__main__':
     #url = "http://www.oyksoft.com/soft/32456.html"
     #oyk = OykSoftChannel()
@@ -1314,7 +1388,7 @@ if __name__ == '__main__':
         url='http://android.gamedog.cn/game/386653.html',
         title=u'水果忍者安卓版v1.9.5'
     )
-    gamedog.run()
+    #gamedog.run()
 
     #url = "http://mm.10086.cn/android/info/300008279684.html?from=www&stag=cT0lRTglQTElOTclRTUlQTQlQjQlRTglQjYlQjMlRTclOTAlODMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTEmYWN0aXZlPTE%3D"
     #mm10086 = Mm10086Channel()
@@ -1387,4 +1461,14 @@ if __name__ == '__main__':
         url='http://game.3533.com/game/49703/',
         title=u'水果忍者安卓版v1.9.5'
     )
-    p3533.run()
+    #p3533.run()
+    nduoa = NduoaChannel(
+        channellink=1,
+        app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
+        app_version=1,
+        channel=36,
+        url='http://www.nduoa.com/apk/detail/634370',
+        title=u'工行短信银行'
+    
+    )
+    print nduoa.run()

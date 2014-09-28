@@ -76,11 +76,14 @@ class CreeperBase(object):
         content = ''
         if headers:
             self.session.headers.update(headers)
-        if data is not None:
-            ack = self.session.post(url, data)
-        else:
-            ack = self.session.get(url)
-        content = ack.content
+        try:
+            if data is not None:
+                ack = self.session.post(url, data)
+            else:
+                ack = self.session.get(url)
+            content = ack.content
+        except:
+            pass
         return content
 
     def normalize_url(self, source, url):
@@ -341,7 +344,7 @@ class ChannelSpider(CreeperBase):
 
     def run(self):
         result= self.parser()
-        detail, is_created = self.record_appdetail(result)
         download_times = result.pop('download_times', 0)
+        detail, is_created = self.record_appdetail(result)
         if download_times:
             self.record_dailydownload(download_times)
