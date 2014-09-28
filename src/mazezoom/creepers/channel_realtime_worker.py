@@ -19,7 +19,7 @@ def worker():
     while 1:
         links = ChannelLink.objects.values(*values).filter(is_first=True)
         for link in links:
-            domain = link['channel_domain']
+            domain = link['channel__domain']
             cls = subclass.get(domain, None)
             if cls is not None:
                 channellink = link['id']
