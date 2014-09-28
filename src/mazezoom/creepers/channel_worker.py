@@ -6,6 +6,7 @@
 
 #StdLib imports
 import time
+import json
 
 #Project imports
 from channel import *
@@ -31,7 +32,7 @@ def worker():
                 #crontab dispatcher
                 (channellink, app_uuid, app_version, url,
                     channel, title, clsname) = loadtask 
-                    is_first = False
+                is_first = False
             elif length == 8:
                 (channellink, app_uuid, app_version, url,
                     channel, title, clsname, is_first) = loadtask 

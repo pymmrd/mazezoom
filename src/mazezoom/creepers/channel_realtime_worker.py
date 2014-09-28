@@ -1,9 +1,15 @@
 # -*- coding:utf-8 -*-
 
+#StdLib imports
 import time
+import json
+
+#Project imports
 from base import ChannelSpider
 from channel import *
+from backend import RedisBackend
 from cloudeye.models import ChannelLink
+from constants import CHANNEL_TASK_KEY
 
 
 REALTIME_WORKER_INTERCEPT = 5 * 60
@@ -16,6 +22,7 @@ def worker():
         'title', 'channel_id', 'url', 'channel__domain'
     )
     is_first = 1
+    backend = RedisBackend()
     while 1:
         links = ChannelLink.objects.values(*values).filter(is_first=True)
         for link in links:
