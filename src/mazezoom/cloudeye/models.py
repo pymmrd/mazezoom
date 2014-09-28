@@ -405,6 +405,12 @@ class ChannelLink(models.Model):
         null=True
     )
 
+    is_first = models.BooleanField(
+        default=True,
+        verbose_name=u'是否第一次入库',
+        help_text=u'首次入库链接，进行实时抓取'
+    )
+
     class Meta:
         db_table = 'channellink'
 
