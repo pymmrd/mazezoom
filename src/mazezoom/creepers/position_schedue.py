@@ -15,7 +15,7 @@ import time
 import subprocess
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
-WORKER_PATH = os.path.join(CURRENT_PATH, 'position_worker.py') 
+WORKER_PATH = os.path.join(CURRENT_PATH, 'position_worker.py')
 
 
 INTERRUPT = 0.5

@@ -1,6 +1,7 @@
 # Django settings for mazezoom project.
 import os
 import sys
+import logging
 
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -128,6 +129,16 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+LOG_FORMATTER = ('[%(asctime)s] %(levelname)-8s %(pathname)s '
+                 '%(funcName)s %(lineno)d %(process)d %(thread)d'
+                 '%(threadName)s: %(message)s')
+
+LOG_LEVEL = logging.DEBUG
+
+CHANNEL_LOG_TYPE = 'channel'
+
+POSITION_LOG_TYPE = 'position'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -136,12 +147,41 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'verbose': {
+            'format': LOG_FORMATTER
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'console': {
+            'level': LOG_LEVEL,
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'position_file': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/position_info.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
+        'channel_file': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/channel_info.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
     },
     'loggers': {
         'django.request': {
@@ -149,5 +189,13 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        CHANNEL_LOG_TYPE: {
+            'handlers': ['channel_file', 'console'],
+            'level': LOG_LEVEL,
+        },
+        POSITION_LOG_TYPE: {
+            'handlers': ['position_file', 'console'],
+            'level': LOG_LEVEL,
+        }
     }
 }

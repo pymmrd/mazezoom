@@ -9,16 +9,13 @@ from cloudeye.models import ChannelLink
 REALTIME_WORKER_INTERCEPT = 5 * 60
 
 
-def update_first_status(pk):
-    ChannelLink.objects.filter(pk=pk).update(is_first=False)
-
-
 def worker():
     subclass = ChannelSpider.subclass
     values = (
         'id', 'app_id', 'version_id',
         'title', 'channel_id', 'url', 'channel__domain'
     )
+    is_first = 1
     while 1:
         links = ChannelLink.objects.values(*values).filter(is_first=True)
         for link in links:
@@ -31,20 +28,11 @@ def worker():
                 title = link['title']
                 channel = link['channel_id']
                 url = link['url']
-                instance = cls(
-                    channellink=channellink,
-                    app_uuid=app_uuid,
-                    app_version=app_version,
-                    url=url,
-                    channel=channel,
-                    title=title
-                )
-                try:
-                    instance.run()
-                except:
-                    pass
-                else:
-                    update_first_status(channellink)
+                dumptask = json.dumps([
+                    channellink, app_uuid, app_version,
+                    url, channel, title, domain, is_first
+                ])
+                backend.send(CHANNEL_TASK_KEY, dumptask)
         time.sleep(REALTIME_WORKER_INTERCEPT)
 
 

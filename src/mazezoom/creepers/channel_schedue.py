@@ -10,26 +10,20 @@
 """
 
 #StdLib imports
+import os
 import time
 import subprocess
-from datetime import datetime, timedelta
-from cloudeye.models import ChannelLink
 
 
 INTERRUPT = 0.5
 PROCESS_LIMIT = 5
-CHANNEL_CMD = "python channel_worker.py"
-
-def get_date_range():
-    today = datetime.today()
-    start_date = datetime(today.year, today.month, today.month)
-    end_date = start_date + timedelta(days=1)
-    return end_date
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+WORKER_PATH = os.path.join(CURRENT_PATH, 'channel_worker.py')
+CHANNEL_CMD = "python %s" % WORKER_PATH
 
 
 def schedule(cmd):
     all_process = []
-
     while 1:
         if len(all_process) < PROCESS_LIMIT:
             p = subprocess.Popen(
