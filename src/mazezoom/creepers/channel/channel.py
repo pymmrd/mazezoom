@@ -906,14 +906,17 @@ class Channel3533(ChannelSpider):
     base_xpath = "//div[@class='appdownbox']/dl[@class='packbox']"
     andorid_xpath = "child::dt/a/img/@alt"
     andorid_token = u'安卓版下载'
-    fuzzy_xpath = "child::dd/div/div[@class='packclear']/div[@class='packright']/div/p/span"
+    fuzzy_xpath = (
+        "child::dd/div/div[@class='packclear']/"
+        "div[@class='packright']/div/p/span"
+    )
 
     def parser(self):
         result = {}
         storage = None
         mapping = {
-            u'版本': 'human_version', 
-            u'大小': 'size', 
+            u'版本': 'human_version',
+            u'大小': 'size',
             u'系统要求': 'env',
         }
         etree = self.send_request(self.url)
@@ -1263,7 +1266,6 @@ class PcHomeChannel(ChannelSpider):
         for link in links:
             text = link.text().strip()
             if text == down_label:
-                href = link.attrib.get('href', '')
                 etree = self.send_request(self.url)
                 items = etree.xpath(self.down_xpath)
                 if items:
@@ -1306,8 +1308,8 @@ class NduoaChannel(ChannelSpider):
     url: http://www.nduoa.com/apk/detail/808577
     version: (4.0.1)
     下载次数：8,740,875次下载
-    版本：5.0.1.11 
-    大小：18.62 MB 
+    版本：5.0.1.11
+    大小：18.62 MB
     作者：网易
     更新：发布于4天前
     """
@@ -1374,12 +1376,261 @@ class NduoaChannel(ChannelSpider):
         return result
 
 
+class DChannel(ChannelSpider):
+    """
+    url: http://android.d.cn/software/12486.html
+    类别 阅读工具
+    下载 128.72万次
+    版本 4.6.1.680
+    时间 2014-07-24
+    大小 7.32MB
+    星级
+    资费 完全免费
+    热度 65℃
+    支持系统 1.6以上
+    开发商 Tencent Technology
+    语言英文, 中文
+    """
+    domain = "www.d.cn"
+    fuzzy_xpath = "//ul[@class='de-game-info clearfix']/li"
+    label_xpath = "child::span/text()"
+    value_xpath = "child::text()"
+
+    def download_times(self, rawstring):
+        times = 0
+        dot = '.'
+        regx = re.compile('(?P<times>[\d\.]+)')
+        match = regx.search(rawstring)
+        if match is not None:
+            raw_times = match.group('times')
+            if dot in raw_times:
+                times = int(float(raw_times) * 10000)
+            else:
+                times = int(raw_times)
+        return times
+
+    def parser(self):
+        result = {}
+        etree = self.send_request(self.url, ignore=True)
+        mapping = {
+            u'类别': 'category',
+            u'下载': 'download_times',
+            u'版本': 'human_version',
+            u'大小': 'size',
+            u'时间': 'update_time',
+            u'开发商': 'company',
+            u'支持系统': 'env',
+            u'语言': 'language',
+            u'资费': 'authorize',
+        }
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            value = ''
+            label = item.xpath(self.label_xpath)[0].strip()
+            label = mapping.get(label, '')
+            if label:
+                vraw = item.xpath(self.value_xpath)
+                if vraw:
+                    value = ''.join(vraw).strip()
+                result[label] = value
+
+        dtimes = result.get('download_times', '')
+        if dtimes:
+            times = self.download_times(dtimes)
+            result['download_times'] = times
+        return result
+
+
+class LiqucnChannel(ChannelSpider):
+    """
+    url: http://os-android.liqucn.com/rj/12910.shtml
+    下载次数：2950444次
+    大小：13.62MB
+    更新时间：2014-08-26
+    标签： 来电归属地,隐私保护,体检,防骚扰,杀毒,拦截,来电防火墙
+    """
+
+    domain = "www.liqucn.com"
+    fuzzy_xpath = "//div[@class='app_boxcon']/table/tr/td"
+    info_xpath = "child::text()|child::*/text()"
+    down_xpath = "//a[@id='content_mobile_href']/@href"
+    seperator = u'：'
+    label = u'下载次数'
+
+    def download_times(self, dtimes):
+        times = 0
+        try:
+            times = int(dtimes[:-1])
+        except (TypeError, ValueError):
+            pass
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'下载次数': 'download_times',
+            u'大小': 'size',
+            u'更新时间': 'update_time',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content()
+            label, value = content.split(self.seperator)
+            label = label.strip()
+            label = mapping.get(label, '')
+            if label:
+                value = value.strip()
+                result[label] = value
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            storage = self.download_app(down_link)
+        return result
+
+
+class WandoujiaChannel(ChannelSpider):
+    """
+    url: http://www.wandoujia.com/apps/com.netease.newsreader.activity
+    大小 18.62M
+    分类 新闻资讯 新闻 精品 网易 世界杯
+    更新 8月26日
+    版本 4.0.1
+    要求 Android 2.3 以上
+    网站 网之易信息技术（北京）有限公司
+    来自 官方提供
+    """
+
+    domain = "www.wandoujia.com"
+    label_xpath = "//div[@class='infos']/dl[@class='infos-list']/dt/text()"
+    value_xpath = "//div[@class='infos']/dl[@class='infos-list']/dd"
+    times_xpath = "//div[@class='num-list']/span[@class='item']/i/text()"
+    down_xpath = "//div[@class='download-wp']/a[@class='install-btn']/@href"
+
+    def download_times(self, etree):
+        times = 0
+        token = u'万'
+        raw_times = etree.xpath(self.times_xpath)
+        if raw_times:
+            raw_times = raw_times[0].strip()
+            if token in raw_times:
+                raw_times = raw_times[:-1].strip()
+                try:
+                    times = int(raw_times) * 10000
+                except (TypeError, ValueError):
+                    pass
+            else:
+                try:
+                    times = int(raw_times)
+                except (TypeError, ValueError):
+                    pass
+        return times
+
+    def parser(self):
+        result = {}
+        stroage = None
+        env_token = "perms"
+        mapping = {
+            u'大小': 'size',
+            u'分类': 'category',
+            u'更新': 'update_time',
+            u'版本': 'human_version',
+            u'要求': 'env',
+            u'网站': 'company',
+        }
+        etree = self.send_request(self.url)
+        labels = etree.xpath(self.label_xpath)
+        value_dom = etree.xpath(self.value_xpath)
+        labels = [item.strip() for item in labels]
+        values = []
+        for v in value_dom:
+            if v.attrib.get('class', '') == env_token:
+                value = v.text.strip().split(' ')
+            else:
+                value = v.text_content().strip().split(' ')
+            value = [va.strip() for va in value if va]
+            value = ' '.join(value)
+            values.append(value)
+        items = zip(labels, values)
+        for item in items:
+            label, value = item
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value
+        times = self.download_times(etree)
+        result['download_times'] = times
+        #down_link = etree.xpath(self.down_xpath)[0]
+        #if down_link:
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class AnzowChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.anzow.com/download/Software/JQKRDPQQP8.shtml
+    所属分类：通讯辅助
+    授权方式：免费使用
+    软件大小：3.1MB
+    应用版本：1.0.1
+    软件语言：简体中文
+    适用平台：Android 2.3+
+    推荐指数：★★☆☆☆
+    作者：网易
+    更新时间：2014-7-16 11:33:26
+    """
+
+    domain = "www.anzow.com"
+    fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
+    info_xpath = "child::text()|child::*/text()|child::*/*/text()"
+    down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
+    seperator = u'：'
+
+    def parser(self):
+        result = {}
+        stroage = None
+        mapping = {
+            u'所属分类': 'category',
+            u'授权方式': 'authorize',
+            u'软件大小': 'size',
+            u'应用版本': 'human_version',
+            u'软件语言': 'language',
+            u'适用平台': 'env',
+            u'更新时间': 'update_time',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            label = label.strip()
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value.strip()
+        #down_link = etree.xpath(self.down_xpath)[0]
+        #if down_link:
+        #    storage = self.download_app(down_link)
+        return result
+
+
 if __name__ == '__main__':
     #url = "http://www.oyksoft.com/soft/32456.html"
     #oyk = OykSoftChannel()
     #print oyk.run(url)
 
     #url = "http://android.gamedog.cn/online/233523.html"
+    wandoujia = WandoujiaChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.wandoujia.com/apps/com.halfbrick.fruitninja',
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #wandoujia.run()
+
     gamedog = GameDogChannel(
         channellink=1,
         app_uuid='1',
@@ -1469,6 +1720,23 @@ if __name__ == '__main__':
         channel=36,
         url='http://www.nduoa.com/apk/detail/634370',
         title=u'工行短信银行'
-    
     )
-    print nduoa.run()
+    #print nduoa.run()
+    dchannel = DChannel(
+        channellink=1,
+        app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
+        app_version=1,
+        channel=36,
+        url="http://android.d.cn/software/12486.html",
+        title=u'工行短信银行'
+    )
+    #dchannel.run()
+    liqucn = LiqucnChannel(
+        channellink=1,
+        app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
+        app_version=1,
+        channel=36,
+        url="http://os-android.liqucn.com/yx/15024.shtml",
+        title=u'工行短信银行'
+    )
+    #liqucn.run()

@@ -4,6 +4,7 @@
 import json
 
 #Project imports
+from channel import *
 from base import ChannelSpider
 from backend import RedisBackend
 from cloudeye.models import ChannelLink

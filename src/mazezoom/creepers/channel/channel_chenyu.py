@@ -752,44 +752,6 @@ class Shop958Channel(ChannelSpider):
 
         return result
 
-class LiqucnChannel(ChannelSpider):
-    """
-    url: http://os-android.liqucn.com/rj/12910.shtml
-    下载次数：2950444次
-    大小：13.62MB
-    更新时间：2014-08-26
-    标签： 来电归属地,隐私保护,体检,防骚扰,杀毒,拦截,来电防火墙
-    """
-
-    domain = "www.liqucn.com"
-    fuzzy_xpath = "//table[@class='lineheight_0913']/tr/td"
-    info_xpath = "child::text()|child::*/text()"
-    down_xpath = "//a[@id='content_mobile_href']/@href"
-    seperator = u'：'
-    label = u'下载次数'
-
-    def run(self, url):
-        result = {}
-        stroage = None
-        etree = self.send_request(url)
-        items = etree.xpath(self.fuzzy_xpath)
-        for item in items:
-            if item is not None:
-                info = item.xpath(self.info_xpath)
-                content = ''.join(info)
-                label, value = content.split(self.seperator)
-                label = label.strip()
-                value = value.strip()
-                print label, value
-                result[label] = value
-
-        times = result.get(self.label)
-        print times
-        down_link = etree.xpath(self.down_xpath)[0]
-        print down_link
-        if down_link:
-           storage = self.download_app(down_link)
-        return result
 
 class CrskyChannel(ChannelSpider):
     """
@@ -1237,46 +1199,6 @@ class YruanChannel(ChannelSpider):
 
         return result
 
-class AnzowChannel(ChannelSpider):
-    """
-    ***无下载次数***
-    url: http://www.anzow.com/download/Software/JQKRDPQQP8.shtml
-    所属分类：通讯辅助
-    授权方式：免费使用
-    软件大小：3.1MB
-    应用版本：1.0.1
-    软件语言：简体中文
-    适用平台：Android 2.3+
-    推荐指数：★★☆☆☆
-    作者：网易
-    更新时间：2014-7-16 11:33:26
-    """
-
-    domain = "www.anzow.com"
-    fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
-    info_xpath = "child::text()|child::*/text()|child::*/*/text()"
-    down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
-    seperator = u'：'
-
-    def run(self, url):
-        result = {}
-        stroage = None
-        etree = self.send_request(url)
-        items = etree.xpath(self.fuzzy_xpath)
-        for item in items:
-            if item is not None:
-                info = item.xpath(self.info_xpath)
-                content = ''.join(info)
-                print content
-                label, value = [x.strip() for x in content.split(self.seperator)]
-                print label, value
-                result[label] = value
-
-        down_link = etree.xpath(self.down_xpath)[0]
-        print down_link
-        if down_link:
-           storage = self.download_app(down_link)
-        return result
 
 class ZhuodownChannel(ChannelSpider):
     """
@@ -1355,56 +1277,6 @@ class Xz7Channel(ChannelSpider):
            storage = self.download_app(down_link)
         return result
 
-class WandoujiaChannel(ChannelSpider):
-    """
-    url: http://www.wandoujia.com/apps/com.netease.newsreader.activity
-    大小 18.62M 
-    分类 新闻资讯 新闻 精品 网易 世界杯 
-    更新 8月26日
-    版本 4.0.1
-    要求 Android 2.3 以上
-    网站 网之易信息技术（北京）有限公司 
-    来自 官方提供 
-    """
-
-    domain = "www.7xz.com"
-    label_xpath = "//div[@class='infos']/dl[@class='infos-list']/dt//text()"
-    fuzzy_xpath = "//div[@class='infos']/dl[@class='infos-list']/dd"
-    value_xpath = "child::text()|child::*/text()|child::a/span/text()"
-    down_xpath = "//div[@class='download-wp']/a/@href"
-    times_xpath = "//div[@class='num-list']/span[@class='item']/i/text()"
-    seperator = u'：'
-
-    def run(self, url):
-        result = {}
-        value_list = []
-        stroage = None
-        etree = self.send_request(url)
-        labels = etree.xpath(self.label_xpath)
-        #for label in labels:
-            #print label
-        items = etree.xpath(self.fuzzy_xpath)
-        for item in items:
-            if item is not None:
-                values = item.xpath(self.value_xpath)
-                value = ''.join(values).strip()
-                value = ','.join(value.split()) 
-                value_list.append(value)
-
-        info = zip(labels, value_list)
-        for content in info:
-            label, value = content
-            print label, value
-            result[label] = value
-
-        times = etree.xpath(self.times_xpath)[0]
-        print times
-
-        down_link = etree.xpath(self.down_xpath)[0]
-        print down_link
-        #if down_link:
-        #   storage = self.download_app(down_link)
-        return result
 
 class Channel3533Channel(ChannelSpider):
     """
