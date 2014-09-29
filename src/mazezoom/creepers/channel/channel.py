@@ -943,11 +943,10 @@ class Channel3533(ChannelSpider):
                 label = mapping.get(label, '')
                 if label:
                     result[label] = value.strip()
-        print result
-        down_link = etree.xpath(self.down_xpath)
-        if down_link:
-            down_link = down_link[0]
-            storage = self.download_app(down_link)
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = down_link[0]
+        #    storage = self.download_app(down_link)
         return result
 
 
@@ -1246,7 +1245,7 @@ class PcHomeChannel(ChannelSpider):
     支持系统：Android
     """
 
-    domain = "www.pchome.com"
+    domain = "www.pchome.net"
     seperator = u"："
     fuzzy_xpath = "//div[@class='dl-info-con']/ul/li"
     down_xpath = "//div[@class='dl-download-links mg-btm20']/dl/dd/a/@onclick"
@@ -1584,7 +1583,6 @@ class AnzowChannel(ChannelSpider):
 
     domain = "www.anzow.com"
     fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
-    info_xpath = "child::text()|child::*/text()|child::*/*/text()"
     down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
     seperator = u'：'
 
@@ -1686,13 +1684,594 @@ class HiapkChannel(ChannelSpider):
         return result 
 
 
+class GfanChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://apk.gfan.com/Product/App98660.html
+    版 本 号：4.0.0
+    开 发 者：网易移动中心
+    发布时间：2014-08-08
+    文件大小：18.24MB
+    支持固件：2.3 及以上版本 
+    """
+
+    domain = "apk.gfan.com"
+    fuzzy_xpath = "//div[@class='app-infoAintro']/div[@class='app-info']/p[position()<5]/text()"
+    down_xpath = "//a[@id='computerLoad']/@href"
+    seperator = u'：' 
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'版 本 号':'human_version',
+            u'开 发 者': 'company',
+            u'发布时间': 'update_time',
+            u'文件大小': 'size',
+            u'支持固件': 'env',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item is not None:
+                content = item.strip()
+                label, value = content.split(self.seperator)
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = down_link[0]
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class Apk91Channel(ChannelSpider):
+    """
+    url: http://apk.91.com/Soft/Android/com.tencent.mm-462-5.3.1.67_r745169.html
+    版本：5.3.1.67_r745169
+    下载次数：25380万
+    文件大小：25.12MB
+    适用固件：Android2.2及以上
+    分享日期：2014-07-17 15:37
+    分享者：Wechat我要上传
+    联系电话：-
+    联系邮箱：-
+    开发商：腾讯科技广州分公司
+    热门标签： 聊天工具 、 娱乐 、 通讯 、 网络语音 、 聊天社交 、 我想恋爱
+    """
+
+    domain = "apk.91.com"
+    fuzzy_xpath = "//ul[@class='s_info']/li/text()"
+    down_xpath = "//a[@class='s_btn s_btn4']/@href"
+    seperator = u'：'
+
+    def download_times(self, dtimes):
+        times = 0
+        token = u'万'
+        if token in dtimes:
+            try:
+                times = int(dtimes[:-1]) * 10000
+            except (TypeError, ValueError):
+                pass
+        else:
+            try:
+                times = int(dtimes)
+            except (TypeError, ValueError):
+                pass
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'版本': 'human_version',
+            u'下载次数': 'download_times',
+            u'文件大小': 'size',
+            u'适用固件': 'env',
+            u'分享日期': 'update_time',
+            u'开发商': 'company',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems 
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = self.normalize_url(self.url, down_link[0])
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class It168Channel(ChannelSpider):
+    """
+    url: http://down.it168.com/315/321/130157/index.shtml
+    软件大小: 24MB
+    软件作者: 腾讯
+    语言界面: 简体中文
+    软件授权: 免费软件
+    下载次数: 614285
+    更新时间: 2014-2-11
+    """
+    domain = "down.it168.com"
+    seperator = ':'
+    fuzzy_xpath = "//div[@class='right_con1_2 mt8 border1']/ul/li"
+    down_xpath = "//li[@class='sign11 four_li1']/a/@href"
+
+    def download_times(self, dtimes):
+        try:
+            times = int(dtimes)
+        except (TypeError, ValueError):
+            times = 0
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件大小': 'size',
+            u'软件作者': 'company',
+            u'语言界面': 'language',
+            u'软件授权': 'authorize',
+            u'下载次数': 'download_times',
+            u'更新时间': 'update_time',
+        }
+        storage = None
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = down_link[0]
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class QQChannel(ChannelSpider):
+    """
+    url: http://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm
+    版本号：V5.3.1.67_r745169
+    更新时间：2014年7月11日
+    开发商：腾讯
+    """
+    domain = "sj.qq.com"
+    seperator = u'：'
+    times_xpath = "//div[@class='det-ins-num']/text()"
+    size_xpath = "//div[@class='det-size']/text()"
+    category_xpath = "//div[@class='det-type-bdx']/a[@class='det-type-link']/text()"
+    label_xpath = "//div[@class='det-othinfo-tit']/text()"
+    value_xpath = "//div[@class='det-othinfo-data']/text()"
+    down_xpath = "//a[@class='det-down-btn']/@data-apkurl"
+
+    def download_times(self, etree):
+        times = 0
+        token = u'亿'
+        token1 = u'万'
+        regx = re.compile('(?P<times>[\d\.]+)')
+        times_dom = etree.xpath(self.times_xpath)
+        if times_dom:
+            rawtimes = times_dom[0]
+            match = regx.search(rawtimes)
+            if match is not None:
+                try:
+                    base_times = float(match.group('times'))
+                except (TypeError, ValueError):
+                    pass
+                else:
+                    if token in rawtimes:
+                        times = int(base_times * 100000000)
+                    elif token1 in rawtimes:
+                        times = int(base_times * 10000)
+                    else:
+                        times = int(base_times)
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'版本号': 'human_version',
+            u'更新时间': 'update_time',
+            u'开发商': 'company',
+        }
+        etree = self.send_request(self.url)
+
+        sizeraw = etree.xpath(self.size_xpath)
+        if sizeraw:
+            size = sizeraw[0].strip()
+            result['size'] = size
+        
+        categoryraw = etree.xpath(self.category_xpath)
+        if categoryraw:
+            category = categoryraw[0].strip()
+            result['category'] = category
+
+        times = self.download_times(etree)
+        result['download_times'] = times
+
+        label_dom = etree.xpath(self.label_xpath)
+        labels = [item.strip()[:-1] for item in label_dom]
+
+        value_dom = etree.xpath(self.value_xpath)
+        values = [item.strip() for item in value_dom]
+
+        items = zip(labels, values)
+        for item in items:
+            label = item[0]
+            label = mapping.get(label, '')
+            if label:
+                value = item[1]
+                result[label]= value
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = down_link[0]
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class MumayiChannel(ChannelSpider):
+    """
+    url: http://www.mumayi.com/android-28640.html
+    软件类型：免费软件
+    所属类别：新闻资讯
+    更新时间：2014-08-26
+    程序大小：18.62MB
+    系统要求：1.5以上
+    分  辨  率：240*320等
+    运行权限：可放心下载
+    安全检测：包含AdMob广告等1项插件 
+    """
+
+    domain = "android.mumayi.com"
+    seperator = u'：'
+    fuzzy_xpath = "//ul[@class='istyle fl']/li"
+    down_xpath = "//a[@class='download fl']/@href"
+
+    def download_times(self):
+        """
+        下载次数：1620472次
+        """
+        from position import MumayiPosition
+        import pdb
+        pdb.set_trace()
+        position = MumayiPosition(
+            self.title,
+            has_orm=False,
+        )
+        times = position.download_times()
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'软件类型': 'authorize',
+            u'所属类别': 'category',
+            u'更新时间': 'update_time',
+            u'程序大小': 'size',
+            u'系统要求': 'env',
+        }
+        etree = self.send_request(self.url)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+
+        times = self.download_times()
+        result['download_times'] = times
+
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = down_link[0]
+        #    storage = self.download_app(down_link)
+        return result
+
+
+class ZolChannel(ChannelSpider):
+    """
+    url: http://sj.zol.com.cn/mkey/
+    下载次数： 93,866次 
+    """
+    domain = "sj.zol.com.cn"
+    down_xpath = (
+        "//ul[@class='download-items']/li/"
+        "a[@class='downLoad-button androidDown-button']/@onclick"
+    )
+    fuzzy_xpath = "//ul[@class='soft-text']/li"
+    fuzzy2_xpath = "//ul[@class='summary-text clearfix']/li"
+    seperator = u'：'
+    env_xpath = (
+        "//ul[@class='download-items']/li/"
+        "a[@class='downLoad-button androidDown-button']/following::span/text()"
+    )
+
+    def download_times(self, dtimes):
+        down_times = 0
+        regx = re.compile(',')
+        dregx = re.compile('(?P<times>\d+)')
+        if dtimes:
+            raw_string = regx.sub('', dtimes)
+            match = dregx.search(raw_string)
+            if match is not None:
+                try:
+                    down_times = int(match.group('times'))
+                except:
+                    pass
+        return down_times
+
+    def download_link(self, etree):
+        down_link = None
+        onclick = etree.xpath(self.down_xpath)[0]
+        regx = re.compile("corpsoft\('([^']+)','1'\)")
+        match = regx.search(onclick)
+        if match is not None:
+            down_link = match.group(1)
+            down_link = self.normalize_url(self.url, down_link)
+        return down_link
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'分类': 'category',
+            u'厂商': 'company',
+            u'更新': 'update_time',
+            u'下载次数': 'download_times',
+            u'系统要求': 'env',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        items2 = etree.xpath(self.fuzzy2_xpath)
+        items.extend(items2)
+        for item in items: 
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+
+        envraw = etree.xpath(self.env_xpath)
+        if envraw:
+            env = envraw[0].split(self.seperator)[-1]
+            result['env'] = env
+
+        times = self.download_times(
+            result.get('download_times', '')
+        )
+        result['download_times'] = times
+        down_link = self.download_link(etree)
+        return result
+
+
+class PcOnlineChannel(ChannelSpider):
+    """
+    url: http://dl.pconline.com.cn/download/172907.html
+    提供商：百度无线
+    软件大小：7.59M
+    软件授权：免费
+    更新：2014-8-22
+    软件评级：
+    语言：简体中文
+    """
+    domain = "dl.pconline.com.cn"
+    fuzzy_xpath = "//div[@class='megR']//i[@class='item']"
+    info_xpath = "child::*/text()"
+    times_xpath = "//a[@id='linkPage']/em[@id='span_dl_count']/text()"
+    seperator = u'：'
+
+    def download_link(self):
+        pass
+
+    def download_times(self, etree):
+        times = 0
+        dtimes = etree.xpath(self.times_xpath)
+        if dtimes:
+            dtimes = dtimes[0]
+            try:
+                times = int(dtimes)
+            except (TypeError, ValueError):
+                pass
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'语言': 'language',
+            u'软件授权': 'authorize',
+            u'更新': 'update_time',
+            u'软件大小': 'size',
+            u'提供商': 'company',
+        }
+        etree = self.send_request(url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = conetnt.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(etree)
+        result['download_times'] = times
+        return result
+
+
+class SinaChannel(ChannelSpider):
+    """
+    url: http://down.tech.sina.com.cn/3gsoft/download.php?id=296
+    文件类型：邮件收发
+    软件厂商：网易
+    版本信息：1.2.1
+    文件大小：0.33 MB
+    发布时间：2012-09-02
+    推荐度：
+    软件标签：邮件收发
+    是否收费：免费
+    适用系统：Android   
+    软件下载统计：本周：65　本月：70　总计：601
+    """
+    domain = "tech.sina.com.cn"
+    fuzzy_xpath = "//div[@class='zcbox clearfix']/ul/li"
+    child_p_xpath = "child::p"
+    seperator = u'：'
+    charset = 'gb2312'
+
+    def download_times(self, dtimes):
+        times = 0
+        regx = re.compile('\d+')
+        matches = regx.findall(dtimes)
+        if matches:
+            try:
+                times = int(matches[-1])
+            except (TypeError, ValueError):
+                pass
+        return times
+
+    def parser(self):
+        result = {}
+        storage = None
+        mapping = {
+            u'文件类型': 'category',
+            u'是否收费': 'authorize',
+            u'适用系统': 'env',
+            u'软件下载统计': 'download_times',
+            u'软件厂商': 'company',
+            u'版本信息': 'human_version',
+            u'文件大小': 'size',
+            u'发布时间': 'update_time',
+        }
+        etree = self.send_request(self.url, ignore=True)
+        items = etree.xpath(self.fuzzy_xpath)
+        leaives = []
+        for item in items:
+            child_p = item.xpath(self.child_p_xpath)
+            if child_p:
+                for dom in child_p:
+                    leaives.append(dom)
+            else:
+                leaives.append(item)
+
+        for item in leaives:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator, 1)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        return result
 
 if __name__ == '__main__':
-    #url = "http://www.oyksoft.com/soft/32456.html"
-    #oyk = OykSoftChannel()
-    #print oyk.run(url)
+    sina = SinaChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://down.tech.sina.com.cn/3gsoft/download.php?id=296",
+        title=u'网易新闻'
+    )
+    sina.run()
 
-    #url = "http://android.gamedog.cn/online/233523.html"
+    pconline = PcOnlineChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://dl.pconline.com.cn/download/172907.html",
+        title=u'网易新闻'
+    )
+    #pconline.run()
+    
+    zol = ZolChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://sj.zol.com.cn/umplayer/",
+        title=u'网易新闻'
+    )
+    #zol.run()
+    mumayi = MumayiChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.mumayi.com/android-28640.html",
+        title=u'网易新闻'
+    )
+    #mumayi.run()
+
+    qq = QQChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm",
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #qq.run()
+
+    it168 = It168Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://down.it168.com/315/321/130157/index.shtml",
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #it168.run()
+
+    apk91 = Apk91Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url = "http://apk.91.com/Soft/Android/com.tencent.mm-480-5.4.0.66_r807534.html",
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #apk91.run()
+
+    gfan = GfanChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://apk.gfan.com/Product/App235332.html',
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #gfan.run()
+    
+
     hiapk = HiapkChannel(
         channellink=1,
         app_uuid='1',
@@ -1702,7 +2281,7 @@ if __name__ == '__main__':
         title=u'水果忍者安卓版v1.9.5'
     
     )
-    hiapk.run()
+    #hiapk.run()
 
     wandoujia = WandoujiaChannel(
         channellink=1,

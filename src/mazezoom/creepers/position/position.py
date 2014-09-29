@@ -1253,38 +1253,44 @@ class MumayiPosition(PositionSpider):
     位置：    列表页
     """
     name = u'木蚂蚁应用市场'
-    domain = "android.mumayi.com"
+    domain = "andorid.mumayi.com"
     search_url = "http://s.mumayi.com/index.php?q=%s"
-    xpath = "//ul[@class='applist']//h3[@class='hidden']/a"
-    times_xpath = (
-        "//ul[@class='appattr hidden']/"
-        "li[@class='num']/text()"
-    )
+    base_xpath = "//ul[@class='applist']/li"
+    link_xpath = "child::h3[@class='hidden']/a"
+    times_xpath = "descendant::li[@class='num']/text()"
     down_xpath = "//a[@class='download fl']/@href"
 
-    def download_times(self, title):
+    def download_times(self):
         """
         下载次数：1620467次
         """
-        seperator = u'下载次数：'
-        etree = self.send_request(title)
-        item = etree.xpath(self.times_xpath)
-        times = None
-        if item:
-            item = item[0]
-            try:
-                times = item.split(seperator)[-1]
-            except (TypeError, IndexError, ValueError):
-                pass
+        times = 0
+        seperator = u'：'
+        etree = self.send_request(self.app_name)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            rawtitle = elem.attrib.get('title', '').strip()
+            if rawtitle == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    rawtimes = times_dom[0]
+                    try:
+                        times = int(rawtimes.split(seperator)[-1][:-1])
+                    except (TypeError, IndexError, ValueError):
+                        pass
+                    else:
+                        break
         return times
 
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
-            link = item.attrib['href']
-            title = item.attrib.get('title', '').strip()
+            elem = item.xpath(self.link_xpath)[0]
+            link = elem.attrib['href']
+            title = elem.attrib.get('title', '').strip()
             if self.app_name in title.lower():
                 if self.is_accurate:    # 精确匹配
                     detail = self.get_elemtree(link)
