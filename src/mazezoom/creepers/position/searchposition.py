@@ -30,7 +30,7 @@ class AndroidcnPosition(PositionSpider):
     search_url1 = "http://game.androidcn.com/search/q/%s"
     xpath = "//h2/a"
     down_xpath = "//p[@class='dl-add-3']/a/@href"
-    abstract = True
+    #abstract = True
 
     def position(self):
         results = []
@@ -58,19 +58,20 @@ class AndroidcnPosition(PositionSpider):
                     results.append((link, title))
         return results
 
-#error 下载页面打不开
+
 class ApkcnPosition(PositionSpider):
     """
     下载次数：否
     备选：    无
     搜索：    post
     """
+    #error 下载页面打不开
     name = u'安奇网'
     domain = "www.apkcn.com"
     search_url = "http://www.apkcn.com/search/"
     xpath = "//div[@class='box']/div[@class='post indexpost']/h3/a"
     down_xpath = "//div[@class='imginfo']/p[2]/a/@href"
-    abstract = True
+    #abstract = True
 
     def position(self):
         results = []
@@ -108,7 +109,7 @@ class SohoPosition(PositionSpider):
     search_url = "http://download.sohu.com/search?words=%s"
     xpath = "//div[@class='yylb_box']/div[@class='yylb_main']/p[@class='yylb_title']/strong/a"
     down_xpath = "//div[@class='gy_03 clear']/div[2]/a/@href"
-    abstract = True
+    #abstract = True
 
     def position(self):
         results = []
@@ -140,7 +141,7 @@ class ShoujiPosition(PositionSpider):
     位置：    信息页
     搜索：    应用和游戏分类搜索，域名不同
     """
-    abstract = True
+    #abstract = True
     name = u'手机乐园'
     domain = "soft.shouji.com.cn"
     domain1 = "game.shouji.com.cn"
@@ -161,7 +162,16 @@ class ShoujiPosition(PositionSpider):
         "&thsubmit=搜索"
     )
     xpath = "//div[@id='bklist']//li[@class='bname']/a"
-    down_xpath = "//span[@class='bdown']/a[1]/@href"
+    down_xpath = "//span[@class='adown']/strong/a/@href"
+
+    def collect_link(self, source, items): 
+        elems = []
+        for item in items:
+            link = self.normalize_url(source, item.attrib['href'])
+            title = item.text_content().strip()
+            if self.app_name in title:
+                elems.append((link, title))
+        return elems
 
     def position(self):
         results = []
@@ -169,36 +179,21 @@ class ShoujiPosition(PositionSpider):
         etree2 = self.send_request(self.app_name, url=self.search_url1)
         items = etree.xpath(self.xpath)
         items2 = etree2.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[0]
-                if self.is_accurate:    #精确匹配
-                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
-                              'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
-                    match = self.download_app(down_link, headers=headers)
-                    if match:
-                        results.append((link, title))
-                else:
-                    results.append((link, title))
-        for item in items2:
-            link = self.normalize_url(self.search_url1, item.attrib['href'])
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[0]
-                if self.is_accurate:    #精确匹配
-                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
-                              'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
-                    match = self.download_app(down_link, headers=headers)
-                    if match:
-                        results.append((link, title))
-                else:
-                    results.append((link, title))
+        elems = self.collect_link(self.search_url, items)
+        elems.extend(self.collect_link(self.search_url1, items2))
+        if self.is_accurate:    #精确匹配
+            for item in elems:
+                link = item[0]
+                title = item[1]
+                detail = self.get_elemtree(link)
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    for dlink in down_link:
+                        match = self.verify_app(down_link=dlink, chksum=self.chksum)
+                        if match:
+                            results.append((link, title))
+        else:
+            results = elems
         return results
 
 #页面下载403
@@ -208,7 +203,7 @@ class Mobile1Position(PositionSpider):
     位置：    信息页
     搜索：    json返回数据
     """
-    abstract = True
+    #abstract = True
     name = u'1Mobile'
     domain = "www.1mobile.tw"
     search_url = "http://www.1mobile.tw/index.php?c=search.json&keywords=%s&page=1"
@@ -233,7 +228,7 @@ class OnlineDownPosition(PositionSpider):
     位置：    信息页
     排行列表页有下载量，搜索列表页无，结果页无
     """
-    abstract = True
+    #abstract = True
     name = u'华军软件园'
     domain = "www.onlinedown.net"
     search_url = (
@@ -285,7 +280,7 @@ class EoemarketPosition(PositionSpider):
     search_url = "http://www.eoemarket.com/search_.html?keyword=%s&pageNum=1"
     xpath = "//ol[@class='RlistName']/li[1]/span/a"
     down_xpath = "//div[@class='detailsright']/ol/li[1]/a/@href"
-    abstract = True
+    #abstract = True
 
     def position(self):
         results = []
@@ -316,7 +311,7 @@ class ApkolPosition(PositionSpider):
     备选：    安装次数
     搜索：    信息页打开慢
     """
-    abstract = True
+    #abstract = True
     name = u'安卓在线'
     domain = "www.apkol.com"
     search_url = "http://www.apkol.com/search?keyword=%s"
@@ -352,7 +347,7 @@ class BkillPosition(PositionSpider):
     位置：    信息页
     搜索：    高级搜索
     """
-    abstract = True
+    #abstract = True
     name = u'比克尔下载'
     domain = "www.bkill.com"
     charset = 'gb2312'
@@ -398,7 +393,7 @@ class AibalaPosition(PositionSpider):
     位置：    信息页
     搜索：    列表页与结果页不一致
     """
-    abstract = True
+    #abstract = True
     name = u'android软件分享社区'
     domain = "www.aibala.com"
     search_url = "http://www.aibala.com/android-search-1-0-0-%s-1-1"
@@ -437,7 +432,7 @@ class VmallPosition(PositionSpider):
     位置：    信息页
     华为开发者联盟-->华为应用市场
     """
-    abstract = True
+    #abstract = True
     name = u'华为应用市场'
     domain = "app.vmall.com"
     search_url = "http://app.vmall.com/search/%s"
@@ -474,7 +469,7 @@ class YruanPosition(PositionSpider):
     位置：    信息页
     搜索:     搜索结果不区分平台
     """
-    abstract = True
+    #abstract = True
     name = u'亿软网'
     domain = "www.yruan.com"
     search_url = "http://www.yruan.com/search.php?keyword=%s"
@@ -512,7 +507,7 @@ class AnzowPosition(PositionSpider):
     """
     下载次数：否
     """
-    abstract = True
+    #abstract = True
     name = u'安卓软件园'
     domain = "www.anzow.com"
     search_url = "http://www.anzow.com/Search.shtml?stype=anzow&q=%s"
@@ -548,7 +543,7 @@ class ZhuodownPosition(PositionSpider):
     位置:     信息页
     搜索：    高级搜索
     """
-    abstract = True
+    #abstract = True
     name = u'捉蛋网'
     domain = "www.zhuodown.com"
     charset = 'gb2312'
@@ -599,7 +594,7 @@ class WandoujiaPosition(PositionSpider):
     备选：    安装量
     位置：    信息页
     """
-    abstract = True
+    #abstract = True
     name = u'豌豆荚'
     domain = "www.wandoujia.com"
     search_url = "http://www.wandoujia.com/search?key=%s"
@@ -636,7 +631,7 @@ class Android159Position(PositionSpider):
     搜索：    应用和游戏分类搜索
     机客网安卓市场
     """
-    abstract = True
+    #abstract = True
     name = u'机客网安卓市场'
     domain = "android.159.com"
     charset = 'gb2312'
@@ -662,7 +657,7 @@ class MuzisoftPosition(PositionSpider):
     """
     网站做得很烂，页面经常有错误
     """
-    abstract = True
+    #abstract = True
     name = u'木子ROM'
     domain = "www.muzisoft.com"
     charset = 'gb2312'
@@ -685,7 +680,7 @@ class Position7613(PositionSpider):
     下载次数：否
     搜索:     搜索结果不区分平台，无下载量
     """
-    abstract = True
+    #abstract = True
     name = u'软件下吧'
     domain = "www.7613.com"
     charset = 'gb2312'
@@ -708,7 +703,7 @@ class BaicentPosition(PositionSpider):
     位置:     信息页
     搜索：    搜索结果不区分平台，类别杂乱，可选高级搜索
     """
-    abstract = True
+    #abstract = True
     name = u'百分网'
     domain = "www.baicent.com"
     charset = 'gb2312'
@@ -763,22 +758,20 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #androidcn.run()
-    '''
     apkcn = ApkcnPosition(
         u'水果忍者',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    apkcn.run()
+    #apkcn.run()
     soho = SohoPosition(
         u'水果忍者',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    soho.run()
-    下载需要cookie
+    #soho.run()
     shouji = ShoujiPosition(
         u'水果忍者',
         app_uuid=1,
@@ -786,6 +779,7 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     shouji.run()
+    '''
     mobile1 = Mobile1Position(
         u'水果忍者',
         app_uuid=1,
