@@ -22,7 +22,7 @@ def dispatcher():
     #装饰并分发扫描任务到worker队列
     #[id, app_uuid, version_id, url, channel_id, title, clsname]
     for link in links:
-        domain = link['channel_domain']
+        domain = link['channel__domain']
         cls = ChannelSpider.subclass.get(domain, None)
         if cls is not None:
             channellink = link['id']
