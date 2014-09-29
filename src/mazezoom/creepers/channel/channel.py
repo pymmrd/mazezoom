@@ -1615,12 +1615,95 @@ class AnzowChannel(ChannelSpider):
         return result
 
 
+class HiapkChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url ： http://apk.hiapk.com/appinfo/com.tencent.mm
+    作者： 腾讯科技广州分公司
+    热度： 2.3亿热度
+    大小： 25.12MB
+    类别： 社交
+    语言： 中文
+    固件： 2.2及以上固件版本
+    支持屏幕： 适用分辨率
+    上架时间： 2014-07-17
+    """
+
+    domain = "apk.hiapk.com"
+    fuzzy_xpath = "//div[@class='code_box_border']/div[@class='line_content']"
+    down_xpath = "//a[@class='link_btn']/@href"
+    seperator = u'：'
+
+    def download_times(self, dtimes):
+        times = 0
+        token1 = u'万'
+        token2 = u'千万'
+        regx = re.compile('(?P<times>[\d\.]+)')
+        match = regx.search(dtimes)
+        if match is not None:
+            try:
+                raw_times = float(match.group('times'))
+            except (TypeError, ValueError):
+                pass
+            else:
+                if token2 in dtimes:
+                    times = int(raw_times * 10000)
+                elif token1 in dtimes:
+                    times = int(raw_times * 10000000)
+                else:
+                    times = 1000
+        return times
+
+    def parser(self):
+        result = {}
+        stroage = None
+        etree = self.send_request(self.url, ignore=True)
+        mapping = {
+            u'作者': 'company',
+            u'大小': 'size',
+            u'类别': 'category',
+            u'热度': 'download_times',
+            u'语言': 'language',
+            u'固件': 'env',
+            u'上架时间': 'update_time',
+        }
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label = elems[0].strip()
+                value = elems[1].strip()
+                label = mapping.get(label, '')
+                result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = self.normalize_url(self.url, down_link[0])
+            storage = self.download_app(down_link)
+        return result 
+
+
+
 if __name__ == '__main__':
     #url = "http://www.oyksoft.com/soft/32456.html"
     #oyk = OykSoftChannel()
     #print oyk.run(url)
 
     #url = "http://android.gamedog.cn/online/233523.html"
+    hiapk = HiapkChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://apk.hiapk.com/appinfo/com.mobi.screensaver.fzlxqx2',
+        title=u'水果忍者安卓版v1.9.5'
+    
+    )
+    hiapk.run()
+
     wandoujia = WandoujiaChannel(
         channellink=1,
         app_uuid='1',

@@ -340,51 +340,6 @@ class ApkolPosition(PositionSpider):
                     results.append((link, title))
         return results
 
-class BkillPosition(PositionSpider):
-    """
-    下载次数：否
-    备选：    人气
-    位置：    信息页
-    搜索：    高级搜索
-    """
-    #abstract = True
-    name = u'比克尔下载'
-    domain = "www.bkill.com"
-    charset = 'gb2312'
-    search_url = "http://www.bkill.com/d/search.php?mod=do&n=1"
-    xpath = "//div[@class='clsList']/dl/dt/a"
-    down_xpath = "//div[@class='down_link_main']/ul/li/a/@href"
-
-    def position(self):
-        results = []
-        data = {
-            'keyword': self.app_name.encode(self.charset),
-            'area': 'name',
-            'category': '0',
-            'field[condition]': 'Android',
-            'order': 'downcount',    #updatetime
-            'submit': '搜 索',
-            'way': 'DESC'
-        }
-        etree = self.send_request(data=data)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[-1]
-                if self.is_accurate:    #精确匹配
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
-                else:
-                    results.append((link, title))
-        return results
 
 class AibalaPosition(PositionSpider):
     """
@@ -508,38 +463,6 @@ class YruanPosition(PositionSpider):
                         results.append((link, title))
         return results                    
 
-class AnzowPosition(PositionSpider):
-    """
-    下载次数：有
-    """
-    #abstract = True
-    name = u'安卓软件园'
-    domain = "www.anzow.com"
-    search_url = "http://www.anzow.com/Search.shtml?stype=anzow&q=%s"
-    xpath = "//div[@class='box boxsbg']//dd[@class='down_title']/h2/a"
-    down_xpath = "//div[@class='contentdbtn']/a[@class='commentbtn']/@href"
-
-    def position(self):
-        results = []
-        etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[0]
-                if self.is_accurate:    #精确匹配
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
-                else:
-                    results.append((link, title))
-        return results
 
 
 class ZhuodownPosition(PositionSpider):

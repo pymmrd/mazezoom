@@ -55,7 +55,6 @@ class HiapkChannel(ChannelSpider):
             if item is not None:
                 label = item.xpath(self.lable_xpath)[0]
                 value = item.xpath(self.value_xpath)[-1]
-                print  title, value
                 result[label.strip()] = value.strip()
 
         down_link = etree.xpath(self.down_xpath)[0]
