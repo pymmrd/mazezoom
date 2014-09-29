@@ -254,7 +254,10 @@ class PositionSpider(CreeperBase):
 
     def run(self):
         result = self.position()
-        self.record_channellink(result)
+        if self.has_orm:
+            self.record_channellink(result)
+        else:
+            return result
 
 
 class DownloadAppSpider(CreeperBase):

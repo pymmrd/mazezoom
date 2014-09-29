@@ -437,33 +437,38 @@ class VmallPosition(PositionSpider):
     位置：    信息页
     华为开发者联盟-->华为应用市场
     """
-    abstract = True
     name = u'华为应用市场'
     domain = "app.vmall.com"
     search_url = "http://app.vmall.com/search/%s"
-    xpath = "//div[@class='list-game-app dotline-btn nofloat']/div[@class='game-info  whole']/h4[@class='title']/a"
-    down_xpath = "//a[@class='mkapp-btn mab-download']/@onclick"
+    base_xpath = "//div[@class='list-game-app dotline-btn nofloat']/div[@class='game-info whole']"
+    #down_xpath = "//a[@class='mkapp-btn mab-download']/@onclick"
+    down_xpath = "child::div[@class='app-btn']/a/@onclick"
+    link_xpath = "child::h4/a"
 
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
+        items = etree.xpath(self.base_xpath)
         for item in items:
-            link = item.attrib['href']
-            title = item.text_content()
-            detail = self.get_elemtree(link)
-            down_link = detail.xpath(self.down_xpath)[0]
-            r = re.compile("'(http://appdl\.hicloud\.com/[^']+)'")
-            down_link = r.search(down_link)
-            down_link = down_link.group(1)
-            if down_link:
+            elem = item.xpath(self.link_xpath)[0]
+            link = elem.attrib['href']
+            title = item.text_content().strip()
+            #detail = self.get_elemtree(link)
+            if self.app_name in title:
                 if self.is_accurate:    #精确匹配
-                    match = self.verify_app(
-                        down_link=down_link,
-                        chksum=self.chksum
-                    )
-                    if match:
-                        results.append((link, title))
+                    down_link_raw = item.xpath(self.down_xpath)[0]
+                    if down_link_raw:
+                        down_link_raw = down_link_raw[0]
+                        regx = re.compile("'(http://appdl\.hicloud\.com/[^']+)'")
+                        down_link = regx.search(down_link_raw)
+                        down_link = down_link.group(1)
+                        if down_link:
+                                match = self.verify_app(
+                                    down_link=down_link,
+                                    chksum=self.chksum
+                                )
+                                if match:
+                                    results.append((link, title))
                 else:
                     results.append((link, title))
         return results

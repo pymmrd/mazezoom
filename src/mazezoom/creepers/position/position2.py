@@ -109,7 +109,7 @@ class LenovoPosition(PositionSpider):
     (S, D)
     """
     name = u'乐商店'
-    doamin = 'app.lenovo.com'
+    domain = 'app.lenovo.com'
     search_url = "http://app.lenovo.com/search/index.html?q=%s"
     base_xpath = "//ul[@class='appList']/li[@class='borderbtm1 pr']"
     link_xpath = "child::div[@class='appDetails']/p[@class='f16 ff-wryh appName']/a"
@@ -126,4 +126,85 @@ class LenovoPosition(PositionSpider):
                 link = elem.attrib['href']
                 results.append((link, title))
         return results
-        
+
+
+class UCPosition(PositionSpider):
+    """
+    """
+    name = u'UC应用商店'
+    domain = "apps.uc.cn"
+    search_url = "http://apps.uc.cn/search?keyword=%s"
+    base_xpath = "//ul[@class='J_commonAjaxWrap']/li"
+    link_xpath = "child::div[@class='sq-app-list small']/dl/dt/a"
+    down_xpath = "child::a[@class='sq-btn blue-light']/@href"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class YeskyPosition(PositionSpider):
+    """
+    """
+    name = u'天极下载'
+    domain = u'mydown.yesky.com'
+    abstract = True
+
+class QQAppPosition(PositionSpider):
+    """
+    """
+    name = u'腾讯应用中心'
+    domain = "http://qqapp.qq.com"
+    abstract = True
+
+
+class M163Position(PositionSpider):
+    """
+    """
+    name = u'网易应用中心'
+    domain = "m.163.com"
+    search_url = "http://m.163.com/search/multiform?platform=2&query=%s"
+    base_xpath = "//div[@class='arti m-b15']"
+    token_xpath = "child::div[@class='arti-hd arti-hd-bar']/div/div/h3/span/@class"
+    android_token = 'ico-android'
+    link_base_xpath = "child::div[@class='arti-bd']/descendant::li"
+    link_xpath = "descendant::h3/a"
+    down_xpath = "descendant::div[@class='m-t5']/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            token_dom = item.xpath(self.token_xpath)
+            if token_dom:
+                rawtoken = token_dom[0].strip()
+                if rawtoken == self.android_token:
+                    doms = item.xpath(self.link_base_xpath)
+                    for dom in doms: 
+                        elem = dom.xpath(self.link_xpath)[0]
+                        title = elem.text_content().strip()
+                        if self.app_name in title:
+                            link = self.normalize_url(self.search_url, elem.attrib['href'])
+                            results.append((link, title))
+        return results
+
+if __name__ == "__main__":
+    m163 = M163Position(
+       u'水果忍者',
+       is_accurate=False,
+       has_orm=False,
+        app_uuid=1,
+        version='1.9.5',
+        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+    )
+    print m163.run()
