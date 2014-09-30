@@ -40,16 +40,18 @@ class OykSoftChannel(ChannelSpider):
         关键词项：VST全聚合 全媒体聚合 VST电视直播 电视回播 视频点播
     """
 
+    seperator = u'：'
     domain = "www.oyksoft.com"
     down_xpath = "//a[@class='normal']/@href"
     fuzzy_xpath = "//div[@id='softinfo']/ul/li"
-    label_xpath = "child::strong/text()"
-    value_xpath = "child::text()"
 
-    def download_times(self, title):
+    def download_times(self):
         from position import OyksoftPosition
-        position = OyksoftPosition()
-        times = position.download_times(title)
+        position = OyksoftPosition(
+            self.title,
+            has_orm=False,
+        )
+        times = position.download_times()
         return times
 
     def parser(self):
@@ -67,15 +69,15 @@ class OykSoftChannel(ChannelSpider):
         #down_link = etree.xpath(self.down_xpath)[0]
         #storage = self.download_app(down_link)
         for item in items:
-            try:
-                label = item.xpath(self.label_xpath)[0][:-1].strip()
-                value = item.xpath(self.value_xpath)[0].strip()
-            except IndexError:
-                pass
-            else:
-                label = mapping.get(label, '')
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
                 if label:
                     result[label] = value
+        times = self.download_times()
+        result['download_times'] = times
         return result
 
 
@@ -145,8 +147,26 @@ class Mm10086Channel(ChannelSpider):
 
     """
     domain = "mm.10086.cn"
+    seperator = u'：'
     down_xpath = "//ul[@class='ml40 o-hidden']/li[@class='mt20']/a[2]/@href"
-    version_xpath = "//span[@id='appversion']/text()"
+    fuzzy_xpath = "//div[@class='mj_info font-f-yh']/ul/li"
+
+    def download_times(self, dom):
+        lower = u'<'
+        times = base = 10000
+        content = dom.text_content().strip()
+        regx = re.compile('\d+')
+        match = regx.search(content)
+        if match is not None:
+            rawtimes = match.group(0)
+            if content.startswith(lower):
+                times = base
+            else:
+                try:
+                    times = int(rawtimes) * base
+                except (TypeError, ValueError):
+                    pass
+        return times
 
     def parser(self):
         result = {}
@@ -156,10 +176,22 @@ class Mm10086Channel(ChannelSpider):
             u'更新时间': 'update_time',
             u'文件大小': 'size',
             u'系统支持': 'env',
+            u'版　　本': 'human_version',
+            u'大　　小': 'size',
         }
         etree = self.send_request(self.url)
-        version = etree.xpath(self.version_xpath)[0]
-        result['human_version'] = version
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items[1:]:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(items[0])
+        result['download_times'] = times
         #down_link = etree.xpath(self.down_xpath)[0]
         #下载app
         #storage = self.download_app(down_link)
@@ -321,11 +353,13 @@ class DownzaChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             if item.strip():
-                label, value = item.split(self.seperator)
-                label = label.strip()
-                label = mapping.get(label, '')
-                if label:
-                    result[label] = value.strip()
+                elems = item.split(self.seperator)
+                if len(elems) == 2:
+                    label, value = elems
+                    label = label.strip()
+                    label = mapping.get(label, '')
+                    if label:
+                        result[label] = value.strip()
         download_times = result.get('download_times', 0)
         result['download_times'] = int(download_times)
         down_link = etree.xpath(self.down_xpath)
@@ -408,11 +442,13 @@ class AnZhiChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            label = label.strip()
-            label = mapping.get(label, '')
-            if label:
-                result[label] = value.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
 
         #下载次数
         times = self.download_times(result)
@@ -455,11 +491,13 @@ class AngeeksChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            label, value = content.split(self.seperator)
-            label = label.strip()
-            label = mapping.get(label, '')
-            if label:
-                result[label] = value.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
 
         down_link = etree.xpath(self.down_xpath)
         if down_link:
@@ -496,11 +534,13 @@ class JiQiMaoChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.strip()
-            label, value = content.split(self.seperator)
-            label = label.strip()
-            label = mapping.get(label, '')
-            if label:
-                result[label] = value.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
@@ -773,7 +813,7 @@ class ShoujiBaiduChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'大小': 'size',
             u'版本': 'human_version',
@@ -794,7 +834,7 @@ class ShoujiBaiduChannel(ChannelSpider):
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link, session=self.session)
+            #storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -831,7 +871,7 @@ class Channel7xz(ChannelSpider):
             u'更新日期': 'update_time',
             u'适用于': 'env',
         }
-        storage = None
+        #storage = None
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
@@ -848,7 +888,7 @@ class Channel7xz(ChannelSpider):
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link, session=self.session)
+            #storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -869,7 +909,7 @@ class PC6Channel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'类别': 'category',
             u'更新': 'update_time',
@@ -891,7 +931,7 @@ class PC6Channel(ChannelSpider):
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link, session=self.session)
+            #storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -913,7 +953,7 @@ class Channel3533(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'版本': 'human_version',
             u'大小': 'size',
@@ -988,7 +1028,7 @@ class Apk8Channel(ChannelSpider):
             u'文件大小': 'size',
             u'更新时间': 'update_time',
         }
-        storage = None
+        #storage = None
         etree = self.send_request(self.url)
 
         items = etree.xpath(self.fuzzy_xpath)
@@ -1007,7 +1047,7 @@ class Apk8Channel(ChannelSpider):
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link, session=self.session)
+            #storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -1041,7 +1081,7 @@ class XiaZaiZhiJiaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'软件大小': 'size',
             u'下载次数': 'download_times',
@@ -1084,7 +1124,7 @@ class XiaZaiZhiJiaChannel(ChannelSpider):
         down_link = etree.xpath(self.down_xpath)
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link, session=self.session)
+            #storage = self.download_app(down_link, session=self.session)
         return result
 
 
@@ -1103,7 +1143,7 @@ class CngbaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'所属分类': 'category',
             u'大小': 'size',
@@ -1150,7 +1190,7 @@ class SjwyxChannel(ChannelSpider):
             u'游戏大小': 'size',
             u'更新时间': 'update_time',
         }
-        storage = None
+        #storage = None
         etree = self.send_request(self.url, ignore=True)
         lists = etree.xpath(self.fuzzy_list_xpath)
         for elem in lists:
@@ -1169,8 +1209,8 @@ class SjwyxChannel(ChannelSpider):
                         if label:
                             result[label] = value.strip()
         #times = self.download_times():
-        if down_link:
-            storage = self.download_app(down_link)
+        #if down_link:
+            #storage = self.download_app(down_link)
         return result
 
 
@@ -1193,7 +1233,7 @@ class Ruan8Channel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'版本': 'human_version',
             u'软件语言': 'language',
@@ -1230,7 +1270,7 @@ class Ruan8Channel(ChannelSpider):
 
         if down_link:
             down_link = down_link[0]
-            storage = self.download_app(down_link)
+            #storage = self.download_app(down_link)
         return result
 
 
@@ -1276,7 +1316,7 @@ class PcHomeChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'更新时间': 'update_time',
             u'软件大小': 'size',
@@ -1296,9 +1336,9 @@ class PcHomeChannel(ChannelSpider):
                 result[label] = value.strip()
         times = self.download_times()
         result['download_times'] = times
-        down_link = self.download_link(etree)
-        if down_link:
-            storage = self.download_app(down_link)
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
         return result
 
 
@@ -1466,7 +1506,7 @@ class LiqucnChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'下载次数': 'download_times',
             u'大小': 'size',
@@ -1484,9 +1524,9 @@ class LiqucnChannel(ChannelSpider):
                 result[label] = value
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        down_link = etree.xpath(self.down_xpath)[0]
-        if down_link:
-            storage = self.download_app(down_link)
+        #down_link = etree.xpath(self.down_xpath)[0]
+        #if down_link:
+            #storage = self.download_app(down_link)
         return result
 
 
@@ -1529,7 +1569,7 @@ class WandoujiaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        stroage = None
+        #storage = None
         env_token = "perms"
         mapping = {
             u'大小': 'size',
@@ -1588,7 +1628,7 @@ class AnzowChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        stroage = None
+        #storage = None
         mapping = {
             u'所属分类': 'category',
             u'授权方式': 'authorize',
@@ -1654,7 +1694,7 @@ class HiapkChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        stroage = None
+        #storage = None
         etree = self.send_request(self.url, ignore=True)
         mapping = {
             u'作者': 'company',
@@ -1677,11 +1717,11 @@ class HiapkChannel(ChannelSpider):
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
 
-        down_link = etree.xpath(self.down_xpath)
-        if down_link:
-            down_link = self.normalize_url(self.url, down_link[0])
-            storage = self.download_app(down_link)
-        return result 
+        #down_link = etree.xpath(self.down_xpath)
+        #if down_link:
+        #    down_link = self.normalize_url(self.url, down_link[0])
+            #storage = self.download_app(down_link)
+        return result
 
 
 class GfanChannel(ChannelSpider):
@@ -1692,19 +1732,22 @@ class GfanChannel(ChannelSpider):
     开 发 者：网易移动中心
     发布时间：2014-08-08
     文件大小：18.24MB
-    支持固件：2.3 及以上版本 
+    支持固件：2.3 及以上版本
     """
 
     domain = "apk.gfan.com"
-    fuzzy_xpath = "//div[@class='app-infoAintro']/div[@class='app-info']/p[position()<5]/text()"
+    fuzzy_xpath = (
+        "//div[@class='app-infoAintro']/"
+        "div[@class='app-info']/p[position()<5]/text()"
+    )
     down_xpath = "//a[@id='computerLoad']/@href"
-    seperator = u'：' 
+    seperator = u'：'
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
-            u'版 本 号':'human_version',
+            u'版 本 号': 'human_version',
             u'开 发 者': 'company',
             u'发布时间': 'update_time',
             u'文件大小': 'size',
@@ -1728,7 +1771,6 @@ class GfanChannel(ChannelSpider):
 
 class Apk91Channel(ChannelSpider):
     """
-    url: http://apk.91.com/Soft/Android/com.tencent.mm-462-5.3.1.67_r745169.html
     版本：5.3.1.67_r745169
     下载次数：25380万
     文件大小：25.12MB
@@ -1763,7 +1805,7 @@ class Apk91Channel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'版本': 'human_version',
             u'下载次数': 'download_times',
@@ -1778,7 +1820,7 @@ class Apk91Channel(ChannelSpider):
             content = item.strip()
             elems = content.split(self.seperator)
             if len(elems) == 2:
-                label, value = elems 
+                label, value = elems
                 label = mapping.get(label.strip(), '')
                 if label:
                     result[label] = value.strip()
@@ -1824,7 +1866,7 @@ class It168Channel(ChannelSpider):
             u'下载次数': 'download_times',
             u'更新时间': 'update_time',
         }
-        storage = None
+        #storage = None
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
@@ -1857,7 +1899,10 @@ class QQChannel(ChannelSpider):
     seperator = u'：'
     times_xpath = "//div[@class='det-ins-num']/text()"
     size_xpath = "//div[@class='det-size']/text()"
-    category_xpath = "//div[@class='det-type-bdx']/a[@class='det-type-link']/text()"
+    category_xpath = (
+        "//div[@class='det-type-bdx']/"
+        "a[@class='det-type-link']/text()"
+    )
     label_xpath = "//div[@class='det-othinfo-tit']/text()"
     value_xpath = "//div[@class='det-othinfo-data']/text()"
     down_xpath = "//a[@class='det-down-btn']/@data-apkurl"
@@ -1887,7 +1932,7 @@ class QQChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'版本号': 'human_version',
             u'更新时间': 'update_time',
@@ -1899,7 +1944,7 @@ class QQChannel(ChannelSpider):
         if sizeraw:
             size = sizeraw[0].strip()
             result['size'] = size
-        
+
         categoryraw = etree.xpath(self.category_xpath)
         if categoryraw:
             category = categoryraw[0].strip()
@@ -1920,7 +1965,7 @@ class QQChannel(ChannelSpider):
             label = mapping.get(label, '')
             if label:
                 value = item[1]
-                result[label]= value
+                result[label] = value
         #down_link = etree.xpath(self.down_xpath)
         #if down_link:
         #    down_link = down_link[0]
@@ -1938,7 +1983,7 @@ class MumayiChannel(ChannelSpider):
     系统要求：1.5以上
     分  辨  率：240*320等
     运行权限：可放心下载
-    安全检测：包含AdMob广告等1项插件 
+    安全检测：包含AdMob广告等1项插件
     """
 
     domain = "android.mumayi.com"
@@ -1951,8 +1996,6 @@ class MumayiChannel(ChannelSpider):
         下载次数：1620472次
         """
         from position import MumayiPosition
-        import pdb
-        pdb.set_trace()
         position = MumayiPosition(
             self.title,
             has_orm=False,
@@ -1962,7 +2005,7 @@ class MumayiChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'软件类型': 'authorize',
             u'所属类别': 'category',
@@ -1995,7 +2038,7 @@ class MumayiChannel(ChannelSpider):
 class ZolChannel(ChannelSpider):
     """
     url: http://sj.zol.com.cn/mkey/
-    下载次数： 93,866次 
+    下载次数： 93,866次
     """
     domain = "sj.zol.com.cn"
     down_xpath = (
@@ -2036,7 +2079,7 @@ class ZolChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'分类': 'category',
             u'厂商': 'company',
@@ -2048,7 +2091,7 @@ class ZolChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         items2 = etree.xpath(self.fuzzy2_xpath)
         items.extend(items2)
-        for item in items: 
+        for item in items:
             content = item.text_content().strip()
             elems = content.split(self.seperator)
             if len(elems) == 2:
@@ -2066,7 +2109,7 @@ class ZolChannel(ChannelSpider):
             result.get('download_times', '')
         )
         result['download_times'] = times
-        down_link = self.download_link(etree)
+        #down_link = self.download_link(etree)
         return result
 
 
@@ -2102,7 +2145,7 @@ class PcOnlineChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'语言': 'language',
             u'软件授权': 'authorize',
@@ -2110,11 +2153,11 @@ class PcOnlineChannel(ChannelSpider):
             u'软件大小': 'size',
             u'提供商': 'company',
         }
-        etree = self.send_request(url)
+        etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
-            elems = conetnt.split(self.seperator)
+            elems = content.split(self.seperator)
             if len(elems) == 2:
                 label, value = elems
                 label = mapping.get(label.strip(), '')
@@ -2136,7 +2179,7 @@ class SinaChannel(ChannelSpider):
     推荐度：
     软件标签：邮件收发
     是否收费：免费
-    适用系统：Android   
+    适用系统：Android
     软件下载统计：本周：65　本月：70　总计：601
     """
     domain = "tech.sina.com.cn"
@@ -2158,7 +2201,7 @@ class SinaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        storage = None
+        #storage = None
         mapping = {
             u'文件类型': 'category',
             u'是否收费': 'authorize',
@@ -2189,6 +2232,7 @@ class SinaChannel(ChannelSpider):
                 if label:
                     result[label] = value.strip()
         times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
         return result
 
 if __name__ == '__main__':
@@ -2200,7 +2244,7 @@ if __name__ == '__main__':
         url="http://down.tech.sina.com.cn/3gsoft/download.php?id=296",
         title=u'网易新闻'
     )
-    sina.run()
+    #sina.run()
 
     pconline = PcOnlineChannel(
         channellink=1,
@@ -2211,7 +2255,7 @@ if __name__ == '__main__':
         title=u'网易新闻'
     )
     #pconline.run()
-    
+
     zol = ZolChannel(
         channellink=1,
         app_uuid='1',
@@ -2256,7 +2300,10 @@ if __name__ == '__main__':
         app_uuid='1',
         app_version=1,
         channel=1,
-        url = "http://apk.91.com/Soft/Android/com.tencent.mm-480-5.4.0.66_r807534.html",
+        url=(
+            "http://apk.91.com/Soft/Android/com."
+            "tencent.mm-480-5.4.0.66_r807534.html"
+        ),
         title=u'水果忍者安卓版v1.9.5'
     )
     #apk91.run()
@@ -2270,8 +2317,6 @@ if __name__ == '__main__':
         title=u'水果忍者安卓版v1.9.5'
     )
     #gfan.run()
-    
-
     hiapk = HiapkChannel(
         channellink=1,
         app_uuid='1',
@@ -2279,7 +2324,6 @@ if __name__ == '__main__':
         channel=1,
         url='http://apk.hiapk.com/appinfo/com.mobi.screensaver.fzlxqx2',
         title=u'水果忍者安卓版v1.9.5'
-    
     )
     #hiapk.run()
 
@@ -2302,11 +2346,6 @@ if __name__ == '__main__':
         title=u'水果忍者安卓版v1.9.5'
     )
     #gamedog.run()
-
-    #url = "http://mm.10086.cn/android/info/300008279684.html?from=www&stag=cT0lRTglQTElOTclRTUlQTQlQjQlRTglQjYlQjMlRTclOTAlODMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTEmYWN0aXZlPTE%3D"
-    #mm10086 = Mm10086Channel()
-    #mm10086.run(url)
-
     #url = "http://www.520apk.com/android/dongzuoyouxi/100012517.html"
     #c520 = Channel520Apk()
     #c520.run(url)
@@ -2339,7 +2378,6 @@ if __name__ == '__main__':
     #cs = CrossmoChannel()
     #cs.run(url)
 
-    #url = "http://shouji.baidu.com/soft/item?docid=6865605&from=&f=search_app_%E6%9F%9A%E5%AD%90%E7%9B%B8%E6%9C%BA%40list_1_title%401%40header_software_input_btn_search"
     #shouji = ShoujiBaiduChannel()
     #shouji.run(url)
 
@@ -2366,6 +2404,19 @@ if __name__ == '__main__':
     #url = "http://soft.anruan.com/7295/"
     #ruan8 = Ruan8Channel()
     #ruan8.run(url)
+    mm10086 = Mm10086Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url=(
+            "http://mm.10086.cn/android/info/300002796373.html?from=www"
+            "&stag=cT0zRCVFNyVCQiU4OCVFNiU5RSU4MSVFNyU4QiU4MiVFOSVBMyU5O"
+            "TMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTImYWN0aXZlPTE%3D"
+        ),
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    mm10086.run()
     p3533 = Channel3533(
         channellink=1,
         app_uuid='1',
@@ -2402,3 +2453,13 @@ if __name__ == '__main__':
         title=u'工行短信银行'
     )
     #liqucn.run()
+
+    oyksoft = OykSoftChannel(
+        channellink=1,
+        app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
+        app_version=1,
+        channel=36,
+        url="http://www.oyksoft.com/soft/20852.html",
+        title=u'微软官方Windows 7主题《水果忍者》'
+    )
+    oyksoft.run()

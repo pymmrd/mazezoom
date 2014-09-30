@@ -32,6 +32,7 @@ class OyksoftPosition(PositionSpider):
     >>>oyk = OyksoftPosition()
     >>>oyk.run(u'腾讯手机管家')
     """
+    seperator = u'：'
     name = u'快乐无极'
     android_token = 'Android'
     domain = "www.oyksoft.com"
@@ -40,25 +41,34 @@ class OyksoftPosition(PositionSpider):
         "http://www.oyksoft.com/search.asp?"
         "action=s&sType=ResName&keyword=%s"
     )
-    link_xpath = "child::a/strong"
+    base = "//div[@class='searched']"
+    link_xpath = "child::div[@class='title']/a/strong"
     down_xpath = "//a[@class='normal']/@href"  # detail
-    base_xpath = "//div[@class='searched']/div[@class='title']"
-    times_xpath = "//div[@class='softjj']/a[@class='listdbt']/text()"
+    base_xpath = "//div[@class='searched']"
+    times_xpath = "child::div[@class='softjj']/a[@class='listdbt']/text()"
 
-    def download_times(self, title):
+    def download_times(self):
         """
         总下载次数：2444
         """
-        times = None
+        times = 0
         seperator = u"："
-        etree = self.send_request(title)
-        item = etree.xpath(self.times_xpath)
-        if item:
-            item = item[0]
-            try:
-                times = item.split(seperator)[-1]
-            except (TypeError, IndexError, ValueError):
-                pass
+        etree = self.send_request(self.app_name)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            strong = item.xpath(
+                self.link_xpath
+            )[0]
+            title = strong.text_content().strip()
+            if self.app_name == title:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    times_raw = times_dom[0]
+                    try:
+                        times = int(times_raw.split(self.seperator)[-1].strip())
+                    except (TypeError, IndexError, ValueError):
+                        pass
+                    break
         return times
 
     def download_token(self):
@@ -109,7 +119,7 @@ class OyksoftPosition(PositionSpider):
                 self.search_url,
                 parent.attrib['href']
             )
-            title = item.text_content()
+            title = item.text_content().strip()
             if self.android_token in title:
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
@@ -945,8 +955,8 @@ class PcHomePosition(PositionSpider):
                 if times_dom:
                     times_raw = times_dom[0]
                     try:
-                        times = int(times_raw.split(self.seperator)[-1])
-                    except (TypeError, IndexError):
+                        times = int(times_raw.split(self.seperator)[-1].strip())
+                    except (TypeError, IndexError, ValueError):
                         pass
                     break
         return times
