@@ -120,7 +120,7 @@ class LenovoPosition(PositionSpider):
         #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         for item in items:
-            elem = item.xpath(link_xpath)[0]
+            elem = item.xpath(self.link_xpath)[0]
             title = elem.text.strip()
             if self.app_name in title:
                 link = elem.attrib['href']
@@ -198,9 +198,134 @@ class M163Position(PositionSpider):
                             results.append((link, title))
         return results
 
+class MopPosition(PositionSpider):
+    """
+    无用
+    """
+    name = u'掌上猫扑'
+    domain = "http://m.mop.com"
+    abstract = True
+
+class Sj91Position(PositionSpider):
+    """
+    """
+    name = u'手机娱乐'
+    domain = "sj.91.com"
+    search_url = "http://play.91.com/android/Search/index.html?keyword=%s"
+    base_xpath = "//div[@class='box search_list']/dl"
+    link_xpath = "child::dt/a"
+    times_xpath = "child::em[@class='cor_blue']/text()"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class VmallPosition(PositionSpider):
+    """
+    重复
+    """
+    name = u'华为应用市场'
+    domain = "app.vmall.com"
+    abstract = True
+
+class Gao7Position(PositionSpider):
+    """
+    """
+    name = u'搞趣网'
+    domain = "http://www.gao7.com"
+    search_url = "http://www.gao7.com/search.do?key=%s&listType=6"
+    base_xpath = "//ul[@class='app-list']/li"
+    link_xpath = "child::div[@class='app-list-main']/h3/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class UucunPosition(PositionSpider):
+    """
+    无用
+    """
+    name = u'悠悠村'
+    domain = "http://www.uucun.com/"
+    abstract = True
+
+class DomobPosition(PositionSpider):
+    """
+    无用
+    """
+    name = u'多盟'
+    domain = "http://www.domob.cn/"
+    abstract = True
+
+class AndroidmiPosition(PositionSpider):
+    """
+    """
+    name = u'安智迷'
+    domain = "www.androidmi.com"
+    search_url = "http://www.androidmi.com/index.php?m=search&c=index&a=init&typeid=55&siteid=1&q=%s"
+    base_xpath = "//ul[@class='wrap']/li[@class='wrap']"
+    link_xpath = "child::div/h5/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class Vapp51Position(PositionSpider):
+    """
+    """
+    name = u'安卓商店'
+    domain = "www.51vapp.com"
+    search_url = "http://www.51vapp.com/market/apps/search.vhtml?ct=%s"
+    base_xpath = "//div[@class='l_list']/ul/li"
+    link_xpath = "child::a[1]"
+    title_xpath = "child::a/h4"
+    down_xpath = "child:a[2]/@href"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
 if __name__ == "__main__":
-    m163 = M163Position(
-       u'水果忍者',
+    m163 = Vapp51Position(
+       u'忍者',
        is_accurate=False,
        has_orm=False,
         app_uuid=1,
