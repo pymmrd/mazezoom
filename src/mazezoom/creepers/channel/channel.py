@@ -2235,7 +2235,245 @@ class SinaChannel(ChannelSpider):
         result['download_times'] = times
         return result
 
+class DuoteChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.duote.com/soft/32673.html
+    版本：3.8.2
+    人气：2776
+    更新：2014-05-04
+    大小：9.5MB
+    授权：免费软件
+    语言：简体中文
+    系统要求：Android 2.2 以上
+    """
+    domain = "www.duote.com"
+    fuzzy_xpath = "//ul[@class='prop_area']/li/text()"
+    label = u'人气'
+    seperator = u'：'
+
+    def download_times(self, dtimes):
+        try:
+            times = int(dtimes)
+        except (TypeError, ValueError):
+            times = 0
+        return times
+
+    def parser(self):
+        result = {}
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        mapping = {
+            u'版本': 'human_version',
+            u'人气': 'download_times',
+            u'更新': 'update_time',
+            u'大小': 'size',
+            u'授权': 'authorize',
+            u'语言': 'language',
+            u'系统要求': 'env',
+        }
+        for item in items:
+            content = item.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+        return result
+
+
+class ImobileChannel(ChannelSpider):
+    """
+    url: http://app.imobile.com.cn/android/app/8025.html
+    版 本 号：3.5.0
+    所属类型：软件 / 新闻阅读
+    更新时间：2013-07-01
+    文件大小：6.39 MB
+    下载次数：648万
+    支持固件：Android 2.0以上
+    开 发 者：网易
+    """
+    domain = "www.imobile.com.cn"
+    fuzzy_xpath = "//ul[@class='app_params']/li/text()"
+    seperator = u'：'
+
+    def download_times(self, rawstring):
+        times = 0
+        translate = u"万"
+        regx = re.compile('\d+')
+        match = regx.search(rawstring)
+        if match is not None:
+            try:
+                times = int(match.group())
+            except (TypeError, ValueError):
+                #log
+                pass
+            else:
+                if translate in rawstring:
+                    times = times * 10000
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'版\xa0本\xa0号': 'human_version',
+            u'所属类型': 'category', 
+            u'更新时间': 'update_time',
+            u'文件大小': 'size',
+            u'下载次数': 'download_times',
+            u'支持固件': 'env',
+            u'开 发 者': 'company',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+        return result
+
+
+class ApkzuChannel(ChannelSpider):
+    """
+    url: http://www.apkzu.com/soft/5206.shtml
+    类别：新闻资讯
+    时间：2014-1-3 14:46:45
+    大小：9 M
+    系统：Android 2.1及以上
+    授权：免费
+    评分：7 分
+    语言：简体中文
+    人气：1326
+    """
+
+    domain = "www.apkzu.com"
+    fuzzy_xpath = "//div[@class='appInfo']/li"
+    seperator = u'：'
+
+    def download_times(self):
+        times = 0
+        times_url = "http://www.apkzu.com/Inc/H.asp?id=%s"
+        pid = self.url.rsplit('/', 1)[-1].split('.')[0]
+        url = times_url % pid
+        regx = re.compile('\d+')
+        content = self.send_request(url=url, tree=False)
+        match = regx.search(content)
+        if match is not None:
+            times = int(match.group(0))
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'类别': 'category',
+            u'时间': 'update_time',
+            u'大小': 'size',
+            u'系统': 'env',
+            u'授权': 'authorize',
+            u'语言': 'language',
+            u'人气': 'download_times',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times()
+        result['download_times'] = times
+        return result
+
+
+class Android155Channel(ChannelSpider):
+    """
+    url: http://android.155.cn/soft/10198.html
+    生活实用
+    中文
+    完全免费
+    3M
+    5756
+    开发商：互联网
+    2014-08-22
+    """
+    seperator = u':'
+    domain = "www.155.cn"
+    child_a = "child::a/text()"
+    fuzzy_xpath = "//div[@class='c1_xxi']/span/text()"
+    fuzzy2_xpath ="//div[@class='c1_xxi2']/span/text()" 
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'开发商': 'company',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        category = items[0].text_content().strip()
+        result['category'] = category 
+
+        language_raw = items[1].text_content('/')
+        if len(language_raw) == 2:
+            pass
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(seperator)
+            print label, value
+            result[label] = value
+
+        times = etree.xpath(self.time_xpath)[0].strip()
+        return result
+
+
 if __name__ == '__main__':
+    apkzu = ApkzuChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.apkzu.com/game/12569.shtml",
+        title=u'网易新闻'
+    )
+    apkzu.run()
+
+    imobile  = ImobileChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://app.imobile.com.cn/android/app/8025.html",
+        title=u'网易新闻'
+    )
+    #imobile.run()
+
+    duote = DuoteChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.duote.com/soft/23385.html",
+        title=u'网易新闻'
+    )
+    #duote.run()
+
     sina = SinaChannel(
         channellink=1,
         app_uuid='1',
@@ -2337,15 +2575,6 @@ if __name__ == '__main__':
     )
     #wandoujia.run()
 
-    gamedog = GameDogChannel(
-        channellink=1,
-        app_uuid='1',
-        app_version=1,
-        channel=1,
-        url='http://android.gamedog.cn/game/386653.html',
-        title=u'水果忍者安卓版v1.9.5'
-    )
-    #gamedog.run()
     #url = "http://www.520apk.com/android/dongzuoyouxi/100012517.html"
     #c520 = Channel520Apk()
     #c520.run(url)
@@ -2404,19 +2633,6 @@ if __name__ == '__main__':
     #url = "http://soft.anruan.com/7295/"
     #ruan8 = Ruan8Channel()
     #ruan8.run(url)
-    mm10086 = Mm10086Channel(
-        channellink=1,
-        app_uuid='1',
-        app_version=1,
-        channel=1,
-        url=(
-            "http://mm.10086.cn/android/info/300002796373.html?from=www"
-            "&stag=cT0zRCVFNyVCQiU4OCVFNiU5RSU4MSVFNyU4QiU4MiVFOSVBMyU5O"
-            "TMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTImYWN0aXZlPTE%3D"
-        ),
-        title=u'水果忍者安卓版v1.9.5'
-    )
-    mm10086.run()
     p3533 = Channel3533(
         channellink=1,
         app_uuid='1',
@@ -2454,6 +2670,30 @@ if __name__ == '__main__':
     )
     #liqucn.run()
 
+    mm10086 = Mm10086Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url=(
+            "http://mm.10086.cn/android/info/300002796373.html?from=www"
+            "&stag=cT0zRCVFNyVCQiU4OCVFNiU5RSU4MSVFNyU4QiU4MiVFOSVBMyU5O"
+            "TMmcD0xJnQ9JUU1JTg1JUE4JUU5JTgzJUE4JnNuPTImYWN0aXZlPTE%3D"
+        ),
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #mm10086.run()
+
+    gamedog = GameDogChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://android.gamedog.cn/game/386653.html',
+        title=u'水果忍者安卓版v1.9.5'
+    )
+    #gamedog.run()
+
     oyksoft = OykSoftChannel(
         channellink=1,
         app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
@@ -2462,4 +2702,4 @@ if __name__ == '__main__':
         url="http://www.oyksoft.com/soft/20852.html",
         title=u'微软官方Windows 7主题《水果忍者》'
     )
-    oyksoft.run()
+    #oyksoft.run()

@@ -1626,7 +1626,7 @@ class NduoaPosition(PositionSpider):
         return results
 
 
-class Android115Position(PositionSpider):
+class Android155Position(PositionSpider):
     """
     下载次数：是(S,D)
     位置：    信息页
@@ -2365,13 +2365,13 @@ if __name__ == "__main__":
     )
     #nduoa.run()
 
-    android115 = Android115Position(
+    android155 = Android115Position(
         u'水果忍者',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #android115.run()
+    #android155.run()
 
     shop958 = Shop958Position(
         u'水果忍者',
