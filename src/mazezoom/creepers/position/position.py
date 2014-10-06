@@ -884,11 +884,7 @@ class XiaZaiZhiJiaPosition(PositionSpider):
         return results
 
 
-class Ruan8Position(PositionSpider):
-    """
-    >>>ruan8 = Ruan8Position()
-    >>>ruan8.run(u'360')
-    """
+class AnRuanPosition(PositionSpider):
     name = u'安软市场'
     charset = 'gbk'
     domain = "soft.anruan.com"
@@ -923,11 +919,6 @@ class Ruan8Position(PositionSpider):
 
 
 class PcHomePosition(PositionSpider):
-    """
-    >>>pchome = PcHomePosition()
-    >>>pchome.run(u'微信')
-    下载次数：9604
-    """
     #charset = 'gbk'
     domain = "www.pchome.net"
     #search_url = ("http://search.pchome.net/download.php"
@@ -943,12 +934,12 @@ class PcHomePosition(PositionSpider):
     android_url_token = '/mobile/'
     fuzzy_xpath = "//div[@class='dl-info-con']/ul/li"
 
-    def download_times(self, appname):
+    def download_times(self):
         times = 0
-        etree = self.send_request(appname)
+        etree = self.send_request(self.app_name)
         items = etree.xpath(self.base_xpath)
         for item in items:
-            elem = item.xpath(self.link_xpath)
+            elem = item.xpath(self.link_xpath)[0]
             title = elem.text_content()
             if title == self.app_name:
                 times_dom = item.xpath(self.times_xpath)
@@ -1788,6 +1779,7 @@ class LiqucnPosition(PositionSpider):
 
 class CnmoPosition(PositionSpider):
     """
+    TODO:channel
     下载次数：否
     备选：    赞次数
     位置：    信息页

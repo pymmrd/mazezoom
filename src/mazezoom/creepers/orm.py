@@ -64,7 +64,7 @@ class ORMManager(object):
         detail, is_created = AppDetail.objects.get_or_create(
             app_uuid=app_uuid,
             app_version=version,
-            **kwargs
+            defaults=kwargs
         )
         #for key, value in kwargs.iteritems():
         #    setattr(detail, key, value)

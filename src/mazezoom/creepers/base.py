@@ -189,7 +189,6 @@ class PositionSpider(CreeperBase):
         if data is None and appname:
             quote_app = self.quote_args(appname)
             url = url % quote_app
-        print 'url--->', url
         if tree:
             #获取页面dom树
             etree = self.get_elemtree(url, data, ignore, charset)
@@ -331,13 +330,13 @@ class ChannelSpider(CreeperBase):
             channel = self.channel
         )
 
-    def send_request(self, url, tree=True, ignore=False, charset=None):
+    def send_request(self, url, tree=True, ignore=False, charset=None, data=None):
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, ignore=ignore, charset=charset)
+            etree = self.get_elemtree(url, data=data, ignore=ignore, charset=charset)
         else:
             #获取response的 raw string
-            etree = self.get_content(url)
+            etree = self.get_content(url, data=data)
         return etree
 
     def parser(self):
