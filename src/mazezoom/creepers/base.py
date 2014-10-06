@@ -331,10 +331,10 @@ class ChannelSpider(CreeperBase):
             channel = self.channel
         )
 
-    def send_request(self, url, tree=True, ignore=False):
+    def send_request(self, url, tree=True, ignore=False, charset=None):
         if tree:
             #获取页面dom树
-            etree = self.get_elemtree(url, ignore=ignore)
+            etree = self.get_elemtree(url, ignore=ignore, charset=charset)
         else:
             #获取response的 raw string
             etree = self.get_content(url)
