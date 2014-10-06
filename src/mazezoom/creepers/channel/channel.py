@@ -1489,12 +1489,10 @@ class LiqucnChannel(ChannelSpider):
     标签： 来电归属地,隐私保护,体检,防骚扰,杀毒,拦截,来电防火墙
     """
 
+    seperator = u'：'
     domain = "www.liqucn.com"
     fuzzy_xpath = "//div[@class='app_boxcon']/table/tr/td"
-    info_xpath = "child::text()|child::*/text()"
     down_xpath = "//a[@id='content_mobile_href']/@href"
-    seperator = u'：'
-    label = u'下载次数'
 
     def download_times(self, dtimes):
         times = 0
@@ -2235,6 +2233,7 @@ class SinaChannel(ChannelSpider):
         result['download_times'] = times
         return result
 
+
 class DuoteChannel(ChannelSpider):
     """
     ***无下载次数***
@@ -2320,7 +2319,7 @@ class ImobileChannel(ChannelSpider):
         result = {}
         mapping = {
             u'版\xa0本\xa0号': 'human_version',
-            u'所属类型': 'category', 
+            u'所属类型': 'category',
             u'更新时间': 'update_time',
             u'文件大小': 'size',
             u'下载次数': 'download_times',
@@ -2412,7 +2411,7 @@ class Android155Channel(ChannelSpider):
     domain = "www.155.cn"
     child_a = "child::a/text()"
     fuzzy_xpath = "//div[@class='c1_xxi']/span"
-    fuzzy2_xpath ="//div[@class='c1_xxi2']/span" 
+    fuzzy2_xpath = "//div[@class='c1_xxi2']/span"
     down_xpath = "//div[@class='c1_bot']/a[@class='down']/@href"
 
     def download_times(self, dtimes):
@@ -2429,13 +2428,10 @@ class Android155Channel(ChannelSpider):
 
     def parser(self):
         result = {}
-        mapping = {
-            u'开发商': 'company',
-        }
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
         category = items[0].text_content().strip()
-        result['category'] = category 
+        result['category'] = category
 
         language_raw = items[1].text_content().strip()
         lang_auth = language_raw.split('/')
@@ -2476,7 +2472,7 @@ class Shop958Channel(ChannelSpider):
     大小：27168KB
     运行平台：Android
     软件性质：免费软件
-    TAG：电子词典 
+    TAG：电子词典
     上传时间：2014-08-11
     浏览/下载次数：149224/120863次
     """
@@ -2552,6 +2548,14 @@ class CrskyChannel(ChannelSpider):
             times = 0
         return times
 
+    def download_link(self, etree):
+        storage = None
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return storage
+
     def parser(self):
         result = {}
         mapping = {
@@ -2576,10 +2580,6 @@ class CrskyChannel(ChannelSpider):
 
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        down_link = etree.xpath(self.down_xpath)
-        if down_link:
-            down_link = down_link[0]
-            storage = self.download_app(down_link)
         return result
 
 
@@ -2662,6 +2662,13 @@ class SohuChannel(ChannelSpider):
                 pass
         return times
 
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)
+        if down_link:
+            down_link = down_link[0]
+            storage = self.download_app(down_link)
+        return storage
+
     def parser(self):
         result = {}
         mapping = {
@@ -2686,10 +2693,6 @@ class SohuChannel(ChannelSpider):
                     result[label] = value.strip().replace(' ', '')
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        down_link = etree.xpath(self.down_xpath)
-        if down_link:
-            down_link = down_link[0]
-            storage = self.download_app(down_link)
         return result
 
 
@@ -2714,6 +2717,15 @@ class ShoujiChannel(ChannelSpider):
     fuzzy_xpath = "//ul[@class='des']/li[position()<10]"
     down_xpath = "//span[@class='bdown']/a[1]/@href"
 
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            headers = {
+                'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu;'
+            }
+            storage = self.download_app(down_link, headers=headers)
+        return storage
+
     def parser(self):
         result = {}
         mapping = {
@@ -2723,7 +2735,7 @@ class ShoujiChannel(ChannelSpider):
             u'软件语言': 'language',
             u'软件类别': 'category',
             u'软件大小': 'size',
-            u'适用固件': 'env', 
+            u'适用固件': 'env',
         }
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
@@ -2734,11 +2746,6 @@ class ShoujiChannel(ChannelSpider):
                 label = mapping.get(label.strip(), '')
                 if label:
                     result[label] = value.strip().replace(' ', '')
-        #down_link = etree.xpath(self.down_xpath)[0]
-        #if down_link:
-        #    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0',
-        #           'Cookie': 'JSESSIONID=abcfXvdIMD3UlhKjxFQGu; Hm_lvt_eaff2b56fe662d8b2be9c4157d8dab61=1409462138; Hm_lpvt_eaff2b56fe662d8b2be9c4157d8dab61=1409463774'}
-        #storage = self.download_app(down_link, headers=headers)
         return result
 
 
@@ -2761,14 +2768,14 @@ class OnlineDownChannel(ChannelSpider):
     pagedown_xpath = "//a[@class='btn_page']/@href"
     down_xpath = "//div[@class='info']/div[@class='down-menu']/a/@href"
 
-    def download_link(self):
+    def download_link(self, etree):
         storage = None
         pagedown_link = etree.xpath(self.pagedown_xpath)[0]
-        pagedown_link = self.normalize_url(url, pagedown_link)
+        pagedown_link = self.normalize_url(self.url, pagedown_link)
         downdetail = self.send_request(pagedown_link)
         down_link = downdetail.xpath(self.down_xpath)[0]
         if down_link:
-           storage = self.download_app(down_link)
+            storage = self.download_app(down_link)
         return storage
 
     def download_times(self, dtimes):
@@ -2780,14 +2787,14 @@ class OnlineDownChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        mapping =  {
+        mapping = {
             u'版本': 'human_version',
             u'类别': 'category',
             u'大小': 'size',
             u'开发商': 'company',
             u'人气': 'download_times',
             u'语言': 'language',
-            u'日期': 'update_time', 
+            u'日期': 'update_time',
 
         }
         etree = self.send_request(self.url)
@@ -2801,11 +2808,522 @@ class OnlineDownChannel(ChannelSpider):
                     result[label] = value.strip().replace(' ', '')
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        print result
         return result
 
 
+class EoemarketChannel(ChannelSpider):
+    """
+    url: http://www.eoemarket.com/soft/33223.html
+    下载：26万次
+    大小：21.8MB
+    版本：4.4.3
+    更新时间：2014-08-19
+    分类：阅读与图书
+    适用：1.6以上
+    """
+
+    seperator = u'：'
+    domain = "www.eoemarket.com"
+    fuzzy_xpath = "//ol[@class='feileis']/li"
+    down_xpath = "//div[@class='detailsright']/ol/li[1]/a/@href"
+
+    def download_times(self, dtimes):
+        times = 0
+        token = u'万'
+        regx = re.compile('(?P<times>\d+)')
+        match = regx.search(dtimes)
+        if match is not None:
+            times_raw = match.group('times')
+            try:
+                times = int(times_raw)
+            except (TypeError, ValueError):
+                pass
+            else:
+                if token in dtimes:
+                    times = times * 10000
+        return times
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'下载': 'download_times',
+            u'大小': 'size',
+            u'版本': 'human_version',
+            u'更新时间': 'update_time',
+            u'分类': 'category',
+            u'适用': 'env',
+        }
+        etree = self.send_request(self.url, ignore=True)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            elems = item.text_content().split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times(result.get('download_times', ''))
+        result['download_times'] = times
+        return result
+
+
+class BkillChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.bkill.com/download/23765.html
+    软件大小 7.1MB
+    软件语言 简体中文
+    软件授权 免费软件
+    更新日期 2014-07-05
+    软件人气
+    """
+
+    seperator = u'：'
+    domain = "www.bkill.com"
+    fuzzy_xpath = (
+        "//div[@class='soft_Abstract h305 w412 l top7 bd']"
+        "/ul/li[@class='right']"
+    )
+    down_xpath = "//div[@class='down_link_main']/ul/li/a/@href"
+
+    def download_times(self):
+        times = 0
+        times_url = "http://www.bkill.com/download/js/%s.js"
+        pid = self.url.rsplit('/', 1)[-1].split('.')[0]
+        url = times_url % pid
+        regx = re.compile('\d+')
+        content = self.send_request(url=url, tree=False)
+        match = regx.search(content)
+        if match is not None:
+            times = int(match.group(0))
+        return times
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件大小': 'size',
+            u'软件语言': 'language',
+            u'软件授权': 'authorize',
+            u'更新日期': 'update_time',
+            u'软件人气': 'download_times',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            elems = item.text_content().split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = mapping.get(label.strip(), '')
+                if label:
+                    result[label] = value.strip()
+        times = self.download_times()
+        result['download_times'] = times
+        return result
+
+
+class AibalaChannel(ChannelSpider):
+    """
+    url: http://www.aibala.com/android-soft-16102.html
+    发布时间：2012-03-30
+    软件大小：3MB
+    版本：1.2.1
+    研发公司：网易（杭州）网络有限公司MAG安卓团队
+    运行环境：Android 1.6及以上
+    """
+
+    seperator = u'：'
+    domain = "www.aibala.com"
+    fuzzy_xpath = (
+        "//div[@class='tabRightM']/"
+        "div[contains(@class,'tabRightM')]/text()"
+    )
+    times_xpath = (
+        "//div[@class='listMainRightBottomL']/"
+        "div[@class='tabLeftB']/div[@class='tabLeftB1']/text()"
+    )
+    down_xpath = (
+        "//div[@class='listMainRightBottomL']"
+        "/div[@class='RightB1']/a[1]/@onclick"
+    )
+
+    def download_times(self, etree):
+        down_times = 0
+        regx = re.compile(',')
+        dregx = re.compile('(?P<times>\d+)')
+        raw_string = etree.xpath(self.times_xpath)
+        if raw_string:
+            raw_string = raw_string[0]
+            raw_string = regx.sub('', raw_string)
+            match = dregx.search(raw_string)
+            if match is not None:
+                try:
+                    down_times = int(match.group('times'))
+                except:
+                    pass
+        return down_times
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        r = re.compile("window.location.href='(.+)';return false;")
+        down_link = r.search(down_link)
+        down_link = down_link.group(1)
+        if down_link:
+            down_link = self.normalize_url(self.url, down_link)
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'发布时间': 'update_time',
+            u'软件大小': 'size',
+            u'版本': 'human_version',
+            u'运行环境': 'env',
+            u'研发公司': 'company',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.strip()
+            label, value = content.split(self.seperator)
+            label = label.strip()
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value.strip()
+        times = self.download_times(etree)
+        result['download_times'] = times
+        return result
+
+
+class VmallChannel(ChannelSpider):
+    """
+    url: http://app.vmall.com/app/C9147
+    下载：18991665次
+    大小：18.62MB
+    日期：2014-08-26
+    开发者：网之易信息技术…
+    版本：4.0.1
+    """
+
+    seperator = u'：'
+    domain = "app.vmall.com"
+    times_xpath = "//span[@class='grey sub']/text()"
+    fuzzy_xpath = (
+        "//ul[@class='app-info-ul nofloat']"
+        "/li[@class='ul-li-detail']"
+    )
+    down_xpath = "//a[@class='mkapp-btn mab-download']/@onclick"
+
+    def download_times(self, etree):
+        times = 0
+        regx = re.compile('(?P<times>\d+)')
+        times_dom = etree.xpath(self.times_xpath)
+        if times_dom:
+            raw_times = times_dom[0]
+            match = regx.search(raw_times)
+            if match is not None:
+                times = int(match.group('times'))
+        return times
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        r = re.compile("'(http://appdl\.hicloud\.com/[^']+)'")
+        down_link = r.search(down_link)
+        down_link = down_link.group(1)
+        print down_link
+        if down_link:
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'大小': 'size',
+            u'日期': 'update_time',
+            u'开发者': 'company',
+            u'版本': 'human_version',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            label = label.strip()
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value.strip()
+        result['download_times'] = self.download_times(etree)
+        return result
+
+
+class YruanChannel(ChannelSpider):
+    """
+    url: http://www.yruan.com/softdetail/584/
+    软件分类： 网络浏览
+    软件资费： 免费软件
+    更新时间： 2011-06-01
+    软件语言： 中文
+    软件大小： 2M
+    下载次数： 49
+    """
+
+    seperator = u'：'
+    domain = "www.yruan.com"
+    fuzzy_xpath = (
+        "//ul[@class='Download-m']/"
+        "li[@class='rightd']/dl[@class='leftdl']/dt"
+    )
+    down_xpath = "//li[@class='downimg']/div[@class='down_link']/a/@href"
+
+    def download_times(self, dtimes):
+        try:
+            times = int(dtimes)
+        except (TypeError, ValueError):
+            times = 0
+        return times
+
+    def download_link(self, etree):
+        pagedown_link = etree.xpath(self.down_xpath)[0]
+        if pagedown_link is not None:
+            r = re.compile("id=([0-9]+)&")
+            soft_id = r.search(pagedown_link)
+            soft_id = soft_id.group(1)
+            down_link = "http://www.yruan.com/down.php?id=%s" % soft_id
+            if down_link:
+                storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件分类': 'category',
+            u'软件资费': 'authorize',
+            u'更新时间': 'update_time',
+            u'软件语言': 'language',
+            u'软件大小': 'sieze',
+            u'下载次数': 'download_times',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            label, value = content.split(self.seperator)
+            label = label.strip()
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value.strip()
+        times = result.get('download_times', '')
+        result['download_times'] = self.download_times(times)
+        return result
+
+
+class BaicentChannel(ChannelSpider):
+    """
+    url: http://www.baicent.com/plus/view-288996-1.html
+    软件类型：国产软件
+    授权方式：共享软件
+    界面语言：简体中文
+    软件大小：
+    文件类型：
+    运行环境：Android
+    软件等级：★★★☆☆
+    发布时间：2011-09-23
+    官方网址：
+    演示网址：
+    下载次数：0
+    """
+
+    seperator = u'：'
+    domain = "www.baicent.com"
+    fuzzy_xpath = "//div[@class='viewbox']/div[@class='infolist']"
+    label_xpath = "child::small[position()<last()]/text()"
+    value_xpath = "child::span[position()<last()]"
+    times_xpath = "//div[@class='infolist']/span/script/@src"
+    script_xpath = "child::script/@src"
+    down_xpath = "//ul[@class='downurllist']/li[1]/a/@href"
+
+    def download_times(self, etree):
+        times = 0
+        regx = re.compile('\d+')
+        times_url = etree.xpath(self.times_xpath)
+        if times_url:
+            times_url = self.normalize_url(self.url, times_url[0])
+            content = self.send_request(url=times_url, tree=False)
+            match = regx.search(content)
+            if match is not None:
+                times = int(match.group(0))
+        return times
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        down_link = self.normalize_url(self.url, down_link)
+        if down_link:
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件类型': 'category',
+            u'授权方式': 'authorize',
+            u'界面语言': 'language',
+            u'软件大小': 'size',
+            u'运行环境': 'env',
+            u'发布时间': 'update_time',
+            u'下载次数': 'download_times',
+        }
+        etree = self.send_request(self.url)
+        base_dom = etree.xpath(self.fuzzy_xpath)
+        if base_dom:
+            base_dom = base_dom[0]
+            labels = base_dom.xpath(self.label_xpath)
+            values_dom = base_dom.xpath(self.value_xpath)
+            values = [v.text_content().strip() for v in values_dom]
+            items = zip(labels, values)
+            for item in items:
+                label = item[0].strip()[:-1]
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = item[1].strip()
+            times = self.download_times(etree)
+            result['download_times'] = times
+        return result
+
+
+class ZhuodownChannel(ChannelSpider):
+    """
+    ***无下载次数***
+    url: http://www.anzow.com/download/Software/JQKRDPQQP8.shtml
+    所属分类：通讯辅助
+    授权方式：免费使用
+    软件大小：3.1MB
+    应用版本：1.0.1
+    软件语言：简体中文
+    适用平台：Android 2.3+
+    推荐指数：★★☆☆☆
+    作者：网易
+    更新时间：2014-7-16 11:33:26
+    """
+
+    domain = "www.zhuodown.com"
+    fuzzy_xpath = "//dl[@class='down_info clear']/dd/dl/dt/ul/li"
+    pagedown_xpath = "//ul[@class='downurllist']/a/@href"
+    down_xpath = "//div[@class='advancedsearch']/table/tr[2]/td/li[1]/a/@href"
+    seperator = u'：'
+
+    def download_link(self, etree):
+        down_link = etree.xpath(self.down_xpath)[0]
+        if down_link:
+            storage = self.download_app(down_link)
+        return storage
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'所属分类': 'category',
+            u'授权方式': 'authorize',
+            u'软件大小': 'size',
+            u'应用版本': 'human_version',
+            u'软件语言': 'language',
+            u'适用平台': 'env',
+            u'作者': 'company',
+            u'更新时间': 'update_time',
+        }
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+        return result
+
 if __name__ == '__main__':
+    zhuodown = ZhuodownChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.anzow.com/download/Software/JNQMQRMQF0.shtml",
+        title=u'网易新闻'
+    )
+    zhuodown.run()
+
+    baicent = BaicentChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.baicent.com/plus/view-288996-1.html",
+        title=u'网易新闻'
+    )
+    #baicent.run()
+    yruan = YruanChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.yruan.com/softdetail/584/",
+        title=u'网易新闻'
+    )
+    #yruan.run()
+
+    vmall = VmallChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://app.vmall.com/app/C9147",
+        title=u'网易新闻'
+    )
+    #vmall.run()
+
+    aibala = AibalaChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.aibala.com/android-soft-61.html",
+        title=u'网易新闻'
+    )
+    #aibala.run()
+
+    bkill = BkillChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.bkill.com/download/23765.html",
+        title=u'网易新闻'
+    )
+    #bkill.run()
+
+    eomarket = EoemarketChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url="http://www.eoemarket.com/soft/33223.html",
+        title=u'网易新闻'
+    )
+    #eomarket.run()
+
     onlinedown = OnlineDownChannel(
         channellink=1,
         app_uuid='1',
@@ -2814,8 +3332,7 @@ if __name__ == '__main__':
         url="http://www.onlinedown.net/soft/110940.htm",
         title=u'网易新闻'
     )
-    onlinedown.run()
-    
+    #onlinedown.run()
     shouji = ShoujiChannel(
         channellink=1,
         app_uuid='1',
@@ -2855,13 +3372,15 @@ if __name__ == '__main__':
         title=u'网易新闻'
     )
     #crsky.run()
-    
     shop958 = Shop958Channel(
         channellink=1,
         app_uuid='1',
         app_version=1,
         channel=1,
-        url="http://d.958shop.com/soft/196F4351-CCB4-46B3-9A6F-DB705CB88A75.html",
+        url=(
+            "http://d.958shop.com/soft/196F4351-"
+            "CCB4-46B3-9A6F-DB705CB88A75.html"
+        ),
         title=u'网易新闻'
     )
     #shop958.run()
@@ -2886,7 +3405,7 @@ if __name__ == '__main__':
     )
     #apkzu.run()
 
-    imobile  = ImobileChannel(
+    imobile = ImobileChannel(
         channellink=1,
         app_uuid='1',
         app_version=1,
