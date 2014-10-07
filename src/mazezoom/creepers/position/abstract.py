@@ -596,3 +596,129 @@ class BaicentPosition(PositionSpider):
                     else:
                         results.append((link, title))
         return results
+
+
+class ApkcnPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    无
+    搜索：    post
+    """
+    #error 下载页面打不开
+    name = u'安奇网'
+    domain = "www.apkcn.com"
+    search_url = "http://www.apkcn.com/search/"
+    xpath = "//div[@class='box']/div[@class='post indexpost']/h3/a"
+    down_xpath = "//div[@class='imginfo']/p[2]/a/@href"
+
+    def position(self):
+        results = []
+        data = {'keyword': self.app_name.encode(self.charset), 'select': 'phone'}
+        etree = self.send_request(data=data)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            detail = self.get_elemtree(link)
+            down_link = detail.xpath(self.down_xpath)
+            if down_link:
+                down_link = down_link[0]
+                down_link = self.normalize_url(link, down_link)
+                if self.is_accurate:    #精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                        chksum=self.chksum
+                    )
+                    if match:
+                        results.append((link, title))
+                else:
+                    results.append((link, title))
+        return results
+
+#页面下载403
+class Mobile1Position(PositionSpider):
+    """
+    下载次数：是
+    位置：    信息页
+    搜索：    json返回数据
+    """
+    #abstract = True
+    name = u'1Mobile'
+    domain = "www.1mobile.tw"
+    search_url = "http://www.1mobile.tw/index.php?c=search.json&keywords=%s&page=1"
+
+    def position(self):
+        results = []
+        quote_app = self.quote_args(self.app_name)
+        url = self.search_url % quote_app
+        content = self.get_content(url)
+        output = json.loads(content)
+        appList = output['appList']
+        for app in appList:
+            link = app['appLink']
+            title = app['appTitle']
+            results.append((link, title))
+        return results
+
+
+class ShoujiPosition(PositionSpider):
+    """
+    下载次数：否
+    备选：    评论次数
+    位置：    信息页
+    搜索：    应用和游戏分类搜索，域名不同
+    """
+    #下载需要Cookie信息
+    name = u'手机乐园'
+    domain = "soft.shouji.com.cn"
+    domain1 = "game.shouji.com.cn"
+    search_url = (
+        "http://soft.shouji.com.cn/sort/search.jsp"
+        "?html=soft"
+        "&phone=100060"    #100060代表安卓平台
+        "&inputname=soft"
+        "&softname=%s"
+        "&thsubmit=搜索"
+    )
+    search_url1 = (
+        "http://game.shouji.com.cn/gamelist/list.jsp"
+        "?html=soft"
+        "&phone=100060"
+        "&inputname=game"
+        "&gname=%s"
+        "&thsubmit=搜索"
+    )
+    xpath = "//div[@id='bklist']//li[@class='bname']/a"
+    down_xpath = "//span[@class='adown']/strong/a/@href"
+
+    def collect_link(self, source, items): 
+        elems = []
+        for item in items:
+            link = self.normalize_url(source, item.attrib['href'])
+            title = item.text_content().strip()
+            if self.app_name in title:
+                elems.append((link, title))
+        return elems
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        etree2 = self.send_request(self.app_name, url=self.search_url1)
+        items = etree.xpath(self.xpath)
+        items2 = etree2.xpath(self.xpath)
+        elems = self.collect_link(self.search_url, items)
+        elems.extend(self.collect_link(self.search_url1, items2))
+        if self.is_accurate:    #精确匹配
+            for item in elems:
+                link = item[0]
+                title = item[1]
+                detail = self.get_elemtree(link)
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    for dlink in down_link:
+                        match = self.verify_app(down_link=dlink)
+                        if match:
+                            results.append((link, title))
+        else:
+            results = elems
+        return results
