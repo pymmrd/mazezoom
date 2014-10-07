@@ -722,3 +722,28 @@ class ShoujiPosition(PositionSpider):
         else:
             results = elems
         return results
+
+
+class MuzisoftPosition(PositionSpider):
+    """
+    网站做得很烂，页面经常有错误
+    """
+    #abstract = True
+    name = u'木子ROM'
+    domain = "www.muzisoft.com"
+    charset = 'gb2312'
+    search_url = (
+        "http://www.muzisoft.com/plus/search.php?"
+        "kwtype=0&q=%s&imageField.x=0&imageField.y=0"
+    )
+    xpath = "//div[@class='searchitem']//dt/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        items = etree.xpath(self.xpath)
+        for item in items:
+            link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content()
+            results.append((link, title))
+        return results
