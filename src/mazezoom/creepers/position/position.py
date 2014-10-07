@@ -2506,7 +2506,6 @@ class YruanPosition(PositionSpider):
             else:
                 if self.app_name in title:
                     android_list.append((link, title))
-        print android_list
         if self.is_accurate:
             for item in android_list:
                 link = item[0]
@@ -2519,7 +2518,6 @@ class YruanPosition(PositionSpider):
                     soft_id = r.search(pagedown_link)
                     soft_id = soft_id.group(1)
                     down_link = "http://www.yruan.com/down.php?id=%s" % soft_id
-                    print 'down_link--->', down_link
                     match = self.verify_app(
                         down_link=down_link,
                     )
@@ -2666,7 +2664,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print oyk.run()
+    #oyk.run()
 
     gd = GameDogPosition(
         u'水果忍者',
@@ -2714,7 +2712,6 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print anzhi.run(u'去哪儿')
     #anzhi.run()
 
     angeek = AngeeksPosition(
@@ -2723,7 +2720,6 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print angeek.run(u'飞机')
     #angeek.run()
 
     jiqimao = JiQiMaoPosition(
@@ -2747,7 +2743,6 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print coolapk.run(u'刀塔传奇')
 
     cs = CrossmoPosition(
         u'水果忍者',
@@ -2755,7 +2750,6 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #print cs.run(u'LT来电报号')
     #cs.run()
 
     shouji = ShoujiBaiduSpider(
@@ -2765,7 +2759,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #shouji.run()
-    #print shouji.run(u'HOT市场')
 
     p7xz = Position7xz(
         u'水果忍者',
@@ -2774,7 +2767,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #p7xz.run()
-    #print p7xz.run(u'刀塔传奇')
 
     pc6 = PC6Position(
         u'水果忍者',
@@ -2783,7 +2775,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #pc6.run()
-    #print pc6.run(u'弹跳忍者')
 
     p3533 = Position3533(
         u'水果忍者',
@@ -2792,7 +2783,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #p3533.run()
-    #print p3533.run(u'功夫西游')
 
     apk8 = Apk8Position(
         u'水果忍者',
@@ -2801,7 +2791,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #apk8.run()
-    #print apk8.run(u'天天跑酷')
 
     xzzj = XiaZaiZhiJiaPosition(
         u'水果忍者',
@@ -2810,7 +2799,6 @@ if __name__ == "__main__":
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
     #xzzj.run()
-    #print xzzj.run(u'微信')
 
     pchome = PcHomePosition(
         u'水果忍者',
