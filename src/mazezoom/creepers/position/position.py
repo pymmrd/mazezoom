@@ -388,16 +388,17 @@ class AnZhiPosition(PositionSpider):
                 item.xpath(self.link_xpath)[0]
             )
             title = item.xpath(self.title_xpath)[0]
-            down_link = self.download_link(item)
-            if self.is_accurate:
-                match = self.verify_app(
-                    down_link=down_link,
-                )
-                if match:
+            if self.app_name in title:
+                if self.is_accurate:
+                    down_link = self.download_link(item)
+                    match = self.verify_app(
+                        down_link=down_link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
                     results.append((link, title))
-                    break
-            else:
-                results.append((link, title))
         return results
 
 
@@ -1055,8 +1056,8 @@ class HiapkPosition(PositionSpider):
                         )
                         if match:
                             results.append((link, title))
-            else:
-                results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -1090,8 +1091,8 @@ class GfanPosition(PositionSpider):
                         )
                         if match:
                             results.append((link, title))
-            else:
-                results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -1141,8 +1142,8 @@ class Apk91Position(PositionSpider):
                         )
                         if match:
                             results.append((link, title))
-            else:
-                results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -1575,8 +1576,8 @@ class ImobilePosition(PositionSpider):
                         )
                         if match:
                             results.append((link, title))
-            else:
-                results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -2525,32 +2526,6 @@ class YruanPosition(PositionSpider):
                         results.append((link, item))
         else:
             results = android_list
-        return results
-
-
-#error 下载页面乱码，无正常内容显示
-class MuzisoftPosition(PositionSpider):
-    """
-    网站做得很烂，页面经常有错误
-    """
-    #abstract = True
-    name = u'木子ROM'
-    domain = "www.muzisoft.com"
-    charset = 'gb2312'
-    search_url = (
-        "http://www.muzisoft.com/plus/search.php?"
-        "kwtype=0&q=%s&imageField.x=0&imageField.y=0"
-    )
-    xpath = "//div[@class='searchitem']//dt/a"
-
-    def position(self):
-        results = []
-        etree = self.send_request(self.app_name)
-        items = etree.xpath(self.xpath)
-        for item in items:
-            link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content()
-            results.append((link, title))
         return results
 
 if __name__ == "__main__":

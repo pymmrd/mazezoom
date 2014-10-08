@@ -8,6 +8,7 @@
 #StdLib imports
 import time
 import json
+import logging
 
 #Project imports
 from position import *
@@ -19,6 +20,10 @@ from constants import POSITION_DISPATCH_KEY, POSITION_TASK_KEY
 
 INTERUPT = 2
 
+logger = logging.getLogger(settings.POSITION_DISPATCH_LOG_TYPE)
+
+
+
 
 def dispatcher():
     """
@@ -29,7 +34,8 @@ def dispatcher():
         #接受扫描任务
         rawtask = backend.accept(POSITION_DISPATCH_KEY)
         if rawtask:
-            print 'rawtask-->', rawtask
+            msg = 'Task:%s' % rawtask.decode('utf-8')
+            logger.info(msg)
             task = rawtask.split(',')
             appname = task[1].decode(settings.DEFAULT_CHARSET)
             task[1] = appname

@@ -7,14 +7,18 @@
 #StdLib imports
 import time
 import json
+import logging
 
 #Project imports
 from channel import *
 from constants import CHANNEL_TASK_KEY
 from base import ChannelSpider
 from backend import RedisBackend
+from django.conf import settings
 
 INTERUPT = 1
+
+logger = logging.getLogger(settings.CHANNEL_WORKER_LOG_TYPE)
 
 
 def update_first_status(pk):
@@ -36,6 +40,12 @@ def worker():
             elif length == 8:
                 (channellink, app_uuid, app_version, url,
                     channel, title, clsname, is_first) = loadtask 
+            msg = "channellink--%s, app_uuid--%s, app_version--%s, url--%s, channel--%s, title--%s, clsname--%s" % (
+                channellink, app_uuid, app_version,
+                url, channel, titile.encode('utf-8'),
+                clsname
+            )
+            logger.info(msg)
             cls = ChannelSpider.subclass.get(clsname, None)
             if cls is not None:
                 instance = cls(

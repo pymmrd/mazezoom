@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import logging
 import random
 import urllib
 import urllib2
@@ -173,6 +174,7 @@ class PositionSpider(CreeperBase):
         self.chksum = chksum
         self.app_name = app_name
         self.has_orm = has_orm
+        self.logger = logging.getLogger(settings.POSITION_LOG_TYPE)
         self.is_accurate = is_accurate
         if settings.DEBUG and has_orm:
             self.objects.create_debug_app(
@@ -189,6 +191,8 @@ class PositionSpider(CreeperBase):
         if data is None and appname:
             quote_app = self.quote_args(appname)
             url = url % quote_app
+        msg = 'URL:%s' % url
+        self.logger.info(msg)
         if tree:
             #获取页面dom树
             etree = self.get_elemtree(url, data, ignore, charset)
@@ -312,6 +316,7 @@ class ChannelSpider(CreeperBase):
         self.channel = channel
         self.url = url
         self.title = title
+        self.logger = logging.getLogger(settings.CHANNEL_LOG_TYPE)
 
     def record_appdetail(self, result):
         detail, is_created = self.objects.get_or_create_appdetail(
@@ -331,6 +336,8 @@ class ChannelSpider(CreeperBase):
         )
 
     def send_request(self, url, tree=True, ignore=False, charset=None, data=None):
+        msg = 'URL:%s' % url
+        logger.info(msg)
         if tree:
             #获取页面dom树
             etree = self.get_elemtree(url, data=data, ignore=ignore, charset=charset)

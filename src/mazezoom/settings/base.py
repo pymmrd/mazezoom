@@ -139,6 +139,15 @@ CHANNEL_LOG_TYPE = 'channel'
 
 POSITION_LOG_TYPE = 'position'
 
+CHANNEL_DISPATCH_LOG_TYPE = 'channel_dispatcher'
+
+POSITION_DISPATCH_LOG_TYPE = 'position_dispatcher'
+
+POSITION_WORKER_LOG_TYPE = 'position_worker'
+
+CHANNEL_WORKER_LOG_TYPE = 'channel_worker'
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -182,6 +191,38 @@ LOGGING = {
             'maxBytes': 104857600,  # 100m
             'backupCount': 5,
         },
+        'channel_dispatch': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/channel_dispatch.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
+        'position_dispatch': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/position_dispatch.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
+        'position_worker': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/position_worker.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
+        'channel_worker': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': '/data/log/channel_worker.log',
+            'maxBytes': 104857600,  # 100m
+            'backupCount': 5,
+        },
     },
     'loggers': {
         'django.request': {
@@ -196,6 +237,22 @@ LOGGING = {
         POSITION_LOG_TYPE: {
             'handlers': ['position_file', 'console'],
             'level': LOG_LEVEL,
-        }
+        },
+        POSITION_DISPATCH_LOG_TYPE: {
+            'handlers': ['position_dispatch', 'console'],
+            'level': LOG_LEVEL,
+        },
+        CHANNEL_DISPATCH_LOG_TYPE: {
+            'handlers': ['channel_dispatch', 'console'],
+            'level': LOG_LEVEL,
+        },
+        CHANNEL_WORKER_LOG_TYPE: {
+            'handlers': ['channel_worker', 'console'],
+            'level': LOG_LEVEL,
+        },
+        POSITION_WORKER_LOG_TYPE: {
+            'handlers': ['position_worker', 'console'],
+            'level': LOG_LEVEL,
+        },
     }
 }

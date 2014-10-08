@@ -22,7 +22,6 @@ def worker():
         task = backend.accept(POSITION_TASK_KEY)
         if task is not None:
             loadtask = json.loads(task)
-            print loadtask
             app_uuid, appname, version, chksum, clsname = loadtask
             cls = PositionSpider.subclass.get(clsname, None)
             if cls is not None:
