@@ -42,7 +42,7 @@ def worker():
                     channel, title, clsname, is_first) = loadtask 
             msg = "channellink--%s, app_uuid--%s, app_version--%s, url--%s, channel--%s, title--%s, clsname--%s" % (
                 channellink, app_uuid, app_version,
-                url, channel, titile.encode('utf-8'),
+                url, channel, title,
                 clsname
             )
             logger.info(msg)
