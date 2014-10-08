@@ -508,8 +508,291 @@ class MaopaokePosition(PositionSpider):
                 results.append((link, title))
         return results
 
+class SouyingyongPosition(PositionSpider):
+    """
+    """
+    name = u'搜应用'
+    domain = "www.soyingyong.com"
+    search_url = "http://www.soyingyong.com/apps/search/%s.html"
+    base_xpath = "//ul[@class='card']/li[@class='card-item']"
+    link_xpath = "child::div[@class='app-content']/div[@class='detail']/h2/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.attrib['title'].strip()
+            if self.app_name in title:
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
+class BaikcePosition(PositionSpider):
+    """
+    """
+    name = u'APP安卓市场'
+    domain = "apps.baikce.cn"
+    search_url = "http://apps.baikce.cn/search.aspx?q=%s&s=app"
+    base_xpath = "//div[@class='list']/div[@class='top-data']"
+    link_xpath = "child::dl/dd[@class='title']/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
+#error 中文乱码
+class SoftonicPosition(PositionSpider):
+    """
+    """
+    name = u'软件天堂'
+    domain = "www.softonic.cn"
+    search_url = "http://www.softonic.cn/s/%s:android"
+    base_xpath = "//ol[@id='program_list']/li[@class='list-program-item js-listed-program']"
+    link_xpath = "child::div[@class='list-program-column-first']/h5/a"
+    
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class A280Position(PositionSpider):
+    """
+    """
+    name = u'安卓下载网'
+    domain = "www.a280.cn"
+    search_url = "http://www.a280.com/?a=search&kw=%s"
+    base_xpath = "//div[@class='softlist']/div[@class='one']"
+    link_xpath = "child::div[@class='rtxt']/div[@class='softname']/a"
+    
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class MeizumiPosition(PositionSpider):
+    """
+    """
+    name = u'魅族迷'
+    domain = "www.meizumi.com"
+    search_url = "http://www.meizumi.com/search?q=%s"
+    base_xpath = "//div[@class='list']/ul/li"
+    link_xpath = "child::div[@class='info']/h4/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            print title
+            if self.app_name in title:
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class CncrkPosition(PositionSpider):
+    """
+    """
+    name = u'起点下载'
+    domain = "www.cncrk.com"
+    charset = 'gb2312'
+    android_token = 'Android'
+    search_url = "http://www.cncrk.com/search.asp?keyword=%s&stype=ResName&x=0&y=0"
+    base_xpath = "//div[@class='results']/ul/li"
+    link_xpath = "child::span[@class='softname']/a[@class='top']"
+    token_xpath = "child::span[@class='softname']/a[1]/text()"
+        
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            token = item.xpath(self.token_xpath)
+            if self.app_name in title and self.android_token in token:
+                print title, token
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
+class ZerosjPosition(PositionSpider):
+    """
+    """
+    name = u'零点安卓手机软件'
+    domain = "www.zerosj.com"
+    charset = 'gb2312'
+    search_url = "http://www.zerosj.com/search/index.php"
+    base_xpath = "//td[@width='556']/table[@class='tablebordercss']/tr[2]/td[@valign='top']/table"
+    link_xpath = "child::tr[1]/td/table/tr/td[1]/a"
+
+    def position(self):
+        results = []
+        data = {'show': 1, 'keyboard': self.app_name.encode(self.charset), 'Submit': '搜索'}
+        etree = self.send_request(data=data)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        print len(items)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
+class AppdhPosition(PositionSpider):
+    """
+    """
+    name = u'app导航'
+    domain = "www.appdh.com"
+    search_url = "http://www.appdh.com/keyword/?s=%s"
+    base_xpath = "//div[@class='clearfix light_line pt_20 pb_20']"
+    link_xpath = "child::div[@class='grid_8']/p/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                print title
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class ItopdogPosition(PositionSpider):
+    """
+    """
+    name = u'软件盒子'
+    domain = "www.itopdog.cn"
+    search_url = "http://www.itopdog.cn/home.php?type=az&ct=home&ac=search&q=%s"    #type=az表示安卓
+    base_xpath = "//div[@class=' panel-list-imgbrief']/dl"
+    link_xpath = "child::dd/strong[@class='name']/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                print title
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class MogustorePosition(PositionSpider):
+    """
+    """
+    name = u'蘑菇市场'
+    domain = "www.mogustore.cn"
+    search_url = "http://www.mogustore.com/search.html"
+    base_xpath = "//div[@class='pro_box app_list app_list_b']/ul/li"
+    link_xpath = "child::div[@class='title']/h2/a"
+
+    def position(self):
+        results = []
+        data = {'keyword': self.app_name.encode(self.charset)}
+        etree = self.send_request(data=data)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                print title
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
+class LeidianPosition(PositionSpider):
+    """
+    """
+    name = u'雷电手机搜索'
+    domain = "www.leidian.com"
+    search_url = "http://www.leidian.com/s?q=%s&ie=utf-8&t=&src=shouji_www"
+    base_xpath = "//ul[@class='mod-soft-list']/li[@class='clearfix']"
+    link_xpath = "child::div[@class='mod-soft-info']/h2/a"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                print title
+                link = elem.attrib['href']
+                results.append((link, title))
+        return results
+
+class Position2265(PositionSpider):
+    """
+    """
+    name = u'2265安卓游戏'
+    domain = "www.2265.com"
+    search_url = "http://www.2265.com/sea_%s.html"
+    base_xpath = "//div[@class='listbox10']/div[@class='tcm']/ul/li"
+    link_xpath = "child::div[@class='rtxtinfo']/div[@class='c']/dl/dt/span[1]/a[1]"
+
+    def position(self):
+        results = []
+        etree = self.send_request(self.app_name)
+        #获取搜索结果title和链接
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if self.app_name in title:
+                print title
+                link = self.normalize_url(self.search_url, elem.attrib['href'])
+                results.append((link, title))
+        return results
+
 if __name__ == "__main__":
-    m163 = UCPosition(
+    m163 = Position2265(
        u'忍者',
        is_accurate=False,
        has_orm=False,
