@@ -15,6 +15,10 @@ MAZEZOOM_POSITION_DISPATCHE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_d
 MAZEZOOM_POSITION_DISPATCHE_LOG="/data/log/supervisord/position.log"
 MAZEZOOM_POSITION_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_schedule.py" 
 MAZEZOOM_POSITION_SCHEDULE_LOG="/data/log/supervisord/pschedule.log"
+MAZEZOOM_CHANNEL_REALTIME="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_realtime_worker.py"
+MAZEZOOM_CHANNEL_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_schedule.py"
+MAZEZOOM_CHANNEL_REALTIME_LOG="/data/log/supervisord/channel_realtime.log"
+MAZEZOOM_CHANNEL_SCHEDULE_LOG="/data/log/supervisord/channel_schedule.log"
 
 
 if [ "$(id -u)" != "0" ]; then
@@ -23,6 +27,9 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 ETH0_INET=`ifconfig eth0 | grep "inet addr"| awk '{print $2}'| awk -F : '{print $2}'`
+if [ -z $ETH0_INET ];then
+	ETH0_INET='127.0.0.1'
+fi
 echo "etho ip address: $ETH0_INET"
 
 
@@ -53,11 +60,13 @@ install_fchksum(){
     echo "tar -xvzf python-fchksum-1.7.1.tar.gz"
     tar -xvzf python-fchksum-1.7.1.tar.gz
 
-    echo "python ./python-fchksum-1.7.1/setup.py build"
-    python ./python-fchksum-1.7.1/setup.py build
-    
-    echo "python ./pyhton-fchksum-1.7.1/setup.py install"
-    python ./pyhton-fchksum-1.7.1/setup.py install
+	cd python-fchksum-1.7.1
+    echo "python setup.py build"
+    python setup.py build
+
+    echo "python setup.py install"
+    python setup.py install
+	cd ..
 
 }
 
@@ -83,6 +92,31 @@ stderr_logfile=${MAZEZOOM_POSITION_SCHEDULE_LOG}
 autostart=true
 autorestart=true
 EOM
+}
+
+channel_realtime_supervisor(){
+    program="channel_realtime"
+    cat <<EOM >>${MAZEZOOM_SUPERVISOR_CONF_FILE}
+[program:${program}]
+command=python ${MAZEZOOM_CHANNEL_REALTIME}
+stdout_logfile=${MAZEZOOM_CHANNEL_REALTIME_LOG}
+stderr_logfile=${MAZEZOOM_CHANNEL_REALTIME_LOG}
+autostart=true
+autorestart=true
+EOM
+}
+
+channel_schedule_supervisor(){
+	program="channel_schedule"
+    cat <<EOM >>${MAZEZOOM_SUPERVISOR_CONF_FILE}
+[program:${program}]
+command=python ${MAZEZOOM_CHANNEL_SCHEDULE}
+stdout_logfile=${MAZEZOOM_CHANNEL_SCHEDULE_LOG}
+stderr_logfile=${MAZEZOOM_CHANNEL_SCHEDULE_LOG}
+autostart=true
+autorestart=true
+EOM
+
 }
 
 smart_redis(){
@@ -171,13 +205,13 @@ init_mysql(){
     read -p "Please input db name:" db_name
     read -p "Please input access ${db_name} user:": username
     read -p "Please set password for ${username}:": password
-    if [ -z $bind_ip];then
+    if [ -z $bind_ip ];then
         bind_ip='127.0.0.1'
     fi
-    if [ -z $db_name];then
+    if [ -z $db_name ];then
         exit 1
     fi
-    if [ -z password];then
+    if [ -z $password ];then
         exit 1
     fi
     mysql -uroot -h${bind_ip}-p -e"create database if not exist ${db_name} character set utf8;grant all on $"
@@ -194,7 +228,3 @@ setup(){
 }
 
 setup
-
-if [ -s /opt/clish/conf_mgr.py ]; then
-    /opt/clish/conf_mgr.py inst_prod webui
-fi
