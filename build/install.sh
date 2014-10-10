@@ -7,9 +7,10 @@ PROJECT_ROOT="${ROOT_DIR}/src"
 
 SOURCE_CODE_SRC="${ROOT_DIR}/src/${PROJECT_NAME}"
 REQUIRMENTS_PYLIB="${ROOT_DIR}/src/${PROJECT_NAME}/requirements.txt"
+MAZEZOOM_PRODUCTION_SETTINGS="${SOURCE_CODE_SRC}/settings/production.py"
 
 #supervisor
-MAZEZOOM_SUPERVISOR_CONF_FILE="mazezoom_supervisord.conf"
+MAZEZOOM_SUPERVISOR_CONF_FILE="${CURRENT_DIR}/mazezoom_supervisord.conf"
 MAZEZOOM_SUPERVSIOR_CONF_PATH="/etc/supervisor/conf.d/${MAZEZOOM_SUPERVISOR_CONF_FILE}"
 MAZEZOOM_POSITION_DISPATCHE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_dispatcher.py" 
 MAZEZOOM_POSITION_DISPATCHE_LOG="/data/log/supervisord/position.log"
@@ -19,6 +20,24 @@ MAZEZOOM_CHANNEL_REALTIME="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_real
 MAZEZOOM_CHANNEL_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_schedule.py"
 MAZEZOOM_CHANNEL_REALTIME_LOG="/data/log/supervisord/channel_realtime.log"
 MAZEZOOM_CHANNEL_SCHEDULE_LOG="/data/log/supervisord/channel_schedule.log"
+MAZEZOOM_CHANNEL_DISPATCH="${SOURCE_CODE_SRC}/creepers/channel_dispatcher.py"
+SYSTEM_CRON="${CURRENT_DIR}/system.cron"
+
+REDIS_DB=0
+REDIS_PORT=6379
+REDIS_HOST='127.0.0.1'
+REDIS_PASSWD="afc7c7180c3c43b51b1ebfebae76b5e8"
+
+MONGO_DB='mazezoom'
+MONGO_PORT=27017
+MONGO_HOST='127.0.0.1'
+MONGO_USER='root'
+MONGO_PASSWD='admin4u'
+
+MYSQL_DB='enginet'
+MYSQL_USER='admin'
+MYSQL_PASSWD='admin4u'
+MYSQL_HOST=''
 
 
 if [ "$(id -u)" != "0" ]; then
@@ -26,11 +45,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-ETH0_INET=`ifconfig eth0 | grep "inet addr"| awk '{print $2}'| awk -F : '{print $2}'`
-if [ -z $ETH0_INET ];then
-	ETH0_INET='127.0.0.1'
+#删除mazezoom_supervisord.conf, 如果存在
+if [ -f "${MAZEZOOM_SUPERVSIOR_CONF_FILE}" ]; then
+    rm ${MAZEZOOM_SUPERVISOR_CONF_FILE}
 fi
-echo "etho ip address: $ETH0_INET"
+
+#ETH0_INET=`ifconfig eth0 | grep "inet addr"| awk '{print $2}'| awk -F : '{print $2}'`
+#if [ -z $ETH0_INET ];then
+#    ETH0_INET='127.0.0.1'
+#fi
+#echo "etho ip address: $ETH0_INET"
 
 
 install_libdev(){
@@ -66,8 +90,7 @@ install_fchksum(){
 
     echo "python setup.py install"
     python setup.py install
-	cd ..
-
+    cd ..
 }
 
 dispatcher_supervisor(){
@@ -79,6 +102,7 @@ stdout_logfile=${MAZEZOOM_POSITION_DISPATCHE_LOG}
 stderr_logfile=${MAZEZOOM_POSITION_DISPATCHE_LOG}
 autostart=true
 autorestart=true
+
 EOM
 }
 
@@ -91,6 +115,7 @@ stdout_logfile=${MAZEZOOM_POSITION_SCHEDULE_LOG}
 stderr_logfile=${MAZEZOOM_POSITION_SCHEDULE_LOG}
 autostart=true
 autorestart=true
+
 EOM
 }
 
@@ -103,11 +128,12 @@ stdout_logfile=${MAZEZOOM_CHANNEL_REALTIME_LOG}
 stderr_logfile=${MAZEZOOM_CHANNEL_REALTIME_LOG}
 autostart=true
 autorestart=true
+
 EOM
 }
 
 channel_schedule_supervisor(){
-	program="channel_schedule"
+    program="channel_schedule"
     cat <<EOM >>${MAZEZOOM_SUPERVISOR_CONF_FILE}
 [program:${program}]
 command=python ${MAZEZOOM_CHANNEL_SCHEDULE}
@@ -115,19 +141,31 @@ stdout_logfile=${MAZEZOOM_CHANNEL_SCHEDULE_LOG}
 stderr_logfile=${MAZEZOOM_CHANNEL_SCHEDULE_LOG}
 autostart=true
 autorestart=true
-EOM
 
+EOM
+}
+
+init_cron(){
+    cat <<EOM > ${SYSTEM_CRON}
+0 13,21 * * *  python ${MAZEZOOM_CHANNEL_DISPATCH}
+EOM
+crontab ${SYSTEM_CRON}
 }
 
 smart_redis(){
+    read -p "Please set IP address for Redis, default:(127.0.0.1):" REIDS_HOST
+    if [ -z $REDIS_HOST ];then
+        REDIS_HOST='127.0.0.1'
+    fi
+    echo "Redis host address: ${REDIS_HOST}"
     redis_conf="/etc/redis/redis.conf"
     echo "mv /etc/redis/redis.conf /etc/redis/redis.conf.bak"
     mv $redis_conf /etc/redis/redis.conf.bak
     cat <<EOM >${redis_conf}
 daemonize yes
 pidfile /var/run/redis/redis-server.pid
-port 6379
-bind ${ETH0_INET}
+port ${REDIS_PORT}
+bind ${redis_host}
 timeout 0
 loglevel notice
 logfile /var/log/redis/redis-server.log
@@ -139,7 +177,7 @@ rdbcompression yes
 dbfilename dump.rdb
 dir /var/lib/redis
 slave-serve-stale-data yes
-requirepass afc7c7180c3c43b51b1ebfebae76b5e8
+requirepass ${REDIS_PASSWD} 
 appendonly no
 appendfsync everysec
 no-appendfsync-on-rewrite no
@@ -151,10 +189,27 @@ EOM
     /etc/init.d/redis-server restart
 }
 
+
 smart_mongodb(){
-    read -p "Please set a username for access mongodb:" mongo_user
-    read -p "Please set password:" mongo_passwd
-    mongo 127.0.0.1:27017/admin --eval="db.addUser('${mongo_user}', '${mongo_passwd}')"
+    read -p "Please set Mongodb host, default:(127.0.0.1):" MONGO_HOST
+    if [ -z $MONGO_HOST ];then
+        MONGO_HOST='127.0.0.1'
+    fi
+    echo "Mongodb host address: ${MONGO_HOST}"
+
+    read -p "Please set a username for access mongodb, default:(root):" mongo_user
+    if [ -z $MONGO_USER ];then
+        MONGO_USER='root'
+    fi
+    echo "Mongodb username:" ${MONGO_USER}
+
+    read -p "Please set password, default:(admin4u):" MONGO_PASSWD
+    if [ -z $MONGO_PASSWD ];then
+        MONGO_PASSWD='admin4u'
+    fi
+    echo "Mongodb password:" ${mongo_passwd}
+
+    mongo ${MONGO_HOST}:27017/admin --eval="db.addUser('${MONGO_USER}', '${MONGO_PASSWD}')"
 
     mongo_conf="/etc/mongodb.conf"
     dbpath="/data/mongodb/${PROJECT_NAME}"
@@ -171,7 +226,7 @@ smart_mongodb(){
 dbpath=${dbpath}
 logpath=${logpath}/${PROJECT_NAME}.log
 logappend=true
-bind_ip=${ETH0_INET}
+bind_ip=${MONGO_HOST}
 port=27017
 journal=true
 auth=true
@@ -184,8 +239,13 @@ EOM
 smart_supervisor(){
     dispatcher_supervisor
     schedule_supervisor
+    channel_realtime_supervisor
+    channel_schedule_supervisor
+    echo "ln -s ${MAZEZOOM_SUPERVISOR_CONF_FILE} ${MAZEZOOM_SUPERVSIOR_CONF_PATH}"
+    ln -s ${MAZEZOOM_SUPERVISOR_CONF_FILE} ${MAZEZOOM_SUPERVSIOR_CONF_PATH}
     echo "supervisorctl update"
     supervisorctl update
+    supervisorctl start all
 }
 
 install_pylib_with_pip(){
@@ -201,21 +261,71 @@ install_src(){
 }
 
 init_mysql(){
-    read -p "Please input mysql host(127.0.0.1):" bind_ip
-    read -p "Please input db name:" db_name
-    read -p "Please input access ${db_name} user:": username
-    read -p "Please set password for ${username}:": password
-    if [ -z $bind_ip ];then
-        bind_ip='127.0.0.1'
+    read -p "Please input root user for mysql, default:(root)" root_user
+    if [ -z $root_user ];then
+        root_user='root'
     fi
-    if [ -z $db_name ];then
+    read -p "Plaase input password for root user" root_passwd
+    read -p "Please input mysql host(127.0.0.1):" MYSQL_HOST
+    read -p "Please input db name:" MYSQL_DB
+    read -p "Please input access ${MYSQL_DB} user:": MYSQL_USER
+    read -p "Please set password for ${MYSQL_USER}:": MYSQL_PASSWD
+    if [ -z $MYSQL_HOST ];then
+        MYSQL_HOST='127.0.0.1'
+    fi
+    if [ -z $MYSQL_DB ];then
+        echo "Access db name is required"
         exit 1
     fi
-    if [ -z $password ];then
+    if [ -z $MYSQL_PASSWD ];then
+        echo "Access password is required"
         exit 1
     fi
-    mysql -uroot -h${bind_ip}-p -e"create database if not exist ${db_name} character set utf8;grant all on $"
+    mysql -u${root_user} -h${MYSQL_HOST} -p${root_passwd} -e"create database if not exists ${MYSQL_DB} character set utf8;grant all on ${MYSQL_DB}.* to \"${MYSQL_USER}\"@\"localhost\" identified by '${MYSQL_PASSWD}'"
 }
+
+init_production_settings(){
+    cat <<EOM > ${MAZEZOOM_PRODUCTION_SETTINGS}
+# -*- coding:utf-8 -*-
+from base import *
+from mongoengine import *
+
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': '${MYSQL_DB}',                      
+        'USER': '${MYSQL_USER}',
+        'PASSWORD': '${MYSQL_PASSWD}',
+        'HOST': '${MYSQL_HOST}',                      
+        'PORT': '',                      
+        'STORAGE_ENGINE': 'INNODB',
+    }
+}
+
+MONGO_HOST = '${MONGO_HOST}'
+MONGO_PORT = ${MONGO_PORT}
+MONGO_DB = '${MONGO_DB}'
+MONGO_POOL_AUTH = {
+    'user': '${MONGO_USER}',
+    'passwd': '${MONGO_PASSWD}',
+}
+
+REDIS_HOST = '${REDIS_HOST}'
+REDIS_PORT = ${REDIS_PORT}
+REDIS_PASSWORD = '${REDIS_PASSWD}'
+REDIS_CONF = {
+    'host': REDIS_HOST,
+    'password': REDIS_PASSWORD,
+    'port': REDIS_PORT,
+    'db': ${REDIS_DB},
+}
+
+EOM
+}
+
 
 
 setup(){
@@ -224,7 +334,10 @@ setup(){
     install_pylib_with_pip 
     smart_mongodb
     smart_redis
+    init_mysql
+    init_production_settings
     smart_supervisor
+    init_cron
 }
 
 setup

@@ -7,7 +7,7 @@ import logging
 import redis
 
 #Project imports
-from constants import REDIS_CONF
+from django.conf import REDIS_CONF
 
 
 class RedisBackend(object):

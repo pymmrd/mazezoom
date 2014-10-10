@@ -5,8 +5,8 @@ import time
 import json
 
 #Project imports
-from base import ChannelSpider
 from channel import *
+from base import ChannelSpider
 from backend import RedisBackend
 from cloudeye.models import ChannelLink
 from constants import CHANNEL_TASK_KEY

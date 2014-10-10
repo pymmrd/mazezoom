@@ -20,15 +20,6 @@ POSITION_APP_DIR = os.path.join(APP_DIR, 'positionapp')
 
 CHANNAL_APP_DIR = os.path.join(APP_DIR, 'channelapp')
 
-REDIS_HOST = '10.9.19.178'
-REDIS_PORT = 6379
-REDIS_PASSWORD = ''
-REDIS_CONF = {
-    'host': REDIS_HOST,
-    'password': 'afc7c7180c3c43b51b1ebfebae76b5e8',
-    'port': REDIS_PORT,
-    'db': 0,
-}
 CHANNEL_TASK_KEY = 'channel_task'
 POSITION_TASK_KEY = 'position_task'
 POSITION_DISPATCH_KEY = 'position_dispatch'
