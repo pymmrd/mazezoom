@@ -9,31 +9,41 @@ SOURCE_CODE_SRC="${ROOT_DIR}/src/${PROJECT_NAME}"
 REQUIRMENTS_PYLIB="${ROOT_DIR}/src/${PROJECT_NAME}/requirements.txt"
 MAZEZOOM_PRODUCTION_SETTINGS="${SOURCE_CODE_SRC}/settings/production.py"
 
+#syncdb
+#MAZEZOOM_SYNCDB="python ${SOURCE_CODE_SRC}/manage.py syncdb"
+
 #supervisor
-MAZEZOOM_SUPERVISOR_CONF_FILE="${CURRENT_DIR}/mazezoom_supervisord.conf"
-MAZEZOOM_SUPERVSIOR_CONF_PATH="/etc/supervisor/conf.d/${MAZEZOOM_SUPERVISOR_CONF_FILE}"
+MAZEZOOM_SUPERVISOR_CONF_FILENMAE="mazezoom_supervisord.conf"
+MAZEZOOM_SUPERVISOR_CONF_FILE="${CURRENT_DIR}/${MAZEZOOM_SUPERVISOR_CONF_FILENMAE}"
+MAZEZOOM_SUPERVSIOR_CONF_PATH="/etc/supervisor/conf.d/${MAZEZOOM_SUPERVISOR_CONF_FILENAME}"
 MAZEZOOM_POSITION_DISPATCHE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_dispatcher.py" 
-MAZEZOOM_POSITION_DISPATCHE_LOG="/data/log/supervisord/position.log"
 MAZEZOOM_POSITION_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/position_schedule.py" 
-MAZEZOOM_POSITION_SCHEDULE_LOG="/data/log/supervisord/pschedule.log"
 MAZEZOOM_CHANNEL_REALTIME="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_realtime_worker.py"
 MAZEZOOM_CHANNEL_SCHEDULE="${PROJECT_ROOT}/${PROJECT_NAME}/creepers/channel_schedule.py"
+MAZEZOOM_CHANNEL_DISPATCH="${SOURCE_CODE_SRC}/creepers/channel_dispatcher.py"
+MAZEZOOM_POSITION_DISPATCHE_LOG="/data/log/supervisord/position.log"
+MAZEZOOM_POSITION_SCHEDULE_LOG="/data/log/supervisord/pschedule.log"
 MAZEZOOM_CHANNEL_REALTIME_LOG="/data/log/supervisord/channel_realtime.log"
 MAZEZOOM_CHANNEL_SCHEDULE_LOG="/data/log/supervisord/channel_schedule.log"
-MAZEZOOM_CHANNEL_DISPATCH="${SOURCE_CODE_SRC}/creepers/channel_dispatcher.py"
+
+#crontab
 SYSTEM_CRON="${CURRENT_DIR}/system.cron"
 
+
+#Redis
 REDIS_DB=0
 REDIS_PORT=6379
 REDIS_HOST='127.0.0.1'
 REDIS_PASSWD="afc7c7180c3c43b51b1ebfebae76b5e8"
 
+#Mongodb
 MONGO_DB='mazezoom'
 MONGO_PORT=27017
 MONGO_HOST='127.0.0.1'
 MONGO_USER='root'
 MONGO_PASSWD='admin4u'
 
+#Mysql
 MYSQL_DB='enginet'
 MYSQL_USER='admin'
 MYSQL_PASSWD='admin4u'
@@ -296,11 +306,11 @@ TEMPLATE_DEBUG = DEBUG
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', 
-        'NAME': '${MYSQL_DB}',                      
+        'NAME': '${MYSQL_DB}',
         'USER': '${MYSQL_USER}',
         'PASSWORD': '${MYSQL_PASSWD}',
-        'HOST': '${MYSQL_HOST}',                      
-        'PORT': '',                      
+        'HOST': '${MYSQL_HOST}',
+        'PORT': '',
         'STORAGE_ENGINE': 'INNODB',
     }
 }
@@ -324,6 +334,8 @@ REDIS_CONF = {
 }
 
 EOM
+    #syncdb
+    python ${SOURCE_CODE_SRC}/manage.py syncdb
 }
 
 
