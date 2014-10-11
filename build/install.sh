@@ -69,13 +69,13 @@ fi
 
 install_libdev(){
     echo "sudo apt-get update"
-    sudo apt-get update
+    #sudo apt-get update
 
     echo "sudo apt-get install -y python-dev gcc libsqlite3-dev make g++ libfreetype6-dev"
     sudo apt-get install -y python-dev gcc libsqlite3-dev make g++ libfreetype6-dev
 
-    echo "sudo apt-get install -y libfontconfig-dev libyaml-dev git-core redis-server mongodb"
-    sudo apt-get install -y libfontconfig-dev libyaml-dev git-core redis-server mongodb
+    echo "sudo apt-get install -y libfontconfig-dev git-core redis-server mongodb-server"
+    sudo apt-get install -y libfontconfig-dev git-core redis-server mongodb-server
 
     echo "sudo apt-get install -y libmysqlclient-dev python-pip zlib1g-dev" 
     sudo apt-get install -y libmysqlclient-dev python-pip zlib1g-dev 
