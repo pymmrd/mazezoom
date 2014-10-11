@@ -175,7 +175,7 @@ smart_redis(){
 daemonize yes
 pidfile /var/run/redis/redis-server.pid
 port ${REDIS_PORT}
-bind ${redis_host}
+bind ${REDIS_HOST}
 timeout 0
 loglevel notice
 logfile /var/log/redis/redis-server.log
