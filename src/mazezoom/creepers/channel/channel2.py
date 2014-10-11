@@ -27,11 +27,37 @@ if __name__ == "__main__":
 from base import ChannelSpider
 
 class ZhuShou360Channel(ChannelSpider):
-    domain = "zhushou.36.cn"
+    seperator = u'：'
+    domain = "zhushou.360.cn"
+    size_xpath = "//div[@class='pf']/span[@class='s-3'][2]/text()"
+
+    def download_times(self):
+        from position import ZhuShou360Position
+        position = ZhuShou360Position(
+            self.title,
+            has_orm=False,
+        )
+        times = position.download_times()
+        return times
+
+    def parser(self):
+        result = {}
+        etree = self.send_request(self.url)
+        size_raw = etree.xpath(self.size_xpath)
+        if size_raw:
+            size_raw = size_raw[0].strip()
+            result['size'] = size_raw
+        times = self.download_times()
+        result['download_times'] = times
+        return result
 
 
 class MiChannel(ChannelSpider):
+    """
+    无下载次数
+    """
     domain = "app.mi.com"
+    fuzzy_xpath = "//div[@class='details preventDefault']/ul/li/text()"
 
 
 class NearMeChannel(ChannelSpider):
