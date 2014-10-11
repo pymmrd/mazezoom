@@ -7,14 +7,14 @@ import logging
 import redis
 
 #Project imports
-from django.conf import REDIS_CONF
+from django.conf import settings
 
 
 class RedisBackend(object):
     """Redis task result store."""
 
     def __init__(self):
-        self.redis = redis.Redis(**REDIS_CONF)
+        self.redis = redis.Redis(**settings.REDIS_CONF)
 
     def send(self, key, value):
         #logging
