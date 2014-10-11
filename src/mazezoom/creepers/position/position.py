@@ -922,6 +922,7 @@ class AnRuanPosition(PositionSpider):
 
 class PcHomePosition(PositionSpider):
     #charset = 'gbk'
+    name=u"电脑之家"
     domain = "www.pchome.net"
     #search_url = ("http://search.pchome.net/download.php"
     #              "?wd=%s&submit=%CB%D1+%CB%F7")
