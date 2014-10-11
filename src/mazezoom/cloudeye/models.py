@@ -240,19 +240,19 @@ class Application(models.Model):
     app_state = models.IntegerField()
     task_id = models.CharField(max_length=36)
     creat_time = models.DateField(auto_now=True)
-    company = models.ForeignKey(
-        Company,
-        blank=True,
-        null=True,
-        verbose_name=u'公司',
-    )
+    #company = models.ForeignKey(
+    #    Company,
+    #    blank=True,
+    #    null=True,
+    #    verbose_name=u'公司',
+    #)
 
-    category = models.ForeignKey(
-        Category,
-        blank=True,
-        null=True,
-        verbose_name=u'类别',
-    )
+    #category = models.ForeignKey(
+    #    Category,
+    #    blank=True,
+    #    null=True,
+    #    verbose_name=u'类别',
+    #)
 
     class Meta:
         db_table = 'app_info'
