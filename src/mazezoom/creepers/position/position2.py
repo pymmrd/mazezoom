@@ -845,6 +845,7 @@ class SouyingyongPosition(PositionSpider):
                     results.append((link, title))
         return results
 
+#error 网站打不开
 class BaikcePosition(PositionSpider):
     """
     """
@@ -993,6 +994,7 @@ class CncrkPosition(PositionSpider):
                 results.append((link, title))
         return results
 
+#error 网站打不开
 class ZerosjPosition(PositionSpider):
     """
     """
@@ -1067,7 +1069,7 @@ class ItopdogPosition(PositionSpider):
     search_url = "http://www.itopdog.cn/home.php?type=az&ct=home&ac=search&q=%s"    #type=az表示安卓
     base_xpath = "//div[@class=' panel-list-imgbrief']/dl"
     link_xpath = "child::dd/strong[@class='name']/a"
-    down_xpath = "//div[@class='down-btn']/a/@href"
+    down_xpath = "//div[@class='down-btn']/a/@href"    #D
 
     def position(self):
         results = []
@@ -1101,6 +1103,7 @@ class ItopdogPosition(PositionSpider):
                     results.append((link, title))
         return results
 
+#error 网站打不开
 class MogustorePosition(PositionSpider):
     """
     """
@@ -1127,13 +1130,23 @@ class MogustorePosition(PositionSpider):
 
 class LeidianPosition(PositionSpider):
     """
+    (S,D)
     """
     name = u'雷电手机搜索'
     domain = "www.leidian.com"
     search_url = "http://www.leidian.com/s?q=%s&ie=utf-8&t=&src=shouji_www"
     base_xpath = "//ul[@class='mod-soft-list']/li[@class='clearfix']"
     link_xpath = "child::div[@class='mod-soft-info']/h2/a"
-    down_xpath = "//a[@class='local down']/@href"
+
+    def download_link(self, url):
+        down_link = ''
+        content = self.get_content(url)
+        if content:
+            regx = re.compile('\'downurl\':\'(?P<down_link>.+)\',')
+            match = regx.search(content)
+            if match is not None:
+                down_link = match.group('down_link')
+        return down_link
 
     def position(self):
         results = []
@@ -1148,10 +1161,7 @@ class LeidianPosition(PositionSpider):
                 link = elem.attrib['href']
                 print link
 
-                detail = self.send_request(url=link)
-                down_link = detail.xpath(self.down_xpath)
-                if down_link:
-                    down_link = down_link[0]
+                down_link = self.download_link(link)
                 print down_link
 
                 if self.is_accurate:  # 精确匹配
@@ -1167,12 +1177,14 @@ class LeidianPosition(PositionSpider):
 
 class Position2265(PositionSpider):
     """
+    (D,)
     """
     name = u'2265安卓游戏'
     domain = "www.2265.com"
     search_url = "http://www.2265.com/sea_%s.html"
     base_xpath = "//div[@class='listbox10']/div[@class='tcm']/ul/li"
     link_xpath = "child::div[@class='rtxtinfo']/div[@class='c']/dl/dt/span[1]/a[1]"
+    down_xpath = "//tr[@height='47']/td/a/@href"
 
     def position(self):
         results = []
@@ -1185,9 +1197,28 @@ class Position2265(PositionSpider):
             if self.app_name in title:
                 print title
                 link = self.normalize_url(self.search_url, elem.attrib['href'])
-                results.append((link, title))
+
+                detail = self.send_request(url=link)
+                down_link = detail.xpath(self.down_xpath)
+                if down_link:
+                    down_link = self.normalize_url(
+                        link,
+                        down_link[0]
+                    )
+                print down_link
+
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    results.append((link, title))
         return results
 
+#error 下载外链百度网盘,JS下载
 class sz1001Position(PositionSpider):
     """
     """
@@ -1227,6 +1258,25 @@ class XdownsPosition(PositionSpider):
     content_xpath = "following::div[@id='searchpageName'][1]/a"
     link_xpath = "child::span/a[@class='showtopic']"
 
+    down_url = "http://www.xdowns.com/soft/softdownnew.asp?softid=%s"
+    down_xpath = "//ul[@class='tx_list_7']/li/a/@href"    #down_url
+
+    def download_link(self, url):
+        """
+        url: http://www.xdowns.com/soft/184/phone/Android/2014/Soft_118253.html
+        """
+        down_link = ''
+        appid = url.split('_')[-1].split('.')[0]
+        down_url = self.down_url % appid
+        down_elem = self.send_request(url=down_url)
+        down_link = down_elem.xpath(self.down_xpath)
+        if down_link:
+            down_link = self.normalize_url(
+                down_url,
+                down_link[0]
+            )
+        return down_link
+
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
@@ -1240,11 +1290,23 @@ class XdownsPosition(PositionSpider):
             if self.app_name in title and self.token in content:
                 print title
                 link = elem.attrib['href']
-                results.append((link, title))
+
+                down_link = self.download_link(link)
+                print down_link
+
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    results.append((link, title))
         return results
 
 if __name__ == "__main__":
-    m163 = LeidianPosition(
+    m163 = MeizuPosition(
        u'忍者',
        is_accurate=True,
        has_orm=False,
