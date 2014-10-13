@@ -340,8 +340,27 @@ class Sj91Position(PositionSpider):
     search_url = "http://play.91.com/android/Search/index.html?keyword=%s"
     base_xpath = "//div[@class='box search_list']/dl"
     link_xpath = "child::dt/a"
-    times_xpath = "child::em[@class='cor_blue']/text()"
+    times_xpath = "child::dd/em[@class='cor_blue']/text()"
     down_xpath = "child::dd[last()]/a[@class='spr down_btn']/@href"
+
+    def download_times(self):
+        times = 0
+        etree = self.send_request(self.app_name)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if title == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    rawtimes = times_dom[0]
+                    try:
+                        times = int(rawtimes)
+                    except (TypeError, IndexError, ValueError):
+                        pass
+                    else:
+                        break
+        return times
 
     def position(self):
         results = []
@@ -498,6 +517,7 @@ class Vapp51Position(PositionSpider):
 #error 只能二维码下载，部分收费的
 class OperaPosition(PositionSpider):
     """
+    (D,)
     """
     name = u'Opera'
     domain = "apps.opera.com"
