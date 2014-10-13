@@ -33,7 +33,7 @@ class ZhuShou360Channel(ChannelSpider):
     size_xpath = "//div[@class='pf']/span[@class='s-3'][2]/text()"
 
     def download_times(self):
-        from position import ZhuShou360Position
+        from position2 import ZhuShou360Position
         position = ZhuShou360Position(
             self.title,
             has_orm=False,
@@ -511,7 +511,6 @@ class OperaChannel(ChannelSpider):
         items = etree.xpath(self.fuzzy_xpath)
         for item in items[1:]:
             content = item.text_content().strip()
-            print content
             elems = content.split(self.seperator)
             if len(elems) == 2:
                 label, value = elems
@@ -519,7 +518,6 @@ class OperaChannel(ChannelSpider):
                 label = mapping.get(label, '')
                 if label:
                     result[label] = value.strip()
-                    print label, value
 
         times = self.download_times(
             result.get('download_times', '')
@@ -528,24 +526,225 @@ class OperaChannel(ChannelSpider):
         #down_link = self.download_link(etree)
         #if down_link:
             #storage = self.download_app(down_link)
-        print result
         return result
 
-class AppchinaChannel(ChannelSpider):
+class AppChinaChannel(ChannelSpider):
+    """
+    url: http://www.appchina.com/app/com.netease.rz
+    更新：2014-08-14
+    版本：1.1.0
+    要求：Android 2.2以上
+    """
+    seperator = u'：'
     domain = "www.appchina.com"
+    fuzzy_xpath = "//p[@class='art-content']/text()"
+    times_xpath = "//span[@class='app-statistic']"
 
+    def download_times(self, etree):
+        times = 0
+        translate = u"万"
+        regx = re.compile('[\d\.]+')
 
-class Zhidian3Channel(ChannelSpider):
+        times_dom = etree.xpath(self.times_xpath)[0]
+        content = times_dom.text_content().strip()
+        number_text = content.split('/')[0]
+        match = regx.search(number_text)
+        if match is not None:
+            rawtimes = match.group(0)
+            try:
+                times = float(rawtimes)
+            except (TypeError, IndexError, ValueError):
+                pass
+            else:
+                if translate in number_text:
+                    times = times * 10000
+
+            times = int(times)
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'更新': 'update_time',
+            u'版本': 'human_version',
+            u'要求': 'env',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            if item:
+                elems = item.strip().split(self.seperator)
+                if len(elems) == 2:
+                    label, value = elems
+                    label = label.strip()
+                    label = mapping.get(label, '')
+                    if label:
+                        result[label] = value.strip()
+
+        times = self.download_times(etree)
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+class Zhidian3gChannel(ChannelSpider):
+    """
+    url: http://app.zhidian3g.cn/appSoftware_download.shtml?id=2046
+    应用版本：1.0
+    系统要求：Android 2.0以上
+    软件大小：9.8 M
+    更新时间：2014-09-10
+    """
+    seperator = u'：'
     domain = "app.zhidian3g.cn"
+    fuzzy_xpath = "//div[@class='article_side_app_info']/ul/li"
 
+    def parser(self):
+        result = {}
+        mapping = {
+            u'应用版本': 'human_version',
+            u'系统要求': 'env',
+            u'软件大小': 'size',
+            u'更新时间': 'update_time',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+
+        #times = self.download_times(etree)
+        #result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
 
 class PaojiaoChannel(ChannelSpider):
+    """
+    url: http://kuang.paojiao.cn/danji/detail_1546.html
+    状态：公测    
+    平台：安卓
+    类型：即时    
+    大小：8.6M
+    """
+    seperator = u'：'
     domain = "kuang.paojiao.cn"
+    fuzzy_xpath = "//div[@class='appinfo-content']/p"
 
+    def download_times(self):
+        from position2 import PaojiaoPosition
+        position = PaojiaoPosition(
+            self.title,
+            has_orm=False,
+        )
+        times = position.download_times()
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'状态': 'state',
+            u'平台': 'env',
+            u'类型': 'category',
+            u'大小': 'size',
+        }
+
+        etree = self.get_elemtree(self.url, ignore=True)
+        items = etree.xpath(self.fuzzy_xpath)
+        infos = []
+        for item in items[1:]:
+            content = item.text_content()
+            info = content.split(' ')
+            infos.extend(info)
+
+        for info in infos:
+            elems = info.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+            
+        times = self.download_times()
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
 
 class TompdaChannel(ChannelSpider):
+    """
+    url: http://android.tompda.com/48127.html
+    软件类型：动作游戏                   
+    软件版本：1.5.4
+    资费类型：完全免费                   
+    软件大小：17.6MB
+    软件时间：2011-04-28
+    热门标签：超棒 有创意 画面精美 。。。 好 扣人心弦 非常好 兴奋
+    """
+    seperator = u'：'
     domain = "android.tompda.com"
+    times_xpath = "//div[@class='mainBody1_right']/p/text()"
+    fuzzy_xpath = "//div[@class='mainBody1_left_2_p']/p/text()"
 
+    def download_times(self, etree):
+        times = None
+
+        regx = re.compile('\d+')
+        number_text = etree.xpath(self.times_xpath)[0]
+        if number_text:
+            match = regx.search(number_text)
+            if match is not None:
+                rawtimes = match.group(0)
+                try:
+                    times = int(rawtimes)
+                except (TypeError, ValueError):
+                    pass
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件类型': 'category',
+            u'软件版本': 'human_version',
+            u'资费类型': 'price',
+            u'软件大小': 'size',
+            u'软件时间': 'update_time',
+            u'热门标签': 'tag',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        items = [x.strip() for x in items if x.strip()]    #去除空格元素
+        infos = []
+        for item in items:
+            if item:
+                content = item.strip().replace('\t', '')
+                print content+'---'
+                info = content.split(' ')
+                print len(info)
+                #infos.extend(info)
+                
+        #elems = content.split(self.seperator)
+
+        times = self.download_times(etree)
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        print result
+        return result
 
 class BorporChannel(ChannelSpider):
     domain = "www.borpor.com"
@@ -603,6 +802,16 @@ class Channel2265(ChannelSpider):
     domain = "www.2265.com"
 
 if __name__ == '__main__':
+    zhushou360 = ZhuShou360Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://zhushou.360.cn/detail/index/soft_id/95487?recrefer=SE_D_360',
+        title=u'360浏览器'
+    )
+    #zhushou360.run()
+
     mi = MiChannel(
         channellink=1,
         app_uuid='1',
@@ -691,4 +900,44 @@ if __name__ == '__main__':
         url='http://apps.opera.com/zh_cn/saasfet4744.html',
         title=u'忍者急襲'
     )
-    opera.run()
+    #opera.run()
+
+    appchina = AppChinaChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.appchina.com/app/com.netease.rz',
+        title=u'忍者必须死2'
+    )
+    #appchina.run()
+
+    zhidian3g = Zhidian3gChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://app.zhidian3g.cn/appSoftware_download.shtml?id=2046',
+        title=u'忍者刷刷刷'
+    )
+    #zhidian3g.run()
+
+    paojiao = PaojiaoChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://kuang.paojiao.cn/danji/detail_1546.html',
+        title=u'迷你忍者'
+    )
+    #paojiao.run()
+
+    tompda = TompdaChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://android.tompda.com/48127.html',
+        title=u'水果忍者高清中文版 Fruit Ninja HD',
+    )
+    tompda.run()

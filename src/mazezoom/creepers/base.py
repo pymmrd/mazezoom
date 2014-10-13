@@ -337,7 +337,7 @@ class ChannelSpider(CreeperBase):
 
     def send_request(self, url, tree=True, ignore=False, charset=None, data=None):
         msg = 'URL:%s' % url
-        logger.info(msg)
+        self.logger.info(msg)
         if tree:
             #获取页面dom树
             etree = self.get_elemtree(url, data=data, ignore=ignore, charset=charset)

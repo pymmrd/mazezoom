@@ -38,6 +38,30 @@ class ZhuShou360Position(PositionSpider):
     base_xpath = "//div[@class='SeaCon']/ul/li"
     link_xpath = "child::dl/dd/h3/a"
     down_xpath = "child::div[@class='seaDown']/div[@class='download comdown']/a/@href"    #S
+    times_xpath = "child::div[@class='seaDown']//p[@class='downNum']/text()"
+
+    def download_times(self):
+        times = 0
+        regx = re.compile('\d+')
+        etree = self.send_request(self.app_name)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if title == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    rawtimes = times_dom[0]
+                    match = regx.search(rawtimes)
+                    if match is not None:
+                        rawtimes = match.group(0)
+                        try:
+                            times = int(rawtimes)
+                        except (TypeError, IndexError, ValueError):
+                            pass
+                        else:
+                            break
+        return times
 
     def download_link(self, etree):
         down_link = ''
@@ -559,6 +583,37 @@ class AppChinaPosition(PositionSpider):
     base_xpath = "//ul[@class='app-list']/li[@class='has-border app']"
     link_xpath = "child::div[@class='app-info']/h1[@class='app-name']/a"
     down_xpath = "child::div[@class='app-intro']/a[@class='download-now has-border']/@href"
+    times_xpath = "child::div[@class='app-info']/span[@class='download-count']/text()"
+
+    def download_times(self):
+        times = 0
+        translate = u"万"
+        regx = re.compile('[\d\.]+')
+        etree = self.send_request(self.app_name)
+        etree2 = self.send_request(self.app_name, url=self.search_url2)
+        items = etree.xpath(self.base_xpath)
+        items2 = etree2.xpath(self.base_xpath)
+        items.extend(items2)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if title == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    number_text = times_dom[0]
+                    match = regx.search(number_text)
+                    if match is not None:
+                        rawtimes = match.group(0)
+                        try:
+                            times = float(rawtimes)
+                        except (TypeError, IndexError, ValueError):
+                            pass
+                        else:
+                            if translate in number_text:
+                                times = times * 10000
+
+                        times = int(times)
+        return times
 
     def position(self):
         results = []
@@ -649,7 +704,33 @@ class PaojiaoPosition(PositionSpider):
     base_xpath = "//ul[@id='ajaxContainer']/li"
     link_xpath = "child::a[@class='module-list-wrap cf tapLink']"
     down_xpath = "child::span[@class='btn-green download_apk']/@href"
+    times_xpath = "child::a[@class='module-list-wrap cf tapLink']//span[@class='item'][1]/text()"
+    
 
+    def download_times(self):
+        times = 0
+        regx = re.compile('\d+')
+        quote_app = self.quote_args(self.app_name)
+        url = self.search_url % quote_app
+        etree = self.get_elemtree(url, ignore=True)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.attrib['title'].strip()
+            if title == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    rawtimes = times_dom[0]
+                    match = regx.search(rawtimes)
+                    if match is not None:
+                        rawtimes = match.group(0)
+                        try:
+                            times = int(rawtimes)
+                        except (TypeError, IndexError, ValueError):
+                            pass
+                        else:
+                            break
+        return times
 
     def download_link(self, etree):
         down_link = ''
@@ -697,6 +778,7 @@ class PaojiaoPosition(PositionSpider):
 #error 下载页面报错
 class TompdaPosition(PositionSpider):
     """
+    (D,)
     """
     name = u'TOMPDA'
     domain = "android.tompda.com"
