@@ -1351,7 +1351,7 @@ class Position2265(PositionSpider):
         return results
 
 #error 下载外链百度网盘,JS下载
-class sz1001Position(PositionSpider):
+class Sz1001Position(PositionSpider):
     """
     """
     name = u'1001下载乐园'
