@@ -730,13 +730,340 @@ class TompdaChannel(ChannelSpider):
         infos = []
         for item in items:
             if item:
-                content = item.strip().replace('\t', '')
-                print content+'---'
+                regx = re.compile(u'\xa0+')
+                content = re.sub(regx, ' ', item)
                 info = content.split(' ')
-                print len(info)
-                #infos.extend(info)
+                infos.extend(info)
                 
-        #elems = content.split(self.seperator)
+        for info in infos:
+            elems = info.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+
+        times = self.download_times(etree)
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+class BorporChannel(ChannelSpider):
+    """
+    url: http://www.borpor.com/enddisplay.php?gid=17041
+    资费： 	0 
+    作者： 	wan123
+    版本： 	V1.8.7
+    发布时间： 	2014-08-12
+    软件大小： 	8.00 MB
+    """
+    seperator = u'：'
+    domain = "www.borpor.com"
+    fuzzy_xpath = "//table[@class='f-11-b3b3b3']/tr"
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'资费': 'price',
+            u'作者': 'company',
+            u'版本': 'human_version',
+            u'发布时间': 'update_time',
+            u'软件大小': 'size',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items[2:-2]:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+
+        #times = self.download_times(etree)
+        #result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+class MaopaokeChannel(ChannelSpider):
+    """
+    url: http://store.nearme.com.cn/product/0000/563/963_1.html?from=1152_2
+    类型：网游-即时 
+    版本：2.3.0 
+    游戏包大小：66.8M 
+    上线时间：2014.09.04
+    标签：格斗 动漫 忍者 王者 动作
+    """
+    seperator = u'：'
+    domain = "www.maopaoke.com"
+    fuzzy_xpath = "//div[@class='app-info']/div[@class='row']"
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'类别': 'category',
+            u'版本': 'human_version',
+            u'游戏包大小': 'size',
+            u'上线时间': 'update_time',
+            u'标签': 'tag',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        infos = []
+        for item in items:
+            content = item.text_content().strip()
+            info = content.split('\n')
+            infos.extend(info)
+
+        for info in infos:
+            elems = info.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+
+        #times = self.download_times(etree)
+        #result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+#404
+class SoyingyongChannel(ChannelSpider):
+    domain = "www.soyingyong.com"
+
+class BaikceChannel(ChannelSpider):
+    """
+    url: http://www.baikce.cn/app/67362.html
+    APK大小： 	50KB
+    更新日期： 	2014-08-01
+    软件授权： 	软件
+    最新版本： 	网页版
+    适用平台： 	Android系统平台
+    开发者官方： 	www.baikce.cn/360/
+    """
+    seperator = u'：'
+    domain = "apps.baikce.cn"
+    times_xpath = "//span[@class='col-94 download-num'][1]"
+    fuzzy_xpath = "//div[@class='detailed-info']/table/tbody/tr"
+
+    def download_times(self, etree):
+        times = None
+
+        regx = re.compile('\d+')
+        dom = etree.xpath(self.times_xpath)[0]
+        number_text = dom.text_content().strip()
+        if number_text:
+            match = regx.search(number_text)
+            if match is not None:
+                rawtimes = match.group(0)
+                try:
+                    times = int(rawtimes)
+                except (TypeError, ValueError):
+                    pass
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'APK大小': 'size',
+            u'更新日期': 'update_time',
+            u'版本授权': 'authorize',
+            u'最新版本': 'human_version',
+            u'适用平台': 'env',
+            u'开发者官方': 'company',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+
+        times = self.download_times(etree)
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+class SoftonicChannel(ChannelSpider):
+    """
+    url: http://ninja-rush.softonic.cn/android
+    软件授权:免费软件 
+    语言:简体中文 
+    操作系统:Android
+    最新版本:1.21 Android 2012-02-17 
+    最近一个月下载量:224 
+    开发者:http://www.feelingtouch.com/
+    """
+    seperator = u'：'
+    domain = "www.softonic.cn"
+    fuzzy_xpath = "//div[@id='program_info']/dl/dt"
+    value_xpath = "following::dd[1]"
+    company_xpath = "////div[@id='program_info']/dl/dd[last()]/a/@href"
+
+    def download_times(self):
+        from position2 import SoftonicPosition
+        position = SoftonicPosition(
+            self.title,
+            has_orm=False,
+        )
+        times = position.download_times()
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件授权': 'authorize',
+            u'语言': 'language',
+            u'操作系统': 'env',
+            u'最新版本': 'human_version',
+            u'开发者': 'company',
+        }
+
+        etree = self.get_elemtree(self.url, ignore=True)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items[:-1]:
+            label = item.text_content().strip()[:-1]
+            value_dom = item.xpath(self.value_xpath)[0]
+            value = value_dom.text_content()
+            label = mapping.get(label, '')
+            if label:
+                result[label] = value.strip()
+        company_site = etree.xpath(self.company_xpath)[0]
+        result['company'] = company_site
+
+        times = self.download_times()
+        result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        return result
+
+class A280Channel(ChannelSpider):
+    """
+    url: http://www.a280.com/soft/haidaodazhanrenzhehaohuaban.v2.1.0
+    所属分类：动作冒险
+    系统需求：1.6以上
+    界面语言：英文
+    软件类型：免费
+    软件大小：8.36M
+    更新时间：2012-04-14
+    """
+    seperator = u'：'
+    domain = "www.a280.cn"
+    fuzzy_xpath = "//div[@class='des']/ul/li"
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'所属分类': 'category',
+            u'系统需求': 'env',
+            u'界面语言': 'language',
+            u'软件类型': 'price',
+            u'软件大小': 'size',
+            u'更新时间': 'update_time',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            print content
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+                    print label, value
+
+        #times = self.download_times(etree)
+        #result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        print result
+        return result
+
+class MeizumiChannel(ChannelSpider):
+    """
+    url: http://www.meizumi.com/apk/2408.html
+    游戏名称：豆腐忍者 
+    应用包名：com.idreamsky.tofu
+    最新版本：1.3.5
+    支持系统：Android 1.5
+    游戏分类：益智休闲
+    界面语言：简体中文
+    游戏大小：21.2 MB
+    更新日期：2012-01-14
+    """
+    seperator = u'：'
+    domain = "www.meizumi.com"
+    times_xpath = "//div[@class='info_row3']/span[1]"
+    fuzzy_xpath = "//div[@class='app_info']/p"
+
+    def download_times(self, etree):
+        times = None
+
+        regx = re.compile('\d+')
+        dom = etree.xpath(self.times_xpath)[0]
+        number_text = dom.text_content().strip()
+        if number_text:
+            match = regx.search(number_text)
+            if match is not None:
+                rawtimes = match.group(0)
+                try:
+                    times = int(rawtimes)
+                except (TypeError, ValueError):
+                    pass
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'游戏名称': 'name',
+            u'最新版本': 'human_version',
+            u'支持系统': 'env',
+            u'游戏分类': 'category',
+            u'界面语言': 'language',
+            u'游戏大小': 'size',
+            u'更新时间': 'update_time',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            print content
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+                    print label, value
 
         times = self.download_times(etree)
         result['download_times'] = times
@@ -746,45 +1073,117 @@ class TompdaChannel(ChannelSpider):
         print result
         return result
 
-class BorporChannel(ChannelSpider):
-    domain = "www.borpor.com"
-
-
-class MaopaokeChannel(ChannelSpider):
-    domain = "www.maopaoke.com"
-
-
-class SoyingyongChannel(ChannelSpider):
-    domain = "www.soyingyong.com"
-
-
-class BaikceChannel(ChannelSpider):
-    domain = "apps.baikce.cn"
-
-
-class SoftonicChannel(ChannelSpider):
-    domain = "www.softonic.cn"
-
-
-class A280Channel(ChannelSpider):
-    domain = "www.a280.cn"
-
-
-class MeizumiChannel(ChannelSpider):
-    domain = "www.meizumi.com"
-
-
 class CncrkChannel(ChannelSpider): 
+    """
+    url: http://www.cncrk.com/downinfo/65995.html
+    软件大小：47 MB 【我要点评？】
+    软件语言：简体中文
+    软件类别：手机软件 / 免费软件 / Android
+    运行环境：Android
+    更新时间：2014/10/12 13:13:20
+    软件标签：水果忍者休闲游戏
+    """
+    seperator = u'：'
     domain = "www.cncrk.com"
+    charset = 'gb2312'
+    fuzzy_xpath = "//div[@id='softinfo']/ul/li"
 
+    def parser(self):
+        result = {}
+        mapping = {
+            u'软件大小': 'size',
+            u'软件语言': 'language',
+            u'软件类别': 'category',
+            u'运行环境': 'env',
+            u'更新时间': 'update_time',
+            u'软件标签': 'tag',
+        }
 
+        #etree = self.send_request(self.url)
+        etree = self.get_elemtree(self.url, ignore=True)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+                    print label, value
+
+        #times = self.download_times(etree)
+        #result['download_times'] = times
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        print result
+        return result
+
+#error 网站打不开
 class ZerosjChannel(ChannelSpider):
     domain = "www.zerosj.com"
 
 
 class AppdhChannel(ChannelSpider):
+    """
+    url: http://www.appdh.com/app/renzhetuxi-ninja-rush/
+    分类：冒险类
+    版本：1.20
+    更新：2011-12-13
+    语言：简体中文
+    固件：Android 2.0 以上
+    作者：Feelingtouch Inc.
+    官网：http://www.feelingtouch.com
+    下载：463 次
+    """
+    seperator = u'：'
     domain = "www.appdh.com"
+    fuzzy_xpath = "//p[@class='pb_2']"
 
+    def download_times(self, dtimes):
+        regx = re.compile('\d+')
+        match = regx.search(dtimes)
+        if match is not None:
+            rawtimes = match.group(0)
+            try:
+                times = int(rawtimes)
+            except (TypeError, ValueError):
+                times = 0
+        return times
+
+    def parser(self):
+        result = {}
+        mapping = {
+            u'分类': 'category',
+            u'版本': 'human_version',
+            u'更新': 'update_time',
+            u'固件': 'env',
+            u'作者': 'company',
+        }
+
+        etree = self.send_request(self.url)
+        items = etree.xpath(self.fuzzy_xpath)
+        for item in items:
+            content = item.text_content().strip()
+            print content
+            elems = content.split(self.seperator)
+            if len(elems) == 2:
+                label, value = elems
+                label = label.strip()
+                label = mapping.get(label, '')
+                if label:
+                    result[label] = value.strip()
+                    print label, value
+
+        times = result.get('download_times', '')
+        result['download_times'] = self.download_times(times)
+        #down_link = self.download_link(etree)
+        #if down_link:
+            #storage = self.download_app(down_link)
+        print result
+        return result
 
 class ItopdogChannel(ChannelSpider):
     domain = "www.itopdog.cn"
@@ -940,4 +1339,74 @@ if __name__ == '__main__':
         url='http://android.tompda.com/48127.html',
         title=u'水果忍者高清中文版 Fruit Ninja HD',
     )
-    tompda.run()
+    #tompda.run()
+
+    borpor = BorporChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.borpor.com/enddisplay.php?gid=17041',
+        title=u'魔界忍者-2',
+    )
+    #borpor.run()
+
+    maopaoke = MaopaokeChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.maopaoke.com/open/app/2690',
+        title=u'格斗之皇',
+    )
+    #maopaoke.run()
+
+    baikce = BaikceChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.baikce.cn/app/67362.html',
+        title=u'音乐',
+    )
+    #baikce.run()
+
+    softonic = SoftonicChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://ninja-rush.softonic.cn/android',
+        title=u'忍者突袭 1.21',
+    )
+    #softonic.run()
+
+    a280 = A280Channel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.a280.com/soft/haidaodazhanrenzhehaohuaban.v2.1.0',
+        title=u'海盗大战忍者豪华版 v2.1.0',
+    )
+    #a280.run()
+
+    meizumi = MeizumiChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.meizumi.com/apk/2408.html',
+        title=u'豆腐忍者',
+    )
+    #meizumi.run()
+
+    cncrk = CncrkChannel(
+        channellink=1,
+        app_uuid='1',
+        app_version=1,
+        channel=1,
+        url='http://www.cncrk.com/downinfo/65995.html',
+        title=u'水果忍者中文版 v1.9.6 官方免费版',
+    )
+    #cncrk.run()

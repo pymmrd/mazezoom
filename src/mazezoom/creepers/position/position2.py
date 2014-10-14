@@ -950,6 +950,9 @@ class SouyingyongPosition(PositionSpider):
 #error 网站打不开
 class BaikcePosition(PositionSpider):
     """
+    http://www.baikce.cn/
+    搜索404
+    (D,)
     """
     name = u'APP安卓市场'
     domain = "apps.baikce.cn"
@@ -974,12 +977,39 @@ class BaikcePosition(PositionSpider):
 #error 盗链
 class SoftonicPosition(PositionSpider):
     """
+    (S,D)
     """
     name = u'软件天堂'
     domain = "www.softonic.cn"
     search_url = "http://www.softonic.cn/s/%s:android"
     base_xpath = "//ol[@id='program_list']/li[@class='list-program-item js-listed-program']"
     link_xpath = "child::div[@class='list-program-column-first']/h5/a"
+    times_xpath = "child::div[2]/dl[2]/dt/text()"
+
+    def download_times(self):
+        times = 0
+        regx = re.compile('\d+')
+        quote_app = self.quote_args(self.app_name)
+        url = self.search_url % quote_app
+        etree = self.get_elemtree(url, ignore=True)
+        items = etree.xpath(self.base_xpath)
+        for item in items:
+            elem = item.xpath(self.link_xpath)[0]
+            title = elem.text_content().strip()
+            if title == self.app_name:
+                times_dom = item.xpath(self.times_xpath)
+                if times_dom:
+                    rawtimes = times_dom[0].replace(',', '')
+                    match = regx.search(rawtimes)
+                    if match is not None:
+                        rawtimes = match.group(0)
+                        try:
+                            times = int(rawtimes)
+                        except (TypeError, IndexError, ValueError):
+                            pass
+                        else:
+                            break
+        return times
     
     def position(self):
         results = []
@@ -1080,7 +1110,7 @@ class CncrkPosition(PositionSpider):
     base_xpath = "//div[@class='results']/ul/li"
     link_xpath = "child::span[@class='softname']/a[@class='top']"
     token_xpath = "child::span[@class='softname']/a[1]/text()"
-        
+
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
