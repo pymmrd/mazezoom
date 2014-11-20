@@ -133,12 +133,12 @@ class MiPosition(PositionSpider):
                             link,
                             down_link[0]
                         )
-                    match = self.verify_app(
-                        down_link=down_link,
-                    )
-                    if match:
-                        results.append((link, title))
-                        break
+                        match = self.verify_app(
+                            down_link=down_link,
+                        )
+                        if match:
+                            results.append((link, title))
+                            break
                 else:
                     results.append((link, title))
         return results
@@ -641,7 +641,7 @@ class MaopaokePosition(PositionSpider):
                     link = self.normalize_url(self.search_url, elem.attrib['href'])
                     detail = self.send_request(url=link)
                     down_link = self.download_link(detail)
-                        match = self.verify_app(
+                    match = self.verify_app(
                         down_link=down_link,
                     )
                     if match:
@@ -1394,16 +1394,14 @@ class MeizuPosition(PositionSpider):
         content = content.decode(self.charset)
         output = json.loads(content)
         appList = output.get('value', {}).get('list', [])
-        print len(appList)
         #获取搜索结果title和链接
         for app in appList:
             link = self.detail_url % app.get('package_name', '')
             title = app.get('name', '').strip()
-            print title, link
-            #downcount = app.get('download_count', '')
             if self.app_name in title:
                         results.append((link, title))
         return results
+
 if __name__ == "__main__":
     d = ZhuShou360Position(
         u'水果忍者',
