@@ -121,7 +121,7 @@ class OyksoftPosition(PositionSpider):
                 parent.attrib['href']
             )
             title = item.text_content().strip()
-            if self.android_token in title:
+            if self.android_token in title and self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
@@ -183,7 +183,8 @@ class GameDogPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             low_title = title.lower()
-            if self.iphone not in low_title or self.ipad not in low_title:
+            if self.iphone not in low_title or self.ipad not in low_title and \
+                self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     links = self.mixin(link, title)
                     if links:
@@ -215,7 +216,7 @@ class Mm10086Position(PositionSpider):
                     dom.attrib['href']
                 )
                 title = dom.text_content()
-                if self.app_name in title:
+                if self.app_name in title or title in self.app_name:
                     down_link = item.xpath(self.down_xpath)[0]
                     down_link = self.normalize_url(
                         self.search_url,
@@ -256,7 +257,7 @@ class Position520Apk(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.url_token in link:
                     if self.is_accurate:
                         match = self.verify_app(
@@ -290,7 +291,7 @@ class Apk3Position(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(url=link)
                     if match:
@@ -326,7 +327,8 @@ class DownzaPosition(PositionSpider):
             title = item.text_content().strip()
             detail = self.send_request(url=link)
             android = detail.xpath(self.andorid_xpath)
-            if android and android[0].strip() == self.android_token:
+            if android and android[0].strip() == self.android_token and \
+                self.app_name in title or title in self.app_name:
 
                 down_link = detail.xpath(self.down_xpath)
                 if down_link:
@@ -388,7 +390,7 @@ class AnZhiPosition(PositionSpider):
                 item.xpath(self.link_xpath)[0]
             )
             title = item.xpath(self.title_xpath)[0]
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link = self.download_link(item)
                     match = self.verify_app(
@@ -428,22 +430,23 @@ class AngeeksPosition(PositionSpider):
                 item.xpath(self.link_xpath)[0]
             )
             title = item.xpath(self.title_xpath)[0]
-            down_link = item.xpath(self.down_xpath)
-            if down_link:
-                down_link = down_link[0]
-                down_link = self.normalize_url(
-                    self.search_url,
-                    down_link
-                )
-            if self.is_accurate:  # 精确匹配
-                match = self.verify_app(
-                    down_link=down_link,
-                )
-                if match:
+            if self.app_name in title or title in self.app_name:
+                down_link = item.xpath(self.down_xpath)
+                if down_link:
+                    down_link = down_link[0]
+                    down_link = self.normalize_url(
+                        self.search_url,
+                        down_link
+                    )
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        down_link=down_link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
                     results.append((link, title))
-                    break
-            else:
-                results.append((link, title))
         return results
 
 
@@ -473,13 +476,14 @@ class JiQiMaoPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:
-                match = self.verify_app(link)
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:
+                    match = self.verify_app(link)
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
                     results.append((link, title))
-                    break
-            else:
-                results.append((link, title))
         return results
 
 
@@ -504,13 +508,14 @@ class SjapkPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:
-                match = self.verify_app(url=link)
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:
+                    match = self.verify_app(url=link)
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
                     results.append((link, title))
-                    break
-            else:
-                results.append((link, title))
         return results
 
 
@@ -571,17 +576,18 @@ class CoolApkPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:
-                down_link = self.download_link(link)
-                if down_link:
-                    match = self.verify_app(
-                        down_link=down_link,
-                    )
-                    if match:
-                        results.append((link, title))
-                        break
-            else:
-                results.append((link, title))
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:
+                    down_link = self.download_link(link)
+                    if down_link:
+                        match = self.verify_app(
+                            down_link=down_link,
+                        )
+                        if match:
+                            results.append((link, title))
+                            break
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -644,7 +650,7 @@ class CrossmoPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     down_link = self.download_link(link)
                     match = self.verify_app(
@@ -694,7 +700,7 @@ class ShoujiBaiduSpider(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
@@ -727,16 +733,17 @@ class Position7xz(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:  # 精确匹配
-                match = self.verify_app(
-                    url=link,
-                )
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        url=link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    #模糊匹配
                     results.append((link, title))
-                    break
-            else:
-                #模糊匹配
-                results.append((link, title))
         return results
 
 
@@ -763,17 +770,18 @@ class PC6Position(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.is_accurate:  # 精确匹配
-                link = self.normalize_url(self.search_url, link)
-                match = self.verify_app(
-                    url=link,
-                )
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    link = self.normalize_url(self.search_url, link)
+                    match = self.verify_app(
+                        url=link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    #模糊匹配
                     results.append((link, title))
-                    break
-            else:
-                #模糊匹配
-                results.append((link, title))
         return results
 
 
@@ -800,16 +808,17 @@ class Position3533(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.is_accurate:  # 精确匹配
-                match = self.verify_app(
-                    url=link,
-                )
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        url=link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    #模糊匹配
                     results.append((link, title))
-                    break
-            else:
-                #模糊匹配
-                results.append((link, title))
         return results
 
 
@@ -836,16 +845,17 @@ class Apk8Position(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.is_accurate:  # 精确匹配
-                match = self.verify_app(
-                    url=link,
-                )
-                if match:
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    match = self.verify_app(
+                        url=link,
+                    )
+                    if match:
+                        results.append((link, title))
+                        break
+                else:
+                    #模糊匹配
                     results.append((link, title))
-                    break
-            else:
-                #模糊匹配
-                results.append((link, title))
         return results
 
 
@@ -872,7 +882,8 @@ class XiaZaiZhiJiaPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.app_name in title and self.andorid_token in title.lower():
+            if self.app_name in title or title in self.app_name and \
+                self.andorid_token in title.lower():
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
@@ -904,7 +915,7 @@ class AnRuanPosition(PositionSpider):
             link = elem.attrib['href']
             title = elem.text_content().strip()
             down_link = item.xpath(self.down_xpath)
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     if down_link:
                         down_link = down_link[0]
@@ -1007,22 +1018,23 @@ class PcHomePosition(PositionSpider):
             link = elem.attrib['href']
             title = elem.text_content()
             is_android, down_link, referer = self.tell_android(title, link)
-            if is_android:
-                if self.is_accurate:  # 精确匹配
-                    headers = {
-                        'Host': 'dl-sh-ctc-2.pchome.net',
-                        'Referer': referer
-                    }
-                    self.update_request_headers(headers)
-                    match = self.verify_app(
-                        down_link=down_link,
-                    )
-                    if match:
+            if self.app_name in title or title in self.app_name:
+                if is_android:
+                    if self.is_accurate:  # 精确匹配
+                        headers = {
+                            'Host': 'dl-sh-ctc-2.pchome.net',
+                            'Referer': referer
+                        }
+                        self.update_request_headers(headers)
+                        match = self.verify_app(
+                            down_link=down_link,
+                        )
+                        if match:
+                            results.append((link, title))
+                            break
+                    else:
+                        #模糊匹配
                         results.append((link, title))
-                        break
-                else:
-                    #模糊匹配
-                    results.append((link, title))
         return results
 
 
@@ -1046,7 +1058,7 @@ class HiapkPosition(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
             detail = self.get_elemtree(link)
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     down_link = detail.xpath(self.down_xpath)
                     if down_link:
@@ -1082,7 +1094,7 @@ class GfanPosition(PositionSpider):
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
             detail = self.get_elemtree(link)
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:    # 精确匹配
                     down_link = detail.xpath(self.down_xpath)
                     if down_link:
@@ -1127,7 +1139,7 @@ class Apk91Position(PositionSpider):
                 item.attrib['href']
             )
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:    # 精确匹配
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1189,7 +1201,7 @@ class It168Position(PositionSpider):
                     is_android = True
                     break
 
-            if is_android:
+            if is_android and self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1237,7 +1249,7 @@ class QQPosition(PositionSpider):
             link = self.detail_url % app.get('pkgName', '')
             title = app.get('appName', '').strip()
             #downcount = app['appDownCount']
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1297,7 +1309,8 @@ class MumayiPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.attrib.get('title', '').strip()
-            if self.app_name in title.lower():
+            low_title = title.lower()
+            if self.app_name in low_title or low_title in self.app_name:
                 if self.is_accurate:    # 精确匹配
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1342,7 +1355,7 @@ class ZolPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content().strip()
             low_title = title.lower()
-            if self.token in link and self.app_name in title:
+            if self.token in link and self.app_name in title or title in self.app_name:
                 is_continue = False
                 for itoken in self.iphone_token:
                     if itoken in low_title:
@@ -1422,7 +1435,7 @@ class PcOnlinePosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     headers = {'Host': self.domain, 'Referer': link}
                     self.update_request_headers(headers)
@@ -1483,19 +1496,19 @@ class SinaPosition(PositionSpider):
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
-            title = item.text_content().strip()
-            if self.is_accurate:  # 精确匹配
-                down_link = self.download_link(link)
-                if down_link:
-                    headers = {'Referer': link}
-                    self.update_request_headers(headers)
-                    match = self.verify_app(
-                        down_link=down_link,
-                    )
-                    if match:
-                        results.append((link, title))
-            else:
-                results.append((link, title))
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    down_link = self.download_link(link)
+                    if down_link:
+                        headers = {'Referer': link}
+                        self.update_request_headers(headers)
+                        match = self.verify_app(
+                            down_link=down_link,
+                        )
+                        if match:
+                            results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -1532,16 +1545,17 @@ class DuotePosition(PositionSpider):
                 item.attrib['href']
             )
             title = item.text_content().strip()
-            if self.is_accurate:  # 精确匹配
-                down_link = self.download_link(link)
-                if down_link:
-                    match = self.verify_app(
-                        down_link=down_link,
-                    )
-                    if match:
-                        results.append((link, title))
-            else:
-                results.append((link, title))
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:  # 精确匹配
+                    down_link = self.download_link(link)
+                    if down_link:
+                        match = self.verify_app(
+                            down_link=down_link,
+                        )
+                        if match:
+                            results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -1566,7 +1580,7 @@ class ImobilePosition(PositionSpider):
                 item.attrib['href']
             )
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1603,7 +1617,7 @@ class NduoaPosition(PositionSpider):
             link = item.xpath(self.link_xpath)[0]
             link = self.normalize_url(self.search_url, link)
             title = item.xpath(self.title_xpath)[0].strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link = item.xpath(self.down_xpath)
                     if down_link:
@@ -1644,23 +1658,24 @@ class Android155Position(PositionSpider):
                 item.attrib['href']
             )
             title = item.text_content().strip()
-            if self.is_accurate:
-                detail = self.get_elemtree(link)
-                down_link = detail.xpath(self.down_xpath)
-                if down_link:
-                    down_link = down_link[0]
-                    down_link = self.normalize_url(
-                        self.search_url,
-                        down_link
-                    )
+            if self.app_name in title or title in self.app_name:
+                if self.is_accurate:
+                    detail = self.get_elemtree(link)
+                    down_link = detail.xpath(self.down_xpath)
                     if down_link:
-                        match = self.verify_app(
-                            down_link=down_link,
+                        down_link = down_link[0]
+                        down_link = self.normalize_url(
+                            self.search_url,
+                            down_link
                         )
-                        if match:
-                            results.append((link, title))
-                else:
-                    results.append((link, title))
+                        if down_link:
+                            match = self.verify_app(
+                                down_link=down_link,
+                            )
+                            if match:
+                                results.append((link, title))
+                    else:
+                        results.append((link, title))
         return results
 
 
@@ -1725,7 +1740,7 @@ class Shop958Position(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 is_android = self.platform_token(item)
                 if is_android:
                     if self.is_accurate:
@@ -1767,7 +1782,7 @@ class LiqucnPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib.get('href', '')
             title = elem.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     down_link = item.xpath(self.down_xpath)
                     if down_link:
@@ -1803,7 +1818,7 @@ class CnmoPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1842,7 +1857,7 @@ class CrskyPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1920,7 +1935,7 @@ class DPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib.get('href', '')
             title = elem.attrib.get('title', '').strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link = self.download_link(item)
                     if down_link:
@@ -1953,7 +1968,7 @@ class SjwyxPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -1988,7 +2003,7 @@ class WandoujiaPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link = item.xpath(self.down_xpath)
                     if down_link:
@@ -2020,7 +2035,7 @@ class AnzowPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2066,7 +2081,7 @@ class BkillPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2106,7 +2121,7 @@ class AndroidcnPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2144,7 +2159,7 @@ class SohuPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2197,7 +2212,7 @@ class OnlineDownPosition(PositionSpider):
             link = elem.attrib['href']
             title = elem.xpath("child::i/text()")[0].strip()
             platform = item.xpath(self.token_xpath)[0].strip().lower()
-            if self.app_name in title and platform == self.android_token:
+            if self.app_name in title or title in self.app_name and platform == self.android_token:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     pagedown_link = detail.xpath(self.pagedown_xpath)
@@ -2246,7 +2261,7 @@ class ZhuodownPosition(PositionSpider):
         for item in items:
             link = item.attrib['href']
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     pagedown_link = detail.xpath(self.pagedown_xpath)
@@ -2302,7 +2317,7 @@ class Android159Position(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2345,7 +2360,7 @@ class AibalaPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)[0]
@@ -2382,7 +2397,7 @@ class EoemarketPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content().strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     down_link = detail.xpath(self.down_xpath)
@@ -2422,7 +2437,7 @@ class VmallPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = elem.attrib['href']
             title = elem.text.strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link_raw = item.xpath(self.down_xpath)[0]
                     if down_link_raw:
@@ -2460,7 +2475,7 @@ class ApkolPosition(PositionSpider):
             elem = item.xpath(self.link_xpath)[0]
             link = self.normalize_url(self.search_url, elem.attrib['href'])
             title = elem.attrib['title'].strip()
-            if self.app_name in title:
+            if self.app_name in title or title in self.app_name:
                 if self.is_accurate:
                     down_link = item.xpath(self.down_xpath)
                     if down_link:
@@ -2503,10 +2518,10 @@ class YruanPosition(PositionSpider):
             if match:
                 platform = match.group('platform').strip()
             if platform:
-                if self.token == platform and self.app_name in title:
+                if self.token == platform and self.app_name in title or title in self.app_name:
                     android_list.append((link, title))
             else:
-                if self.app_name in title:
+                if self.app_name in title or title in self.app_name:
                     android_list.append((link, title))
         if self.is_accurate:
             for item in android_list:
