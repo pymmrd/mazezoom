@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
-#Author: zoug
-#Email: b.zougang@gmail.com
-#Date: 2014/08/18
+# Author: zoug
+# Email: b.zougang@gmail.com
+# Date: 2014/08/18
 
 """
 渠道搜索爬虫：
@@ -89,7 +89,6 @@ class OyksoftPosition(PositionSpider):
         chsksum: 校验和
         """
         is_right = False
-        #如果没有传入down_link,就需要向detail页面发送请求
         if not down_link and url:
             etree = self.send_request(url=url)
             down_link = etree.xpath(self.down_xpath)
@@ -109,7 +108,6 @@ class OyksoftPosition(PositionSpider):
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
-        #获取搜索结果title和链接
         items = etree.xpath(self.base_xpath)
         for item in items:
             strong = item.xpath(
@@ -121,7 +119,11 @@ class OyksoftPosition(PositionSpider):
                 parent.attrib['href']
             )
             title = item.text_content().strip()
-            if self.android_token in title and self.app_name in title or title in self.app_name:
+            if (
+                self.android_token in title and
+                self.app_name in title or
+                title in self.app_name
+            ):
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
@@ -130,7 +132,7 @@ class OyksoftPosition(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
+                    # 模糊匹配
                     results.append((link, title))
         return results
 
@@ -183,8 +185,12 @@ class GameDogPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content()
             low_title = title.lower()
-            if self.iphone not in low_title or self.ipad not in low_title and \
-                self.app_name in title or title in self.app_name:
+            if (
+                self.iphone not in low_title or
+                self.ipad not in low_title and
+                self.app_name in title or
+                title in self.app_name
+            ):
                 if self.is_accurate:  # 精确匹配
                     links = self.mixin(link, title)
                     if links:
@@ -247,8 +253,8 @@ class Position520Apk(PositionSpider):
     xpath = "//h3[@class='c-title']/a"
     url_token = '/android/'  # 通过url token进一步准确定位
     down_xpath = "//a[@class='icon downbd']/@href"
-        #"//a[@class='icon_downdx']/@href",
-        #"//a[@class='icon_downlt']/@href",
+    # "//a[@class='icon_downdx']/@href",
+    # "//a[@class='icon_downlt']/@href",
 
     def position(self):
         results = []
@@ -298,7 +304,7 @@ class Apk3Position(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
+                    # 模糊匹配
                     results.append((link, title))
         return results
 
@@ -327,8 +333,11 @@ class DownzaPosition(PositionSpider):
             title = item.text_content().strip()
             detail = self.send_request(url=link)
             android = detail.xpath(self.andorid_xpath)
-            if android and android[0].strip() == self.android_token and \
-                self.app_name in title or title in self.app_name:
+            if (
+                android and android[0].strip() == self.android_token
+                and self.app_name in title or
+                title in self.app_name
+            ):
 
                 down_link = detail.xpath(self.down_xpath)
                 if down_link:
@@ -368,7 +377,7 @@ class AnZhiPosition(PositionSpider):
     down_url = "http://www.anzhi.com/dl_app.php?s=%s&n=7"
 
     def download_link(self, etree):
-        #opendown(1322730);
+        # opendown(1322730);
         down_link = ''
         down_text = etree.xpath(self.down_xpath)
         if down_text:
@@ -409,7 +418,6 @@ class AngeeksPosition(PositionSpider):
     >>>angeek = AngeeksPosition()
     >>>angeek.run(u'飞机')
     """
-    #验证下载个数
     name = u'安极网'
     charset = 'gbk'
     quanlity = 10
@@ -543,7 +551,7 @@ class CoolApkPosition(PositionSpider):
                 " ex-apk-view-btns']/a/@onclick"
             )
             extra_raw = etree.xpath(extra_xpath)
-            #onDownloadApk(0);
+            # onDownloadApk(0);
             if extra_raw:
                 extra_raw = extra_raw[0]
                 match = extra_regx.match(extra_raw)
@@ -661,7 +669,6 @@ class CrossmoPosition(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -709,7 +716,6 @@ class ShoujiBaiduSpider(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -742,7 +748,6 @@ class Position7xz(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -780,7 +785,6 @@ class PC6Position(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -817,7 +821,6 @@ class Position3533(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -854,7 +857,6 @@ class Apk8Position(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -882,8 +884,10 @@ class XiaZaiZhiJiaPosition(PositionSpider):
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
             title = item.text_content()
-            if self.app_name in title or title in self.app_name and \
-                self.andorid_token in title.lower():
+            if (
+                self.app_name in title or title in self.app_name and
+                self.andorid_token in title.lower()
+            ):
                 if self.is_accurate:  # 精确匹配
                     match = self.verify_app(
                         url=link,
@@ -892,7 +896,6 @@ class XiaZaiZhiJiaPosition(PositionSpider):
                         results.append((link, title))
                         break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
@@ -926,19 +929,18 @@ class AnRuanPosition(PositionSpider):
                             results.append((link, title))
                             break
                 else:
-                    #模糊匹配
                     results.append((link, title))
         return results
 
 
 class PcHomePosition(PositionSpider):
-    #charset = 'gbk'
-    name=u"电脑之家"
+    # charset = 'gbk'
+    name = u"电脑之家"
     domain = "www.pchome.net"
-    #search_url = ("http://search.pchome.net/download.php"
+    # search_url = ("http://search.pchome.net/download.php"
     #              "?wd=%s&submit=%CB%D1+%CB%F7")
     search_url = "http://download.pchome.net/search-%s---0-1.html"
-    #xpath = "//div[@class='tit']/a"
+    # xpath = "//div[@class='tit']/a"
     base_xpath = "//dd[@class='clearfix']"
     seperator = u"："
     times_xpath = "child::div[@class='dw']/span/text()"
@@ -1033,7 +1035,6 @@ class PcHomePosition(PositionSpider):
                             results.append((link, title))
                             break
                     else:
-                        #模糊匹配
                         results.append((link, title))
         return results
 
@@ -1185,7 +1186,7 @@ class It168Position(PositionSpider):
             title = item.text_content().strip()
             low_title = title.lower()
 
-            #准确验证andorid
+            # 准确验证andorid
             isbreak = False
             for token in self.ios_tokens:
                 if token in low_title:
@@ -1248,7 +1249,7 @@ class QQPosition(PositionSpider):
         for app in appList:
             link = self.detail_url % app.get('pkgName', '')
             title = app.get('appName', '').strip()
-            #downcount = app['appDownCount']
+            # downcount = app['appDownCount']
             if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     detail = self.get_elemtree(link)
@@ -1341,7 +1342,7 @@ class ZolPosition(PositionSpider):
         "div[@class='item-header clearfix']/a"
     )
     down_xpath = (
-        #"//ul[@class='download-items']/li[@class='item'][1]"
+        # "//ul[@class='download-items']/li[@class='item'][1]"
         "//a[@class='downLoad-button androidDown-button']/@href"
     )
     token = 'sj.zol.com.cn'
@@ -1355,7 +1356,11 @@ class ZolPosition(PositionSpider):
             link = item.attrib['href']
             title = item.text_content().strip()
             low_title = title.lower()
-            if self.token in link and self.app_name in title or title in self.app_name:
+            if (
+                self.token in link and
+                self.app_name in title or
+                title in self.app_name
+            ):
                 is_continue = False
                 for itoken in self.iphone_token:
                     if itoken in low_title:
@@ -1365,10 +1370,10 @@ class ZolPosition(PositionSpider):
                     continue
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
-                    #onclick = detail.xpath(self.down_xpath)[0]
-                    #r = re.compile("corpsoft\('([^']+)','\d+'\)")
-                    #onclick_content = r.search(onclick)
-                    #down_link = onclick_content.group(1)
+                    # onclick = detail.xpath(self.down_xpath)[0]
+                    # r = re.compile("corpsoft\('([^']+)','\d+'\)")
+                    # onclick_content = r.search(onclick)
+                    # down_link = onclick_content.group(1)
                     down_link = detail.xpath(self.down_xpath)
                     if down_link:
                         down_link = down_link[0]
@@ -1496,6 +1501,7 @@ class SinaPosition(PositionSpider):
         items = etree.xpath(self.xpath)
         for item in items:
             link = self.normalize_url(self.search_url, item.attrib['href'])
+            title = item.text_content().strip()
             if self.app_name in title or title in self.app_name:
                 if self.is_accurate:  # 精确匹配
                     down_link = self.download_link(link)
@@ -1768,7 +1774,7 @@ class LiqucnPosition(PositionSpider):
     search_url = "http://search.liqucn.com/download/%s"
     base_xpath = "//div[@id='search_result']/ul"
     link_xpath = "child::li[@class='appli_info']/a"
-    #down_xpath = "//a[@id='content_mobile_href']/@href"
+    # down_xpath = "//a[@id='content_mobile_href']/@href"
     down_xpath = "child::li[@class='appli_dwn']/div[@class='down_btn']/a/@href"
     os_token = 'os-android'
 
@@ -2182,7 +2188,7 @@ class OnlineDownPosition(PositionSpider):
     位置：    信息页
     排行列表页有下载量，搜索列表页无，结果页无
     """
-    #abstract = True
+    # abstract = True
     name = u'华军软件园'
     domain = "www.onlinedown.net"
     search_url = (
@@ -2212,7 +2218,10 @@ class OnlineDownPosition(PositionSpider):
             link = elem.attrib['href']
             title = elem.xpath("child::i/text()")[0].strip()
             platform = item.xpath(self.token_xpath)[0].strip().lower()
-            if self.app_name in title or title in self.app_name and platform == self.android_token:
+            if (
+                self.app_name in title or title in self.app_name and
+                platform == self.android_token
+            ):
                 if self.is_accurate:
                     detail = self.get_elemtree(link)
                     pagedown_link = detail.xpath(self.pagedown_xpath)
@@ -2465,7 +2474,7 @@ class ApkolPosition(PositionSpider):
     base_xpath = "//div[@class='listbox ty']/div[@class='yl_ybwz']"
     link_xpath = "child::h3/a"
     down_xpath = "child::div[@class='yl_btn']/a/@href"
-    #down_xpath = "//div[@content]/div[@class='cn_btn']/a/@href"
+    # down_xpath = "//div[@content]/div[@class='cn_btn']/a/@href"
 
     def position(self):
         results = []
@@ -2518,7 +2527,10 @@ class YruanPosition(PositionSpider):
             if match:
                 platform = match.group('platform').strip()
             if platform:
-                if self.token == platform and self.app_name in title or title in self.app_name:
+                if (
+                    self.token == platform and
+                    self.app_name in title or title in self.app_name
+                ):
                     android_list.append((link, title))
             else:
                 if self.app_name in title or title in self.app_name:
@@ -2559,7 +2571,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #apkol.run()
+    # apkol.run()
 
     vmall = VmallPosition(
         u'水果忍者',
@@ -2567,7 +2579,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #vmall.run()
+    # vmall.run()
 
     eoemarket = EoemarketPosition(
         u'水果忍者',
@@ -2575,7 +2587,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #eoemarket.run()
+    # eoemarket.run()
 
     aibala = AibalaPosition(
         u'水果忍者',
@@ -2583,7 +2595,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #aibala.run()
+    # aibala.run()
 
     android159 = Android159Position(
         u'水果忍者',
@@ -2591,7 +2603,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #android159.run()
+    # android159.run()
 
     zhuodown = ZhuodownPosition(
         u'水果忍者',
@@ -2599,7 +2611,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #zhuodown.run()
+    # zhuodown.run()
 
     onlinedown = OnlineDownPosition(
         u'水果忍者',
@@ -2607,15 +2619,15 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #onlinedown.run()
+    # onlinedown.run()
 
-    #shouji = ShoujiPosition(
+    # shouji = ShoujiPosition(
     #    u'水果忍者',
     #    app_uuid=1,
     #    version='1.9.5',
     #    chksum='d603edae8be8b91ef6e17b2bf3b45eac'
-    #)
-    #shouji.run()
+    # )
+    # shouji.run()
 
     sohu = SohuPosition(
         u'水果忍者',
@@ -2623,7 +2635,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #sohu.run()
+    # sohu.run()
 
     andoridcn = AndroidcnPosition(
         u'水果忍者',
@@ -2631,7 +2643,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #andoridcn.run()
+    # andoridcn.run()
 
     anzow = AnzowPosition(
         u'水果忍者',
@@ -2639,7 +2651,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #anzow.run()
+    # anzow.run()
 
     wandoujia = WandoujiaPosition(
         u'水果忍者',
@@ -2647,7 +2659,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #wandoujia.run()
+    # wandoujia.run()
 
     oyk = OyksoftPosition(
         u'水果忍者',
@@ -2655,7 +2667,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #oyk.run()
+    # oyk.run()
 
     gd = GameDogPosition(
         u'水果忍者',
@@ -2663,7 +2675,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #gd.run()
+    # gd.run()
 
     mm10086 = Mm10086Position(
         u'水果忍者',
@@ -2671,7 +2683,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #mm10086.run()
+    # mm10086.run()
 
     p520apk = Position520Apk(
         u'水果忍者',
@@ -2679,7 +2691,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #p520apk.run()
+    # p520apk.run()
 
     apk3 = Apk3Position(
         u'水果忍者',
@@ -2687,7 +2699,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #apk3.run()
+    # apk3.run()
 
     dza = DownzaPosition(
         u'水果忍者',
@@ -2695,7 +2707,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #dza.run()
+    # dza.run()
 
     anzhi = AnZhiPosition(
         u'水果忍者',
@@ -2703,7 +2715,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #anzhi.run()
+    # anzhi.run()
 
     angeek = AngeeksPosition(
         u'水果忍者',
@@ -2711,7 +2723,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #angeek.run()
+    # angeek.run()
 
     jiqimao = JiQiMaoPosition(
         u'水果忍者',
@@ -2719,7 +2731,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #jiqimao.run()
+    # jiqimao.run()
 
     sjapk = SjapkPosition(
         u'水果忍者',
@@ -2741,7 +2753,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #cs.run()
+    # cs.run()
 
     shouji = ShoujiBaiduSpider(
         u'水果忍者',
@@ -2749,7 +2761,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #shouji.run()
+    # shouji.run()
 
     p7xz = Position7xz(
         u'水果忍者',
@@ -2757,7 +2769,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #p7xz.run()
+    # p7xz.run()
 
     pc6 = PC6Position(
         u'水果忍者',
@@ -2765,7 +2777,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #pc6.run()
+    # pc6.run()
 
     p3533 = Position3533(
         u'水果忍者',
@@ -2773,7 +2785,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #p3533.run()
+    # p3533.run()
 
     apk8 = Apk8Position(
         u'水果忍者',
@@ -2781,7 +2793,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #apk8.run()
+    # apk8.run()
 
     xzzj = XiaZaiZhiJiaPosition(
         u'水果忍者',
@@ -2789,7 +2801,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #xzzj.run()
+    # xzzj.run()
 
     pchome = PcHomePosition(
         u'水果忍者',
@@ -2797,7 +2809,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #pchome.run()
+    # pchome.run()
 
     hiapk = HiapkPosition(
         u'水果忍者',
@@ -2805,7 +2817,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #hiapk.run()
+    # hiapk.run()
 
     gfan = GfanPosition(
         u'水果忍者',
@@ -2813,7 +2825,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #gfan.run()
+    # gfan.run()
 
     apk91 = Apk91Position(
         u'水果忍者',
@@ -2821,7 +2833,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #apk91.run()
+    # apk91.run()
 
     it168 = It168Position(
         u'水果忍者',
@@ -2829,7 +2841,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #it168.run()
+    # it168.run()
 
     qq = QQPosition(
         u'水果忍者',
@@ -2837,7 +2849,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #qq.run()
+    # qq.run()
 
     mumayi = MumayiPosition(
         u'水果忍者',
@@ -2845,14 +2857,14 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #mumayi.run()
+    # mumayi.run()
     zol = ZolPosition(
         u'水果忍者',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #zol.run()
+    # zol.run()
 
     pconline = PcOnlinePosition(
         u'水果忍者',
@@ -2860,7 +2872,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #pconline.run()
+    # pconline.run()
 
     sina = SinaPosition(
         u'水果忍者',
@@ -2868,7 +2880,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #sina.run()
+    # sina.run()
 
     duote = DuotePosition(
         u'水果忍者',
@@ -2876,7 +2888,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #duote.run()
+    # duote.run()
 
     imobile = ImobilePosition(
         u'水果忍者',
@@ -2884,7 +2896,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #imobile.run()
+    # imobile.run()
 
     nduoa = NduoaPosition(
         u'水果忍者',
@@ -2892,7 +2904,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #nduoa.run()
+    # nduoa.run()
 
     shop958 = Shop958Position(
         u'水果忍者',
@@ -2900,7 +2912,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-   # shop958.run()
+    # shop958.run()
 
     liqucn = LiqucnPosition(
         u'水果忍者',
@@ -2908,7 +2920,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #liqucn.run()
+    # liqucn.run()
 
     cnmo = CnmoPosition(
         u'水果忍者',
@@ -2916,7 +2928,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #cnmo.run()
+    # cnmo.run()
 
     crsky = CrskyPosition(
         u'水果忍者',
@@ -2924,7 +2936,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #crsky.run()
+    # crsky.run()
 
     d = DPosition(
         u'水果忍者',
@@ -2932,7 +2944,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #d.run()
+    # d.run()
 
     sjwyx = SjwyxPosition(
         u'时空',
@@ -2940,4 +2952,4 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    #sjwyx.run()
+    # sjwyx.run()
