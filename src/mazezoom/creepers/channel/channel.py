@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 
-#Author:zoug
-#Date:2014/08/20
-#Email:b.zougang@gmail.com
+# Author:zoug
+# Date:2014/08/20
+# Email:b.zougang@gmail.com
 
 
 """
@@ -66,8 +66,8 @@ class OykSoftChannel(ChannelSpider):
         }
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
-        #down_link = etree.xpath(self.down_xpath)[0]
-        #storage = self.download_app(down_link)
+        # down_link = etree.xpath(self.down_xpath)[0]
+        # storage = self.download_app(down_link)
         for item in items:
             content = item.text_content().strip()
             elems = content.split(self.seperator)
@@ -115,11 +115,11 @@ class GameDogChannel(ChannelSpider):
         seperator = u'安卓版'
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
-        #down_link = etree.xpath(self.down_xpath)[0]
+        # down_link = etree.xpath(self.down_xpath)[0]
         title = etree.xpath(self.title_xpath)[0]
         version = title.split(seperator)[-1]
         result['human_version'] = version
-        #storage = self.download_app(down_link)
+        # storage = self.download_app(down_link)
         for item in items:
             try:
                 label = item.xpath(self.label_xpath)[0][:-1].strip()
@@ -396,7 +396,7 @@ class AnZhiChannel(ChannelSpider):
     down_url = "http://www.anzhi.com/dl_app.php?s=%s&n=5"
 
     def download_link(self, etree):
-        #opendown(1322730);
+        # opendown(1322730);
         storage = None
         down_link = ''
         down_text = etree.xpath(self.down_xpath)
@@ -423,7 +423,7 @@ class AnZhiChannel(ChannelSpider):
                 try:
                     times = int(match.group())
                 except (TypeError, ValueError):
-                    #log
+                    # log
                     pass
                 else:
                     if translate in number_text:
@@ -441,15 +441,15 @@ class AnZhiChannel(ChannelSpider):
             u'资费': 'authorize',
         }
         etree = self.send_request(self.url)
-        #版本
+        # 版本
         version = etree.xpath(self.version_xpath)
         if version:
             version = version[0]
-            #(1.1.1)
+            # (1.1.1)
             if version.startswith('('):
                 version = version[1:-1]
                 result['human_version'] = version
-        #所有属性
+        # 所有属性
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
             content = item.text_content().strip()
@@ -461,7 +461,7 @@ class AnZhiChannel(ChannelSpider):
                 if label:
                     result[label] = value.strip()
 
-        #下载次数
+        # 下载次数
         times = self.download_times(result)
         result['download_times'] = times
         print result
@@ -533,7 +533,7 @@ class JiQiMaoChannel(ChannelSpider):
     系统：安卓android
     """
     down_xpath = "//div[@class='appmsg_titlemid']/table/tr[3]/td/a/@href"
-    #seperator = u"\uff1a"
+    # seperator = u"\uff1a"
     seperator = u"："
     fuzzy_xpath = "//div[@class='appmsg_titlemid']/table/tr/td/span/text()"
     domain = "jiqimao.com"
@@ -663,7 +663,7 @@ class CoolApkChannel(ChannelSpider):
                 " ex-apk-view-btns']/a/@onclick"
             )
             extra_raw = etree.xpath(extra_xpath)
-            #onDownloadApk(0);
+            # onDownloadApk(0);
             if extra_raw:
                 extra_raw = extra_raw[0]
                 match = extra_regx.match(extra_raw)
@@ -700,7 +700,7 @@ class CoolApkChannel(ChannelSpider):
             try:
                 times = int(match.group())
             except (TypeError, ValueError):
-                #log
+                # log
                 pass
             else:
                 if translate in dtimes:
@@ -840,7 +840,7 @@ class ShoujiBaiduChannel(ChannelSpider):
             try:
                 times = int(match.group())
             except (TypeError, ValueError):
-                #log
+                # log
                 pass
             else:
                 if translate in dtimes:
@@ -1329,7 +1329,7 @@ class PcHomeChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'更新时间': 'update_time',
             u'软件大小': 'size',
@@ -1349,9 +1349,9 @@ class PcHomeChannel(ChannelSpider):
                 result[label] = value.strip()
         times = self.download_times()
         result['download_times'] = times
-        #down_link = self.download_link(etree)
-        #if down_link:
-            #storage = self.download_app(down_link)
+        # down_link = self.download_link(etree)
+        # if down_link:
+        #   storage = self.download_app(down_link)
         return result
 
 
@@ -1396,7 +1396,7 @@ class HiapkChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         etree = self.send_request(self.url, ignore=True)
         mapping = {
             u'作者': 'company',
@@ -1419,10 +1419,10 @@ class HiapkChannel(ChannelSpider):
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
 
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
-        #    down_link = self.normalize_url(self.url, down_link[0])
-            #storage = self.download_app(down_link)
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
+        #   down_link = self.normalize_url(self.url, down_link[0])
+        #   storage = self.download_app(down_link)
         return result
 
 
@@ -1447,7 +1447,7 @@ class GfanChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'版 本 号': 'human_version',
             u'开 发 者': 'company',
@@ -1464,8 +1464,8 @@ class GfanChannel(ChannelSpider):
                 label = mapping.get(label.strip(), '')
                 if label:
                     result[label] = value.strip()
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -1507,7 +1507,7 @@ class Apk91Channel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'版本': 'human_version',
             u'下载次数': 'download_times',
@@ -1529,8 +1529,8 @@ class Apk91Channel(ChannelSpider):
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
 
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = self.normalize_url(self.url, down_link[0])
         #    storage = self.download_app(down_link)
         return result
@@ -1568,7 +1568,7 @@ class It168Channel(ChannelSpider):
             u'下载次数': 'download_times',
             u'更新时间': 'update_time',
         }
-        #storage = None
+        # storage = None
         etree = self.send_request(self.url)
         items = etree.xpath(self.fuzzy_xpath)
         for item in items:
@@ -1583,8 +1583,8 @@ class It168Channel(ChannelSpider):
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
 
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -1634,7 +1634,7 @@ class QQChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'版本号': 'human_version',
             u'更新时间': 'update_time',
@@ -1668,8 +1668,8 @@ class QQChannel(ChannelSpider):
             if label:
                 value = item[1]
                 result[label] = value
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -1707,7 +1707,7 @@ class MumayiChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'软件类型': 'authorize',
             u'所属类别': 'category',
@@ -1730,8 +1730,8 @@ class MumayiChannel(ChannelSpider):
         times = self.download_times()
         result['download_times'] = times
 
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -1781,7 +1781,7 @@ class ZolChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'分类': 'category',
             u'厂商': 'company',
@@ -1811,7 +1811,7 @@ class ZolChannel(ChannelSpider):
             result.get('download_times', '')
         )
         result['download_times'] = times
-        #down_link = self.download_link(etree)
+        # down_link = self.download_link(etree)
         return result
 
 
@@ -1847,7 +1847,7 @@ class PcOnlineChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'语言': 'language',
             u'软件授权': 'authorize',
@@ -1903,7 +1903,7 @@ class SinaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'文件类型': 'category',
             u'是否收费': 'authorize',
@@ -2012,7 +2012,7 @@ class ImobileChannel(ChannelSpider):
             try:
                 times = int(match.group())
             except (TypeError, ValueError):
-                #log
+                # log
                 pass
             else:
                 if translate in rawstring:
@@ -2179,8 +2179,8 @@ class Android155Channel(ChannelSpider):
 
         update_time = items[1].text_content().strip()
         result['update_time'] = update_time
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -2286,9 +2286,9 @@ class LiqucnChannel(ChannelSpider):
                 result[label] = value
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        #down_link = etree.xpath(self.down_xpath)[0]
-        #if down_link:
-            #storage = self.download_app(down_link)
+        # down_link = etree.xpath(self.down_xpath)[0]
+        # if down_link:
+        #   storage = self.download_app(down_link)
         return result
 
 
@@ -2481,7 +2481,7 @@ class SjwyxChannel(ChannelSpider):
             u'游戏大小': 'size',
             u'更新时间': 'update_time',
         }
-        #storage = None
+        # storage = None
         etree = self.send_request(self.url, ignore=True)
         lists = etree.xpath(self.fuzzy_list_xpath)
         for elem in lists:
@@ -2499,9 +2499,9 @@ class SjwyxChannel(ChannelSpider):
                         label = mapping.get(label, '')
                         if label:
                             result[label] = value.strip()
-        #times = self.download_times():
-        #if down_link:
-            #storage = self.download_app(down_link)
+        # times = self.download_times():
+        # if down_link:
+        #   storage = self.download_app(down_link)
         return result
 
 
@@ -2544,7 +2544,7 @@ class WandoujiaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         env_token = "perms"
         mapping = {
             u'大小': 'size',
@@ -2575,8 +2575,8 @@ class WandoujiaChannel(ChannelSpider):
                 result[label] = value
         times = self.download_times(etree)
         result['download_times'] = times
-        #down_link = etree.xpath(self.down_xpath)[0]
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)[0]
+        # if down_link:
         #    storage = self.download_app(down_link)
         return result
 
@@ -2603,7 +2603,7 @@ class AnzowChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'所属分类': 'category',
             u'授权方式': 'authorize',
@@ -2622,10 +2622,9 @@ class AnzowChannel(ChannelSpider):
             label = mapping.get(label, '')
             if label:
                 result[label] = value.strip()
-        #down_link = etree.xpath(self.down_xpath)[0]
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)[0]
+        # if down_link:
         #    storage = self.download_app(down_link)
-        print result
         return result
 
 
@@ -2759,7 +2758,7 @@ class CngbaChannel(ChannelSpider):
 
     def parser(self):
         result = {}
-        #storage = None
+        # storage = None
         mapping = {
             u'资源类型': 'category',
             u'资源厂商': 'company',
@@ -2783,8 +2782,8 @@ class CngbaChannel(ChannelSpider):
                 label = mapping.get(label, '')
                 if label:
                     result[label] = value.strip()
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         print result
@@ -2832,8 +2831,8 @@ class AndroidcnChannel(ChannelSpider):
 
         times = self.download_times(result.get('download_times', ''))
         result['download_times'] = times
-        #down_link = etree.xpath(self.down_xpath)
-        #if down_link:
+        # down_link = etree.xpath(self.down_xpath)
+        # if down_link:
         #    down_link = down_link[0]
         #    storage = self.download_app(down_link)
         return result
@@ -3413,7 +3412,7 @@ if __name__ == '__main__':
         ),
         title=u'网易新闻'
     )
-    #zhuodown.run()
+    # zhuodown.run()
 
     baicent = BaicentChannel(
         channellink=1,
@@ -3423,7 +3422,7 @@ if __name__ == '__main__':
         url="http://www.baicent.com/plus/view-288996-1.html",
         title=u'网易新闻'
     )
-    #baicent.run()
+    # baicent.run()
 
     yruan = YruanChannel(
         channellink=1,
@@ -3433,7 +3432,7 @@ if __name__ == '__main__':
         url="http://www.yruan.com/softdetail/584/",
         title=u'网易新闻'
     )
-    #yruan.run()
+    # yruan.run()
 
     vmall = VmallChannel(
         channellink=1,
@@ -3443,7 +3442,7 @@ if __name__ == '__main__':
         url="http://app.vmall.com/app/C9147",
         title=u'网易新闻'
     )
-    #vmall.run()
+    # vmall.run()
 
     aibala = AibalaChannel(
         channellink=1,
@@ -3453,7 +3452,7 @@ if __name__ == '__main__':
         url="http://www.aibala.com/android-soft-61.html",
         title=u'网易新闻'
     )
-    #aibala.run()
+    # aibala.run()
 
     eomarket = EoemarketChannel(
         channellink=1,
@@ -3463,7 +3462,7 @@ if __name__ == '__main__':
         url="http://www.eoemarket.com/soft/33223.html",
         title=u'网易新闻'
     )
-    #eomarket.run()
+    # eomarket.run()
 
     onlinedown = OnlineDownChannel(
         channellink=1,
@@ -3473,7 +3472,7 @@ if __name__ == '__main__':
         url="http://www.onlinedown.net/soft/110940.htm",
         title=u'网易新闻'
     )
-    #onlinedown.run()
+    # onlinedown.run()
 
     shouji = ShoujiChannel(
         channellink=1,
@@ -3483,7 +3482,7 @@ if __name__ == '__main__':
         url="http://soft.shouji.com.cn/down/20275.html#dlshow",
         title=u'网易新闻'
     )
-    #shouji.run()
+    # shouji.run()
 
     sohu = SohuChannel(
         channellink=1,
@@ -3493,7 +3492,7 @@ if __name__ == '__main__':
         url="http://download.sohu.com/app/info?app_id=21174",
         title=u'网易新闻'
     )
-    #sohu.run()
+    # sohu.run()
 
     androidcn = AndroidcnChannel(
         channellink=1,
@@ -3503,7 +3502,7 @@ if __name__ == '__main__':
         url="http://down.androidcn.com/detail/1234.html",
         title=u'网易新闻'
     )
-    #androidcn.run()
+    # androidcn.run()
 
     cngba = CngbaChannel(
         channellink=1,
@@ -3513,7 +3512,7 @@ if __name__ == '__main__':
         url="http://android.cngba.com/androidruanjian/20101118117822.shtml",
         title=u'网易新闻'
     )
-    cngba.run()
+    # cngba.run()
 
     apkzu = ApkzuChannel(
         channellink=1,
@@ -3523,7 +3522,7 @@ if __name__ == '__main__':
         url="http://www.apkzu.com/game/12569.shtml",
         title=u'网易新闻'
     )
-    #apkzu.run()
+    # apkzu.run()
 
     bkill = BkillChannel(
         channellink=1,
@@ -3533,7 +3532,7 @@ if __name__ == '__main__':
         url="http://www.bkill.com/download/23765.html",
         title=u'网易新闻'
     )
-    #bkill.run()
+    # bkill.run()
 
     anzow = AnzowChannel(
         channellink=1,
@@ -3543,7 +3542,7 @@ if __name__ == '__main__':
         url="http://www.anzow.com/download/Software/JQKRDPQQP8.shtml",
         title=u'网易新闻'
     )
-    anzow.run()
+    # anzow.run()
 
     wandoujia = WandoujiaChannel(
         channellink=1,
@@ -3553,7 +3552,7 @@ if __name__ == '__main__':
         url='http://www.wandoujia.com/apps/com.halfbrick.fruitninja',
         title=u'水果忍者安卓版v1.9.5'
     )
-    #wandoujia.run()
+    # wandoujia.run()
 
     sjwyx = SjwyxChannel(
         channellink=1,
@@ -3563,7 +3562,7 @@ if __name__ == '__main__':
         url="http://sklr.sjwyx.com/down/",
         title=u'网易新闻'
     )
-    #sjwyx.run()
+    # sjwyx.run()
 
     dchannel = DChannel(
         channellink=1,
@@ -3573,7 +3572,7 @@ if __name__ == '__main__':
         url="http://android.d.cn/software/12486.html",
         title=u'工行短信银行'
     )
-    #dchannel.run()
+    # dchannel.run()
 
     cnmo = CnmoChannel(
         channellink=1,
@@ -3583,7 +3582,7 @@ if __name__ == '__main__':
         url='http://app.cnmo.com/android/1440/',
         title=u'水果忍者安卓版v1.9.5'
     )
-    cnmo.run()
+    # cnmo.run()
 
     crsky = CrskyChannel(
         channellink=1,
@@ -3593,7 +3592,7 @@ if __name__ == '__main__':
         url="http://android.crsky.com/soft/25385.html",
         title=u'网易新闻'
     )
-    #crsky.run()
+    # crsky.run()
 
     shop958 = Shop958Channel(
         channellink=1,
@@ -3606,7 +3605,7 @@ if __name__ == '__main__':
         ),
         title=u'网易新闻'
     )
-    #shop958.run()
+    # shop958.run()
 
     liqucn = LiqucnChannel(
         channellink=1,
@@ -3616,7 +3615,7 @@ if __name__ == '__main__':
         url="http://os-android.liqucn.com/yx/15024.shtml",
         title=u'工行短信银行'
     )
-    #liqucn.run()
+    # liqucn.run()
 
     android155 = Android155Channel(
         channellink=1,
@@ -3626,7 +3625,7 @@ if __name__ == '__main__':
         url="http://android.155.cn/soft/10198.html",
         title=u'网易新闻'
     )
-    #android155.run()
+    # android155.run()
 
     nduoa = NduoaChannel(
         channellink=1,
@@ -3636,7 +3635,7 @@ if __name__ == '__main__':
         url='http://www.nduoa.com/apk/detail/634370',
         title=u'工行短信银行'
     )
-    #nduoa.run()
+    # nduoa.run()
 
     imobile = ImobileChannel(
         channellink=1,
@@ -3646,7 +3645,7 @@ if __name__ == '__main__':
         url="http://app.imobile.com.cn/android/app/8025.html",
         title=u'网易新闻'
     )
-    #imobile.run()
+    # imobile.run()
 
     duote = DuoteChannel(
         channellink=1,
@@ -3656,7 +3655,7 @@ if __name__ == '__main__':
         url="http://www.duote.com/soft/23385.html",
         title=u'网易新闻'
     )
-    #duote.run()
+    # duote.run()
 
     sina = SinaChannel(
         channellink=1,
@@ -3666,7 +3665,7 @@ if __name__ == '__main__':
         url="http://down.tech.sina.com.cn/3gsoft/download.php?id=296",
         title=u'网易新闻'
     )
-    #sina.run()
+    # sina.run()
 
     pconline = PcOnlineChannel(
         channellink=1,
@@ -3676,7 +3675,7 @@ if __name__ == '__main__':
         url="http://dl.pconline.com.cn/download/172907.html",
         title=u'网易新闻'
     )
-    #pconline.run()
+    # pconline.run()
 
     zol = ZolChannel(
         channellink=1,
@@ -3686,7 +3685,7 @@ if __name__ == '__main__':
         url="http://sj.zol.com.cn/umplayer/",
         title=u'网易新闻'
     )
-    #zol.run()
+    # zol.run()
 
     mumayi = MumayiChannel(
         channellink=1,
@@ -3696,7 +3695,7 @@ if __name__ == '__main__':
         url="http://www.mumayi.com/android-28640.html",
         title=u'网易新闻'
     )
-    #mumayi.run()
+    # mumayi.run()
 
     qq = QQChannel(
         channellink=1,
@@ -3706,7 +3705,7 @@ if __name__ == '__main__':
         url="http://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm",
         title=u'水果忍者安卓版v1.9.5'
     )
-    #qq.run()
+    # qq.run()
 
     it168 = It168Channel(
         channellink=1,
@@ -3716,7 +3715,7 @@ if __name__ == '__main__':
         url="http://down.it168.com/315/321/130157/index.shtml",
         title=u'水果忍者安卓版v1.9.5'
     )
-    #it168.run()
+    # it168.run()
 
     apk91 = Apk91Channel(
         channellink=1,
@@ -3729,7 +3728,7 @@ if __name__ == '__main__':
         ),
         title=u'水果忍者安卓版v1.9.5'
     )
-    #apk91.run()
+    # apk91.run()
 
     gfan = GfanChannel(
         channellink=1,
@@ -3739,7 +3738,7 @@ if __name__ == '__main__':
         url='http://apk.gfan.com/Product/App235332.html',
         title=u'水果忍者安卓版v1.9.5'
     )
-    #gfan.run()
+    # gfan.run()
 
     hiapk = HiapkChannel(
         channellink=1,
@@ -3749,7 +3748,7 @@ if __name__ == '__main__':
         url='http://apk.hiapk.com/appinfo/com.mobi.screensaver.fzlxqx2',
         title=u'水果忍者安卓版v1.9.5'
     )
-    #hiapk.run()
+    # hiapk.run()
 
     pchome = PcHomeChannel(
         channellink=1,
@@ -3759,7 +3758,7 @@ if __name__ == '__main__':
         url="http://soft.anruan.com/3751/",
         title=u'水果忍者手机版 For Android'
     )
-    pchome.run()
+    # pchome.run()
 
     anruan = AnRuanChannel(
         channellink=1,
@@ -3769,7 +3768,7 @@ if __name__ == '__main__':
         url="http://soft.anruan.com/3751/",
         title=u'工行短信银行'
     )
-    #anruan.run()
+    # anruan.run()
 
     xiazaizhijia = XiaZaiZhiJiaChannel(
         channellink=1,
@@ -3779,18 +3778,18 @@ if __name__ == '__main__':
         url="http://www.xiazaizhijia.com/shouji/6570.html",
         title=u'工行短信银行'
     )
-    #xiazaizhijia.run()
+    # xiazaizhijia.run()
 
     apk8 = Apk8Channel(
         channellink=1,
         app_uuid='acfd7fd6-74a3-42ab-82b3-dfc541caad72',
         app_version=1,
         channel=36,
-        #url="http://www.apk8.com/game/game_14104.html",
+        # url="http://www.apk8.com/game/game_14104.html",
         url="http://www.apk8.com/soft/soft_127.html",
         title=u'工行短信银行'
     )
-    #apk8.run()
+    # apk8.run()
 
     p3533 = Channel3533(
         channellink=1,
@@ -3800,7 +3799,7 @@ if __name__ == '__main__':
         url='http://game.3533.com/game/49703/',
         title=u'水果忍者安卓版v1.9.5'
     )
-    #p3533.run()
+    # p3533.run()
 
     pc6 = PC6Channel(
         channellink=1,
@@ -3810,7 +3809,7 @@ if __name__ == '__main__':
         url="http://www.pc6.com/azyx/82254.html",
         title=u'工行短信银行'
     )
-    #pc6.run()
+    # pc6.run()
 
     c7xz = Channel7xz(
         channellink=1,
@@ -3820,7 +3819,7 @@ if __name__ == '__main__':
         url="http://www.7xz.com/games/view/10020683",
         title=u'工行短信银行'
     )
-    #c7xz.run()
+    # c7xz.run()
 
     shoujibaidu = ShoujiBaiduChannel(
         channellink=1,
@@ -3830,7 +3829,7 @@ if __name__ == '__main__':
         url="http://shouji.baidu.com/game/item?docid=7022461",
         title=u'工行短信银行'
     )
-    #shoujibaidu.run()
+    # shoujibaidu.run()
 
     crossmo = CrossmoChannel(
         channellink=1,
@@ -3840,7 +3839,7 @@ if __name__ == '__main__':
         url="http://soft.crossmo.com/softinfo_13185.html",
         title=u'工行短信银行'
     )
-    #crossmo.run()
+    # crossmo.run()
 
     coolapk = CoolApkChannel(
         channellink=1,
@@ -3850,7 +3849,7 @@ if __name__ == '__main__':
         url="http://www.coolapk.com/game/sh.lilith.dgame.uc",
         title=u'工行短信银行'
     )
-    #coolapk.run()
+    # coolapk.run()
 
     sjapk = SjapkChannel(
         channellink=1,
@@ -3860,7 +3859,7 @@ if __name__ == '__main__':
         url="http://www.sjapk.com/36195.Html",
         title=u'工行短信银行'
     )
-    #sjapk.run()
+    # sjapk.run()
 
     jiqimao = JiQiMaoChannel(
         channellink=1,
@@ -3870,7 +3869,7 @@ if __name__ == '__main__':
         url="http://jiqimao.com/game-199571/",
         title=u'工行短信银行'
     )
-    #jiqimao.run()
+    # jiqimao.run()
 
     angeeks = AngeeksChannel(
         channellink=1,
@@ -3880,7 +3879,7 @@ if __name__ == '__main__':
         url="http://apk.angeeks.com/soft/10133401.html",
         title=u'工行短信银行'
     )
-    #angeeks.run()
+    # angeeks.run()
 
     anzhi = AnZhiChannel(
         channellink=1,
@@ -3890,7 +3889,7 @@ if __name__ == '__main__':
         url="http://www.anzhi.com/soft_1322730.html",
         title=u'工行短信银行'
     )
-    #anzhi.run()
+    # anzhi.run()
 
     downza = DownzaChannel(
         channellink=1,
@@ -3900,7 +3899,7 @@ if __name__ == '__main__':
         url="http://www.downza.cn/soft/22271.html",
         title=u'工行短信银行',
     )
-    #downza.run()
+    # downza.run()
 
     apk3 = Apk3Channel(
         channellink=1,
@@ -3910,7 +3909,7 @@ if __name__ == '__main__':
         url="http://www.apk3.com/soft/4393.html",
         title=u'工行短信银行',
     )
-    #apk3.run()
+    # apk3.run()
 
     c520 = Channel520Apk(
         channellink=1,
@@ -3920,7 +3919,7 @@ if __name__ == '__main__':
         url="http://www.520apk.com/android/dongzuoyouxi/100012517.html",
         title=u'工行短信银行'
     )
-    #c520.run()
+    # c520.run()
 
     mm10086 = Mm10086Channel(
         channellink=1,
@@ -3934,7 +3933,7 @@ if __name__ == '__main__':
         ),
         title=u'水果忍者安卓版v1.9.5'
     )
-    #mm10086.run()
+    # mm10086.run()
 
     gamedog = GameDogChannel(
         channellink=1,
@@ -3944,7 +3943,7 @@ if __name__ == '__main__':
         url='http://android.gamedog.cn/game/386653.html',
         title=u'水果忍者安卓版v1.9.5'
     )
-    #gamedog.run()
+    # gamedog.run()
 
     oyksoft = OykSoftChannel(
         channellink=1,
@@ -3954,4 +3953,4 @@ if __name__ == '__main__':
         url="http://www.oyksoft.com/soft/20852.html",
         title=u'微软官方Windows 7主题《水果忍者》'
     )
-    #oyksoft.run()
+    # oyksoft.run()
