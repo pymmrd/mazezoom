@@ -16,8 +16,20 @@ with open('result.txt', 'a') as f:
             print e
         else:
             if result:
+                name = instance.name
+                domain = instance.domain
                 for item in result:
                     url = item[0]
                     title = item[1]
-                    f.write('%s\t%s\n' % (url.encode('utf-8'), title.encode('utf-8'))) 
-                    f.flush()
+                    f.write('%s\t%s\t%s\t%s\n' % (
+                            instance.name.encode('utf-8'),
+                            instance.domain.encode('utf-8'),
+                            url.encode('utf-8'),
+                            title.encode('utf-8'))
+                    )
+            else:
+                    f.write('%s\t%s\n' % (
+                        instance.name.encode('utf-8'),
+                        instance.domain.encode('utf-8'),
+                    ))
+            f.flush()

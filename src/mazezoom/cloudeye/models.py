@@ -285,7 +285,7 @@ class AppVersion(models.Model):
         verbose_name=u'版本'
     )
 
-    channel = models.ManyToManyField('Channel',
+    channel = models.ManyToManyField(Channel,
         blank=True,
         null=True
     )

@@ -4,8 +4,8 @@
 from django.contrib import admin
 
 #Project imports
-from cloudeye.models import (App, Company, Category,
-                             AppVersion, Channel)
+from cloudeye.models import (Application, Company, Category,
+                             AppVersion, Channel, ChannelLink)
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -21,17 +21,27 @@ class CompanyAdmin(admin.ModelAdmin):
 
 
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'company', 'category', 'created_date', 'is_active') 
-    search_fields = ('name', )
-    raw_id_fields = ('company', 'category',)
-
-
-class AppVersionAdmin(admin.ModelAdmin):
-    list_display = ('__unicode__', 'md5sum', 'created_date', 'is_active')
-    search_fields = ('md5sum',)
-    list_filter = ["is_active"]
-    inlines = [ChannelInlineAdmin,]
+    list_display = ('app_name', 'creat_time', ) 
+    search_fields = ('app_name', )
 
 
 class ChannelInlineAdmin(admin.TabularInline):
     model = Channel
+
+
+class AppVersionAdmin(admin.ModelAdmin):
+    list_display = ('__unicode__', 'md5sum', 'created_date',)
+    search_fields = ('md5sum',)
+    inlines = [ChannelInlineAdmin,]
+
+
+class ChannelLinkAdmin(admin.ModelAdmin):
+    pass
+
+
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Application, ApplicationAdmin)
+admin.site.register(Company, CompanyAdmin)
+admin.site.register(AppVersion, AppVersionAdmin)
+admin.site.register(ChannelLink, ChannelLinkAdmin)
+

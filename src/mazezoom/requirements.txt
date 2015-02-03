@@ -1,6 +1,6 @@
 shortuuid
 requests
-Django==1.5.4
+Django==1.5
 pymongo==2.6.3
 pygeoip==0.2.7
 mongoengine
