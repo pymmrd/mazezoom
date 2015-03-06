@@ -410,8 +410,8 @@ class AppChinaPosition(PositionSpider):
     """
     name = u'应用汇'
     domain = "www.appchina.com"
-    search_url = "http://www.appchina.com/sou/%s/?catname=应用"
-    search_url2 = "http://www.appchina.com/sou/%s/?catname=游戏"
+    search_url = "http://www.appchina.com/sou/%s/?catname=软件"
+    #search_url2 = "http://www.appchina.com/sou/%s/?catname=游戏"
     base_xpath = "//ul[@class='app-list']/li[@class='has-border app']"
     link_xpath = "child::div[@class='app-info']/h1[@class='app-name']/a"
     down_xpath = (
@@ -456,17 +456,16 @@ class AppChinaPosition(PositionSpider):
     def position(self):
         results = []
         etree = self.send_request(self.app_name)
-        etree2 = self.send_request(self.app_name, url=self.search_url2)
         items = etree.xpath(self.base_xpath)
-        items2 = etree2.xpath(self.base_xpath)
-        items.extend(items2)
         for item in items:
             elem = item.xpath(self.link_xpath)[0]
             title = elem.text_content().strip()
             if self.app_name in title or title in self.app_name:
-
+                link = self.normalize_url(
+                    self.search_url,
+                    elem.attrib['href']
+                )
                 if self.is_accurate:  # 精确匹配
-                    link = elem.attrib['href']
                     down_link = item.xpath(self.down_xpath)
                     if down_link:
                         down_link = down_link[0]
@@ -1461,7 +1460,7 @@ if __name__ == "__main__":
         has_orm=False,
         is_accurate=False
     )
-    lenovo.run()
+    #lenovo.run()
 
     uc = UCPosition(
         u'水果忍者',
@@ -1490,3 +1489,10 @@ if __name__ == "__main__":
         is_accurate=False
     )
     # zhushou360.run()
+    
+    appchina = AppChinaPosition(
+        u'杭州银行',
+        has_orm=False,
+        is_accurate=False
+    )
+    print appchina.run()
