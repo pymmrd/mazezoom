@@ -1461,7 +1461,7 @@ if __name__ == "__main__":
         has_orm=False,
         is_accurate=False
     )
-    lenovo.run()
+    #lenovo.run()
 
     uc = UCPosition(
         u'水果忍者',
@@ -1482,11 +1482,11 @@ if __name__ == "__main__":
     )
     # mi.run()
     zhushou360 = ZhuShou360Position(
-        u'水果忍者',
+        u'杭州银行',
         app_uuid=1,
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac',
         has_orm=False,
         is_accurate=False
     )
-    # zhushou360.run()
+    print zhushou360.run()

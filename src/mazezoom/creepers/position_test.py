@@ -11,7 +11,7 @@ with open('result.txt', 'a') as f:
     for cls in subclass.values():
         instance = cls(app_name=appname, has_orm=False, is_accurate=False)
         try:
-            result =  instance.run()
+            result = instance.run()
         except Exception, e:
             print e
         else:
@@ -19,5 +19,12 @@ with open('result.txt', 'a') as f:
                 for item in result:
                     url = item[0]
                     title = item[1]
-                    f.write('%s\t%s\n' % (url.encode('utf-8'), title.encode('utf-8'))) 
-                    f.flush()
+                    f.write('%s\t%s\t%s\t%s\n' % (
+                        cls.domain,
+                        cls.name.encode('utf-8'),
+                        url.encode('utf-8'),
+                        title.encode('utf-8'))
+                    )
+            else:
+                f.write('%s\t%s\n' % (cls.domain, cls.name.encode('utf-8')))
+            f.flush()
