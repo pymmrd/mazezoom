@@ -1261,8 +1261,8 @@ class QQPosition(PositionSpider):
                         )
                         if match:
                             results.append((link, title))
-                    else:
-                        results.append((link, title))
+                else:
+                    results.append((link, title))
         return results
 
 
@@ -2563,7 +2563,7 @@ if __name__ == "__main__":
         version='1.9.5',
         chksum='d603edae8be8b91ef6e17b2bf3b45eac'
     )
-    yruan.run()
+    #yruan.run()
 
     apkol = ApkolPosition(
         u'水果忍者',
@@ -2844,12 +2844,11 @@ if __name__ == "__main__":
     # it168.run()
 
     qq = QQPosition(
-        u'水果忍者',
-        app_uuid=1,
-        version='1.9.5',
-        chksum='d603edae8be8b91ef6e17b2bf3b45eac'
+        u'杭州银行',
+        has_orm=False,
+        is_accurate=False
     )
-    # qq.run()
+    qq.run()
 
     mumayi = MumayiPosition(
         u'水果忍者',
