@@ -1,5 +1,9 @@
 shortuuid
 requests
+<<<<<<< HEAD
+=======
+Django==1.5
+>>>>>>> 92517a93da05e8ddd1330411d047bd7e7878c32e
 pymongo==2.6.3
 pygeoip==0.2.7
 mongoengine==0.8.0
