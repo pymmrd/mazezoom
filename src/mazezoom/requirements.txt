@@ -2,7 +2,7 @@ shortuuid
 requests
 pymongo==2.6.3
 pygeoip==0.2.7
-mongoengine
+mongoengine==0.8.0
 mysql-python
 redis
 lxml
